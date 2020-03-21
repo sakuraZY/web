@@ -1,0 +1,212 @@
+<!--
+ * @Description: 功能菜单详情页面
+ * @Author: wangjiayu
+ * @Date: 2020-03-02 18:05:39
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-14 10:22:59
+ -->
+
+<template>
+  <div class="menu-detail-container">
+    <el-form
+      ref="menuAttrForm"
+      :model="menuAttrForm"
+      :rules="menuAttrRules"
+      size="medium"
+      label-width="90px"
+    >
+      <el-form-item label="名称" prop="menuText">
+        <el-input v-model="menuAttrForm.menuText" autocomplete="off" placeholder="名称"></el-input>
+      </el-form-item>
+      <el-form-item label="地址" prop="menuLinkurl">
+        <el-input type="textarea" v-model="menuAttrForm.menuLinkurl" placeholder="地址"
+          resize="none" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="目标" prop="menuLinktarget">
+        <el-select
+          v-model="menuAttrForm.menuLinktarget"
+          placeholder="请选择"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="(item, index) in menuLinktargetOption"
+            :key="item + index"
+            :label="item"
+            :value="item"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="类型" prop="menuType">
+        <el-select
+          v-model="menuAttrForm.menuType"
+          placeholder="请选择"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="(item, index) in menuTypeOption"
+            :key="item + index"
+            :label="item"
+            :value="item"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="默认状态" prop="menuIsdefault">
+        <el-select
+          v-model="menuAttrForm.menuIsdefault"
+          placeholder="请选择"
+          style="width: 100%"
+        >
+          <el-option label="是" value="是"></el-option>
+          <el-option label="否" value="否"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="菜单状态" prop="menuIsmodify">
+        <el-select
+          v-model="menuAttrForm.menuIsmodify"
+          placeholder="请选择"
+          style="width: 100%"
+        >
+          <el-option label="启用" value="启用"></el-option>
+          <el-option label="禁用" value="禁用"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="排序" prop="menuSortnum">
+        <el-input v-model="menuAttrForm.menuSortnum" autocomplete="off" placeholder="排序"></el-input>
+      </el-form-item>
+      <el-form-item label="描述" prop="menuNote">
+        <el-input type="textarea" v-model="menuAttrForm.menuNote" placeholder="描述"
+          resize="none" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="图标" prop="menuIcourl">
+        <div class="menu-icon-container">
+          <icon-svg
+            className="icon menu-icon"
+            :iconClass="menuAttrForm.menuIcourl"
+            style="font-size:22px;vertical-align:-0.3em;"
+          ></icon-svg>
+        </div>
+      </el-form-item>
+      <el-form-item class="icon-list">
+        <svg-icon-list
+          :showIconName="false"
+          :fontSize="20"
+          @onSelect="handleSelectIcon"
+        ></svg-icon-list>
+      </el-form-item>
+      <div class="btn-group">
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <el-button plain @click="cancelEdit">取消</el-button>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import SvgIconList from '@/components/svgIconList';
+
+export default {
+  components: {
+    SvgIconList,
+  },
+  props: {
+    operateType: String,
+    menuDetail: Object,
+  },
+  data() {
+    return {
+      menuAttrForm: {}, // 功能菜单表单数据
+      menuAttrRules: { // 功能菜单表单验证规则
+        menuText: [
+          { required: true, message: '名称不能为空', trigger: 'blur' },
+        ],
+        menuSortnum: [
+          { required: true, message: '排序不能为空', trigger: 'blur' },
+        ],
+      },
+      menuLinktargetOption: ['Tab', '弹框', '自定义'], // 功能菜单目标选项
+      menuTypeOption: ['菜单', '链接', 'js脚本'], // 功能菜单目标选项
+    };
+  },
+  created() {
+    this.getCurrentMenuData();
+  },
+  watch: {
+    menuDetail() {
+      this.getCurrentMenuData();
+    },
+    operateType() {
+      this.getCurrentMenuData();
+    },
+  },
+  methods: {
+    // 保存数据
+    handleSubmit() {
+      const errorMsgs = [];
+      this.$refs.menuAttrForm.validateField(['menuText', 'menuSortnum'], (errorMessage) => {
+        errorMsgs.push(errorMessage);
+      });
+      if (errorMsgs.some(item => !!item)) {
+        return;
+      }
+      this.$emit('onSubmit', this.menuAttrForm);
+    },
+    // 取消编辑
+    cancelEdit() {
+      this.resetFields();
+      this.$emit('onCancel');
+    },
+    // 重制表单数据
+    resetFields() {
+      this.$refs.menuAttrForm.resetFields();
+    },
+    // 选择图标
+    handleSelectIcon(iconName) {
+      this.menuAttrForm.menuIcourl = iconName;
+    },
+    // 获取当前菜单数据（修改模式）
+    getCurrentMenuData() {
+      const defaultData = {
+        menuText: '',
+        menuLinkurl: '',
+        menuLinktarget: 'Tab',
+        menuType: '菜单',
+        menuIsdefault: '是',
+        menuIsmodify: '启用',
+        menuSortnum: '',
+        menuNote: '',
+        menuIcourl: 'type',
+      };
+      if (this.operateType === 'update' && this.menuDetail) {
+        const {
+          menuText,
+          menuLinkurl,
+          menuLinktarget,
+          menuType,
+          menuIsdefault,
+          menuIsmodify,
+          menuSortnum,
+          menuNote,
+          menuIcourl,
+        } = this.menuDetail;
+        this.menuAttrForm = {
+          menuText,
+          menuLinkurl,
+          menuLinktarget,
+          menuType,
+          menuIsdefault,
+          menuIsmodify,
+          menuSortnum,
+          menuNote,
+          menuIcourl,
+        };
+      } else {
+        this.menuAttrForm = defaultData;
+      }
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

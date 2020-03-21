@@ -1,0 +1,5 @@
+.flex-side{
+  width: 180px;
+  min-height: 300px;
+}
+ 

@@ -1,0 +1,19 @@
+.org-manage-container{
+  height: 100%;
+}
+.org-tree-contaner{
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  .icon{
+    margin-right: 5px;
+  }
+  .state{
+    &-open{
+      color: $--color-primary;
+    }
+    &-close{
+      color: $--color-text-secondary;
+    }
+  }
+}

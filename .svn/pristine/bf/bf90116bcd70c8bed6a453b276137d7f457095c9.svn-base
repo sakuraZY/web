@@ -1,0 +1,118 @@
+<template>
+  <div class="operate-type">
+    <geo-banner class="operate-type-banner">
+      <div class="operate-type-name">
+        <span class="operate-type-name-main">{{operateType.title}}</span>
+        <span class="operate-type-name-sub">{{operateType.subTitle}}</span>
+      </div>
+    </geo-banner>
+    <div class="operate-type-main">
+      <el-row
+        :gutter="20"
+        v-for="(colList, colIndex) in businessData"
+        :key="colList + colIndex"
+      >
+        <el-col
+          :sm="24 / colList.length"
+          v-for="(item, index) in colList"
+          :key="item+index"
+          class="operate-col"
+        >
+          <router-link :to="item.link" class="operate-col-link">
+            <operate-card
+              class="operate-card"
+              shadow="always"
+              :class="{active: hoverId === item.id}"
+              @mouseenter="hoverId = item.id"
+              @mouseleave="hoverId = null"
+            >
+              <template>
+                <icon-svg :iconClass="item.icon" class="operate-card-icon"></icon-svg>
+                <span class="operate-card-name">{{item.title}}</span>
+                <div class="operate-card-descript">{{item.subTitle}}</div>
+                <el-button plain size="medium">去办理</el-button>
+              </template>
+            </operate-card>
+          </router-link>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+</template>
+
+<script>
+import GeoBanner from '@/layouts/Personal/bannerContent';
+import OperateCard from '@/components/operateCard';
+import { transtionToDoubleArray } from '@/libs/common';
+
+export default {
+  props: {
+    type: {
+      type: String,
+    },
+  },
+  components: {
+    GeoBanner,
+    OperateCard,
+  },
+  data() {
+    return {
+      hoverId: null,
+      operateType: {},
+      operateTypeMap: {
+        wyb: {
+          title: '我要办',
+          subTitle: '个人在线办理业务，助您少跑腿！',
+          business: [
+            {
+              id: '1',
+              icon: 'woyaoban',
+              title: '业务标题',
+              subTitle: '选记省很积热好或他看求打张第政其压情段海里属展加果再',
+              link: '',
+            },
+            {
+              id: '2',
+              icon: 'woyaoban',
+              title: '业务标题',
+              subTitle: '选记省很积热好或他看求打张第政其压情段海里属展加果再',
+              link: '',
+            },
+            {
+              id: '3',
+              icon: 'woyaoban',
+              title: '业务标题',
+              subTitle: '选记省很积热好或他看求打张第政其压情段海里属展加果再',
+              link: '',
+            },
+          ],
+        },
+      },
+    };
+  },
+  computed: {
+    businessData() {
+      return transtionToDoubleArray(this.operateType.business);
+    },
+  },
+  watch: {
+    type: {
+      handler(val) {
+        if (!this.operateTypeMap[val]) {
+          this.$router.push({ name: 'NotFound' });
+          return;
+        }
+        this.operateType = this.operateTypeMap[val];
+      },
+      immediate: true,
+    },
+  },
+  methods: {
+
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

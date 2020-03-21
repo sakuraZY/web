@@ -1,0 +1,22 @@
+.attachment-list-manage-container {
+  height: 100%;
+
+  .business-tree-container {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    padding: 10px;
+    box-sizing: border-box;
+    .business-tree {
+      /deep/ {
+        .svg-icon {
+          color: $--color-primary;
+        }
+      }
+    }
+  }
+
+  .attachment-table-container {
+    height: 100%;
+  }
+}

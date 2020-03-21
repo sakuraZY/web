@@ -1,0 +1,7 @@
+.geo-main{
+  background: url('../../../assets/bg.png');
+  background-size: contain;
+  &-container{
+    @extend container;
+  }
+}

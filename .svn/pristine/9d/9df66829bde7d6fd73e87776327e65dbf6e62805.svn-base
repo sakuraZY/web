@@ -1,0 +1,53 @@
+.form-message-box{
+  margin: 30px;
+  h3{
+    font-size: 22px;
+  }
+  .workcode{
+    p{
+      font-size: 18px;
+    }
+    .type{
+      display: block;
+      margin-bottom:10px;
+    }
+  }
+  .testinfo{
+    margin-top: 20px;
+    label {
+      font-size: 16px;
+    }
+    .red{
+      color: $--color-danger;
+    }
+  }
+  .info-body{
+    border: 1px solid $--border-color-grey-leftMenu;
+    border-bottom: none;
+  }
+  .infoselect{
+    margin-top: 20px;
+    label{ 
+      display: block;
+      margin-bottom: 10px;
+      span{
+        color: $--color-danger;
+      }
+    }
+  }
+}
+.htbh{
+  width: 50%;
+}
+.bot_btns {
+  width: 100%;
+  text-align: center;
+  margin-top: 30px;
+}
+.diabtns{
+  text-align: right;
+  margin-top: 20px;
+}
+.diatable{
+  border:1px solid $--border-color-grey-leftMenu;
+}

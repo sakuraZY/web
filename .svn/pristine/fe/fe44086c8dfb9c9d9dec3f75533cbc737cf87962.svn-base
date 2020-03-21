@@ -1,0 +1,192 @@
+<!--
+ * @Descripttion:  不动产数据校验
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-03-12 20:58:15
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-18 17:19:28
+ -->
+<template>
+  <div class="checkBDCDiv">
+    <h3 id="t1" ref="t1">不动产数据检验</h3>
+    <p>业务编号：<span>{{checkform.sqbh}}</span></p>
+    <el-form :model="checkform" ref="checkform" size="medium">
+      <div class="check-data-content">
+        <el-row :gutter="20">
+          <el-col :span='baseInfo.bh.spanwidth||8' v-if="baseInfo.bh">
+            <el-form-item :label="baseInfo.bh.name" prop="bjbh"
+              :rules="[{ required: true, message: `请输入${baseInfo.bh.name}`, trigger: 'blur' }]">
+              <el-input type="textarea" autosize v-model.trim="checkform.bjbh"
+                :placeholder="`请输入${baseInfo.bh.name}`">
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='baseInfo.cqz.spanwidth||8'>
+            <el-form-item :label=" baseInfo.cqz.name" prop="cqzh"
+              :rules="[{ required: true, message: `请输入${baseInfo.cqz.name}`, trigger: 'blur' }]">
+              <el-input v-model.trim="checkform.cqzh" :placeholder="`请输入${baseInfo.cqz.name}`">
+              </el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='8'>
+            <div class="button-group">
+              <el-button type="primary" size="medium" @click="handleCheck()">数据验证</el-button>
+              <import-excel :on-success="handleSuccess" :before-upload="beforeUpload"
+                :name="`导入清单`" />
+              <el-button @click="handleReset()" size="medium">重置</el-button>
+            </div>
+          </el-col>
+        </el-row>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import getKeyCode from '@/mixins/getKeyCode';
+import { getBDCXXByCQZH } from '@/apis/nres/zxcx';
+import ImportExcel from '@/components/realReg/cfdj/ImportExcel.vue';
+
+export default {
+  components: {
+    ImportExcel,
+  },
+  mixins: [getKeyCode],
+  data() {
+    return {
+      checkform: {
+        cqzh: '',
+        sqbh: '',
+        bh: '',
+      },
+      list: [],
+
+    };
+  },
+  props: {
+    cqzh: {
+      type: String,
+    },
+    bjbh: {
+      type: String,
+    },
+    info: Object,
+    baseInfo: Object,
+  },
+  methods: {
+    handleCheck() {
+      const { cqzh } = this.checkform;
+      this.list = cqzh.split(',');
+      this.handleQuery(this.list);
+    },
+    handleQuery(data) {
+      this.$refs.checkform.validate((valid) => {
+        if (valid) {
+          // 此方法需改
+          const t = this;
+          this.$parent.showLoading = true;
+          getBDCXXByCQZH({ data }).then(({
+            code,
+            msg,
+            resData = {},
+          } = {}) => {
+            if (code !== 0) {
+              throw new Error(msg || '获取信息失败');
+            } else {
+              const { bdcdylists } = resData;
+              if (bdcdylists) {
+                t.$parent.bdcdyList = bdcdylists;
+                t.$parent.show = true;
+                this.$parent.showLoading = false;
+              } else {
+                throw new Error(msg || '未找到相关登记信息，请重新输入');
+              }
+            }
+          }).catch((err) => {
+            t.clear();
+            this.$parent.showLoading = false;
+            t.$message({
+              type: 'error',
+              message: err.message || '获取信息失败',
+            });
+          });
+        }
+      });
+    },
+    handleReset(formName = 'checkform') {
+      this.clear();
+      if (this.$refs[formName] !== undefined) {
+        this.$refs[formName].resetFields();
+      }
+    },
+    beforeUpload(file) {
+      const limitSize = file.size / 1024 / 1024 < 4;
+      if (limitSize) {
+        return true;
+      }
+      this.$message({
+        message: '请不要导入大于4M的文件',
+        type: 'warning',
+      });
+      return false;
+    },
+    handleSuccess({ results, header }) {
+      if (header.length > 0) {
+        this.setData(results.map(p => p[header[0]]));
+      }
+    },
+    setData(data) {
+      if (this.baseInfo.ywlx === 'cfdj') {
+        this.list = Array.from(new Set([...data, ...this.list]));
+        this.checkform.cqzh = this.list.join(',');
+        this.handleQuery(this.list);
+      }
+    },
+    clear() {
+      this.$parent.info = '';
+      this.$parent.show = false;
+    },
+    changeCQZ() {
+      this.vueEvent.$on('changeCFCQZ', (data) => {
+        if (data === '') {
+          this.clear();
+        }
+        this.checkform.cqzh = data;
+      });
+    },
+  },
+  mounted() {
+    this.$nextTick(() => {
+      const { sqbh } = this.$route.params;
+      if (sqbh === null || sqbh === undefined) {
+        this.getKeyCode();
+      } else {
+        this.checkform.sqbh = sqbh;
+      }
+      this.changeCQZ();
+    });
+  },
+  beforeDestroy() {
+    this.vueEvent.$off('changeCFCQZ');
+  },
+  destroyed() {
+  },
+  watch: {
+    keyCode(nval) {
+      this.checkform.sqbh = nval;
+      this.disabled = false;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import "./index.scss";
+.checkBDCDiv {
+  .button-group {
+    padding-top: 36px;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+</style>

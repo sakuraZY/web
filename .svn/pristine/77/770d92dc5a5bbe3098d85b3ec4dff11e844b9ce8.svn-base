@@ -1,0 +1,87 @@
+<template>
+  <el-form
+    :model="orgAttrForm"
+    :rules="orgAttrRules"
+    size="medium"
+    label-width="80px"
+    ref="orgAttrForm"
+  >
+    <el-form-item label="名称" prop="orgName">
+      <el-input v-model="orgAttrForm.orgName" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="全名" prop="orgFullname">
+      <el-input v-model="orgAttrForm.orgFullname" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="状态" prop="orgState">
+      <el-select v-model="orgAttrForm.orgState" placeholder="请选择" style="width: 100%">
+        <el-option label="启用" value="启用"></el-option>
+        <el-option label="禁用" value="禁用"></el-option>
+      </el-select>
+    </el-form-item>
+    <el-form-item label="排序序号" prop="orgSortnum">
+      <el-input v-model.number="orgAttrForm.orgSortnum" autocomplete="off"></el-input>
+    </el-form-item>
+    <el-form-item label="描述" prop="orgNote">
+      <el-input v-model="orgAttrForm.orgNote" type="textarea" autocomplete="off"></el-input>
+    </el-form-item>
+  </el-form>
+</template>
+
+<script>
+import { addOrg } from '@/apis/auth/org';
+
+export default {
+  props: {
+    parentId: {
+      type: String,
+      default: 'root',
+    },
+  },
+  data() {
+    return {
+      orgAttrForm: {
+        orgName: '',
+        orgFullname: '',
+        orgState: '启用',
+        orgSortnum: '',
+        orgNote: '',
+      },
+      orgAttrRules: {
+        orgName: [
+          { required: true, message: '请输入名称', trigger: 'blur' },
+        ],
+      },
+    };
+  },
+  methods: {
+    cancelEdit() {
+      this.resetFields();
+      this.$emit('onCancel');
+    },
+    resetFields() {
+      this.$refs.orgAttrForm.resetFields();
+    },
+    handleSubmit() {
+      this.$refs.orgAttrForm.validate((valid) => {
+        if (!valid) {
+          return false;
+        }
+        return addOrg(this.parentId, this.orgAttrForm).then(({ code, msg }) => {
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: '添加组织成功',
+            });
+            this.$emit('onSubmited', this.orgAttrForm);
+            this.resetFields();
+          } else {
+            throw new Error(msg);
+          }
+        }).catch((err) => {
+          this.$message.error(err.message);
+        });
+      });
+    },
+  },
+};
+</script>

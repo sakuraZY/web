@@ -1,0 +1,14 @@
+.form-BDCXXByQLR {
+  @extend .form-building;
+  .el-row {
+    &.rowCondition {
+      .el-col:last-child {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+    }
+  }
+  tbody .t-blue {
+    color: $--color-primary;
+  }
+}

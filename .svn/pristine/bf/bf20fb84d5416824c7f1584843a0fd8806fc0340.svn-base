@@ -1,0 +1,206 @@
+<!--
+ * @Descripttion: 填写信息
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-03-11 20:44:41
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-21 18:21:08
+ -->
+<template>
+  <div class="cfmainInfo" v-loading="showLoading" element-loading-text="拼命加载中">
+    <check-data ref="checkBDC" :baseInfo='baseInfo' :isDisabled='isDisabled'>
+    </check-data>
+    <cf-list ref="bdcList" :tableInfo="bdcdyList" :isVisible='show' :isDisabled='isDisabled'>
+    </cf-list>
+    <cf-JBR ref="jbrxx" :isVisible='show' :isDisabled='isDisabled'></cf-JBR>
+    <cf-Info ref="cfxx" :isVisible='show' :isDisabled='isDisabled'></cf-Info>
+  </div>
+</template>
+
+<script>
+import '@/plugins/vueEvent';
+import { mapMutations, mapState } from 'vuex';
+import checkData from '@/components/realReg/cfdj/CheckData.vue';
+import cfList from '@/components/realReg/cfdj/CfList.vue';
+import cfInfo from '@/components/realReg/cfdj/CfInfo.vue';
+import cfJBR from '@/components/realReg/cfdj/JBRXX.vue';
+import { saveCFLHCF } from '@/apis/nres/zxsq';
+
+export default {
+  data() {
+    return {
+      show: false, // 是否显示详细信息
+      nodeName: '宜昌',
+      info: {
+        sqr: sessionStorage.userId,
+        lcmc: '查封登记（含轮候查封）',
+        djxl: '查封登记',
+        djdl: '800',
+        ajzt: '0',
+        ywlxbm: 'cfdj',
+      },
+      bdcdyList: [], // 查封清单信息
+      baseInfo: { // 数据校验
+        cqz: { name: '不动产证书', spanwidth: 16 },
+        ywlx: 'cfdj',
+      },
+      isDisabled: false, // 是否可编辑
+      typeName: '流程实例', // 附件类型
+      parentPnode: 'cfdj', // 附件节点类型
+      showLoading: false, // 是否显示正在加载中
+    };
+  },
+  components: {
+    checkData,
+    cfList,
+    cfJBR,
+    cfInfo,
+  },
+  computed: {
+    ...mapState('queryData', { flowdatas: state => state.FlOWDATA }),
+  },
+  methods: {
+    ...mapMutations('cfdj', {
+      setMessJson: 'SET_MESSAGEJSON',
+      setNodeName: 'SET_NODENAME',
+    }),
+    checkBeforeSubmit() {
+      return this.$refs.cfxx.checkForm();
+    },
+    // 获取业务信息
+    getFlowData() {
+      const { cqzh, sqbh } = this.$refs.checkBDC.checkform;
+      return Object.assign(this.info, {
+        sqbh,
+        xgzh: cqzh,
+        cfxx: { xgzh: cqzh, ...this.$refs.cfxx.cfxxForm },
+        qlrxx: {
+          jbr: this.handldQlrxx(Object.assign([], this.$refs.jbrxx.tableData)),
+        },
+        xgzxx: this.hanldXGZInfo(Object.assign([], this.bdcdyList)),
+      });
+    },
+    // 设置业务信息
+    setFlowData(data) {
+      const {
+        sqbh, viewType, flowdata: {
+          xgzh, cfxx, xgzxx, qlrxx: { jrb: jbr },
+        },
+      } = data;
+
+      Object.assign(this.$refs.checkBDC.checkform, { sqbh, cqzh: xgzh });
+      Object.assign(this.$refs.cfxx.cfxxForm, cfxx);
+      Object.assign(this.$refs.jbrxx.tableData, jbr);
+      Object.assign(this.bdcdyList, this.hanldBdcdyList(Object.assign([], xgzxx)));
+      this.setViewType(viewType);
+    },
+    // 设置查看类型
+    setViewType(type) {
+      if (type === 'update') {
+        this.show = true;
+      } else if (type === 'view') {
+        this.show = true;
+        this.isDisabled = true;
+      }
+    },
+    handldQlrxx(data) {
+      let jbr = [];
+      if (data) {
+        jbr = data.map((p, i) => ({ ...p, sxh: i + 1 }));
+        return jbr;
+      }
+      return jbr;
+    },
+    hanldXGZInfo(data) {
+      let xgz = [];
+      if (data) {
+        xgz = data.map(p => ({
+          sxh: p.xh,
+          xgzh: p.bdczh,
+          bdcdyh: p.bdcdyh,
+          qlrmc: p.qlrmc,
+          qlrzjh: p.qlrzjhm,
+          zl: p.zl,
+          xgzlx: '房屋不动产证',
+        }));
+        return xgz;
+      }
+      return xgz;
+    },
+    hanldBdcdyList(data) {
+      let xgz = [];
+      if (data) {
+        xgz = data.map(p => ({
+          xh: p.sxh,
+          bdczh: p.xgzh,
+          bdcdyh: p.bdcdyh,
+          qlrmc: p.qlrmc,
+          qlrzjhm: p.qlrzjh,
+          zl: p.zl,
+          xgzlx: p.xgzlx,
+        }));
+        return xgz;
+      }
+      return xgz;
+    },
+    // 保存业务数据
+    handlerStorage() {
+      this.getFlowData();
+      this.setMessJson(this.info);
+      saveCFLHCF({
+        data: this.info,
+        nodeName: this.nodeName,
+      }).then(({ code } = {}) => {
+        if (code === 0) {
+          this.$message.success('保存成功');
+        } else {
+          this.$message.error('保存失败！请稍后重试或联系管理员');
+        }
+      }, (err) => {
+        this.$message.error('保存失败！请稍后重试或联系管理员');
+        throw new Error(err);
+      });
+    },
+    // 下一步/提交
+    handlerUp() {
+      this.$refs.cfxx.checkForm().then((valid) => {
+        if (valid) {
+          this.handlerStorage();
+          this.$emit('funcNext', 1);
+        }
+      }).catch(() => {
+        this.$message({
+          type: 'warning',
+          message: '信息输入不完整',
+        });
+      });
+    },
+  },
+  mounted() {
+    this.$nextTick(() => {
+      const { sqbh } = this.$route.params;
+      if (sqbh && this.flowdatas) {
+        // console.log(sqbh, this.flowdatas);
+        const [data] = this.flowdatas.filter(p => p.sqbh === sqbh);
+        this.setFlowData(data);
+      }
+    });
+    this.setNodeName(this.nodeName);
+  },
+  watch: {
+    show(val, oldVal) {
+      if (val !== oldVal) {
+        this.$emit('SetDisabled', !val);
+      }
+    },
+  },
+
+};
+
+</script>
+<style lang='scss' scoped>
+@import "./index.scss";
+.cfmainInfo {
+  padding: 0 20px;
+}
+</style>

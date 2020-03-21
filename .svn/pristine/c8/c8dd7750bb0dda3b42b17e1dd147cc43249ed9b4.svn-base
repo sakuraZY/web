@@ -1,0 +1,30 @@
+.auth-connect{
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  box-sizing: border-box;
+  height: 100%;
+  &-operatebar{
+    display: flex;
+    .filter{
+      flex-grow: 1;
+    }
+    .btn-group{
+      margin-left: 10px;
+      .btn-item{
+        margin: 0 5px 10px;
+      }
+    }
+  }
+  &-content{
+    flex-grow: 1;
+    position: relative;
+    &-body{
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+  }
+}

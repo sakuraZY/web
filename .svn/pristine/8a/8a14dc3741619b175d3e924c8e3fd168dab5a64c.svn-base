@@ -1,0 +1,75 @@
+.dictionary-manage-container{
+  height: 100%;
+}
+.dictionary-tree-contaner{
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+}
+.dictionary-tree{
+  /deep/ {
+    .state{
+      &-open{
+        color: $--color-primary;
+      }
+      &-close{
+        color: $--color-text-secondary !important;
+      }
+    }
+    .custom-dicmain{
+      color: $--color-warning;
+    }
+    .tree_extra_btn{
+      color: $--color-text-primary;
+      margin-left: 5px;
+      .add{
+        &:hover{
+          color: $--color-primary;
+        }
+      }
+      .edit{
+        &:hover{
+          color: $--color-warning;
+        }
+      }
+      .delete{
+        &:hover{
+          color: $--color-danger;
+        }
+      }
+    }
+  }
+}
+.tips{
+  color: $--color-danger;
+}
+.dictionary-item-contaner{
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  .dictionary-cate{
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .content{
+    padding: 0 16px;
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .operate-bar{
+      display: flex;
+      justify-content: flex-end;
+      margin: 15px 0;
+      &-btns{
+        display: flex;
+        margin-left: 15px;
+      }
+    }
+    .dictionary-table{
+      flex-grow: 1;
+    }
+  }
+}

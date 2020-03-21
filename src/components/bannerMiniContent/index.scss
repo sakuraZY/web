@@ -1,0 +1,11 @@
+.banner-container{
+  height: 90px;
+  background-color: $--color-primary;
+  .banner-title{
+    line-height: 90px;
+    color: $--color-white;
+    font-size: 30px;
+    font-weight: bold;
+    @extend container;
+  }
+}

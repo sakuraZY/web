@@ -1,0 +1,29 @@
+/*
+ * @Author: huwei
+ *
+ * @Date: 2020-03-11 16:15:44
+ * @
+# Description: 暂存接口
+ */
+/* eslint-disable */
+import axios from '@/libs/axios';
+
+export const advanceSave = ({ data, nodeName }) => axios({
+  url: '/bdc/fwdt/zxsq/saveYGDJ',
+  method: 'post',
+  baseUrlType: 'nres',
+  params: {
+    nodeName
+  },
+  data,
+});
+
+export const YSZYSave = ({ data, nodeName }) => axios({
+    url: '/bdc/fwdt/zxsq/saveYSZY',
+    method: 'post',
+    baseUrlType: 'nres',
+    params: {
+      nodeName
+    },
+    data,
+  });

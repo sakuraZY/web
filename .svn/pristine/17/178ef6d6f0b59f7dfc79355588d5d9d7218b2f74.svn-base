@@ -1,0 +1,320 @@
+<template>
+  <div id="tags-view-container" class="tags-view-container">
+    <div class="tabs-control" @click="toggleSideBar" v-if="showSideMenu">
+      <icon-svg :iconClass="shrinkSideBarIcon" />
+    </div>
+    <div class="tabs-control" @click="handleScrollPrev">
+      <icon-svg iconClass="doubleLeft" />
+    </div>
+    <scroll-pane ref="scrollPane" class="tags-view-wrapper">
+      <router-link
+        v-for="tag in visitedViews"
+        ref="tag"
+        :key="tag.href"
+        :to="{ path: tag.href }"
+        tag="span"
+        class="tags-view-item tabs-control"
+        :class="{noPadding: tag.href === '/', active: isActive(tag) }"
+      >
+        <icon-svg v-if="tag.icon" :iconClass="tag.icon" />
+        {{ tag.title }}
+        <span
+          v-if="!isAffix(tag)"
+          class="el-icon-close"
+          @click.prevent.stop="closeSelectedTag(tag)"
+        />
+      </router-link>
+    </scroll-pane>
+    <div class="tabs-control" @click="handleScrollNext">
+      <icon-svg iconClass="doubleRight"  />
+    </div>
+    <el-dropdown class="tabs-control">
+      <div class="tabs-control">
+        <icon-svg iconClass="down"  />
+      </div>
+      <el-dropdown-menu slot="dropdown">
+        <el-dropdown-item @click.native="refreshSelectedTag">刷新</el-dropdown-item>
+        <el-dropdown-item
+          v-if="!isAffix(this.getCurrentTag())"
+          @click.native="closeSelectedTag()"
+        >关闭当前</el-dropdown-item>
+        <el-dropdown-item @click.native="closeOthersTags">关闭其他</el-dropdown-item>
+        <el-dropdown-item @click.native="closeAllTags">关闭所有</el-dropdown-item>
+      </el-dropdown-menu>
+    </el-dropdown>
+    <div class="tabs-control" v-if="showRightAside" @click="changePortalCollapseright">
+      <icon-svg :iconClass="shrinkAsideIcon"  />
+    </div>
+  </div>
+</template>
+
+<script>
+import { mapActions, mapState, mapGetters } from 'vuex';
+import { hashArray } from '@/libs/common';
+import ScrollPane from './scrollPane';
+
+export default {
+  components: { ScrollPane },
+  data() {
+    return {
+      visitedViews: [],
+    };
+  },
+  computed: {
+    ...mapState('app', [
+      'portal',
+      'sidebar',
+      'activeCenter',
+    ]),
+    ...mapState('tagsView', [
+      'affixTags',
+      'views',
+      'defaultCenterId',
+    ]),
+    ...mapGetters('app', [
+      'sideMenus',
+    ]),
+    centerId() {
+      return this.activeCenter && this.activeCenter.centerId
+        ? this.activeCenter.centerId
+        : this.defaultCenterId;
+    },
+    showRightAside() {
+      const { portalHideright } = this.portal || {};
+      if (portalHideright === '是') {
+        return false;
+      }
+      return true;
+    },
+    showSideMenu() {
+      if (this.activeCenter && this.activeCenter.configShowmenu === '是') {
+        return true;
+      }
+      return false;
+    },
+    shrinkAsideIcon() {
+      const { portalCollapseright } = this.portal || {};
+      return portalCollapseright === '是' ? 'shrink' : 'shrink-right';
+    },
+    shrinkSideBarIcon() {
+      const { opened } = this.sidebar;
+      return opened ? 'shrink' : 'shrink-right';
+    },
+  },
+  watch: {
+    $route(route) {
+      const { meta: { noCache } = {}, name } = route;
+      if (noCache) {
+        this.addNoCachedView(name);
+      } else {
+        this.delNoCachedView(name);
+      }
+      this.moveToCurrentTag();
+    },
+    views: {
+      handler(views) {
+        this.visitedViews = views[this.centerId].visitedViews;
+      },
+      deep: true,
+      immediate: true,
+    },
+  },
+  mounted() {
+    this.initTags();
+    this.addTags();
+  },
+  methods: {
+    ...mapActions('app', ['toggleSideBar', 'changePortalCollapseright']),
+    ...mapActions('tagsView', [
+      'updateVisitedView',
+      'addNoCachedView',
+      'delNoCachedView',
+      'delView',
+      'delOthersViews',
+      'delAllViews',
+      'addView',
+    ]),
+    handleScrollNext() {
+      this.$refs.scrollPane.scrollNext();
+    },
+    handleScrollPrev() {
+      this.$refs.scrollPane.scrollPrev();
+    },
+    isActive(tag) {
+      return tag.href === this.$route.path;
+    },
+    getCurrentTag() {
+      for (let i = 0; i < this.visitedViews.length; i += 1) {
+        const tag = this.visitedViews[i];
+        if (tag.href === this.$route.path) {
+          return tag;
+        }
+      }
+      return {};
+    },
+    isAffix(tag) {
+      return this.affixTags.map(item => item.href).includes(tag.href);
+    },
+    initTags() {
+      const { affixTags } = this;
+      affixTags.forEach((tag) => {
+        if (tag.href) {
+          this.addView({ tag, centerId: this.centerId });
+        }
+      });
+    },
+    addTags() {
+      let tag = null;
+      const { path, meta: { title, icon } } = this.$route;
+      const href = path.replace('/redirect', '');
+      const hash = hashArray(this.sideMenus);
+      const menuIds = Object.keys(hash);
+      for (let i = 0; i < menuIds.length; i += 1) {
+        const menu = hash[menuIds[i]];
+        if (href === menu.href) {
+          tag = menu;
+          break;
+        }
+      }
+      if (!tag) {
+        tag = {
+          title,
+          icon,
+          href,
+        };
+      }
+      this.addView({ tag, centerId: this.activeCenter.centerId });
+    },
+    moveToCurrentTag() {
+      const tags = this.$refs.tag;
+      this.$nextTick(() => {
+        if (!tags) {
+          return;
+        }
+        for (let i = 0; i < tags.length; i += 1) {
+          const tag = tags[i];
+          if (tag.to.path === this.$route.path) {
+            this.$refs.scrollPane.moveToTarget(tag);
+            break;
+          }
+        }
+      });
+    },
+    refreshSelectedTag() {
+      const { name, fullPath } = this.$route;
+      if (!name) {
+        return;
+      }
+      this.addNoCachedView(name).then(() => {
+        this.$nextTick(() => {
+          this.$router.push({
+            path: `/redirect${fullPath}`,
+          });
+        });
+      });
+    },
+    closeSelectedTag(tag) {
+      const currentTag = tag || this.getCurrentTag();
+      this.delView({ tag: currentTag, centerId: this.centerId }).then(({ visitedViews }) => {
+        if (this.isActive(currentTag)) {
+          this.toLastView(visitedViews);
+        }
+      });
+    },
+    closeOthersTags() {
+      const tag = this.getCurrentTag();
+      this.$router.push(tag);
+      this.delOthersViews({ tag, centerId: this.centerId }).then(() => {
+        this.moveToCurrentTag();
+      });
+    },
+    closeAllTags() {
+      const tag = this.getCurrentTag();
+      this.delAllViews(this.centerId).then(({ visitedViews }) => {
+        if (this.affixTags.some(affixTag => affixTag.href === tag.href)) {
+          return;
+        }
+        this.toLastView(visitedViews);
+      });
+    },
+    toLastView(visitedViews) {
+      const latestView = visitedViews.slice(-1)[0];
+      if (latestView) {
+        this.$router.push(latestView.href);
+      } else {
+        this.$router.push('/');
+      }
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.tags-view-container {
+  height: 56px;
+  width: 100%;
+  background: $--color-white;
+  border-bottom: $--border-base;
+  box-shadow: $--box-shadow-base;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  .tabs-control{
+    height: 55px;
+    min-width: 54px;
+    text-align: center;
+    line-height: 56px;
+    display: inline-block;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  .tabs-control + .tabs-control{
+    border-left: 1px solid $--border-color-lighter;
+  }
+  .tags-view-wrapper {
+    border-left: 1px solid $--border-color-lighter;
+    border-right: 1px solid $--border-color-lighter;
+    .tags-view-item {
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+      height: 55px;
+      line-height: 55px;
+      padding: 0 13px;
+      font-size: 16px;
+      user-select: none;
+      &.active {
+        background-color: $--background-color-base;
+        color: $--color-primary;
+      }
+      &.noPadding{
+        padding: 0;
+      }
+    }
+  }
+}
+</style>
+
+<style lang="scss">
+.tags-view-wrapper {
+  .tags-view-item {
+    .el-icon-close {
+      width: 16px;
+      height: 16px;
+      vertical-align: -1px;
+      border-radius: 50%;
+      text-align: center;
+      transition: all .3s cubic-bezier(.645, .045, .355, 1);
+      transform-origin: 100% 50%;
+      &:before {
+        transform: scale(.6);
+        display: inline-block;
+      }
+      &:hover {
+        background-color: $--color-primary;
+        color: $--color-white;
+      }
+    }
+  }
+}
+</style>

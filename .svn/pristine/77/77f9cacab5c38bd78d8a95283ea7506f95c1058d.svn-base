@@ -1,0 +1,28 @@
+.layout-main{
+  flex-grow: 1;
+  padding: 70px 0 50px;
+}
+.login-container{
+  display: flex;
+  align-items: center;
+  height: 100%;
+  .login-card{
+    width: 372px;
+  }
+  .login-bg{
+    flex-grow: 1;
+    height: 323px;
+    background: url('../../../assets/login-bg.png') no-repeat left center;
+    background-size: cover;
+  }
+}
+.main-card{
+  margin-bottom: 20px;
+}
+@media screen and (max-width: 768px) {
+  .login-container{
+    .login-card{
+      width: 100%;
+    }
+  }
+}

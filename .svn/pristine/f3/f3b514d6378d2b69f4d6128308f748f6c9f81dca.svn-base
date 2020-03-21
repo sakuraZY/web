@@ -1,0 +1,41 @@
+.form-building {
+  padding: 0 20px;
+  
+  /deep/.el-row{
+    margin-left: 0 !important;
+    margin-right:0 !important;
+    &.rowCondition{
+      .el-col:first-child{
+        padding-left: 0 !important;
+      }
+    }
+  }
+  .el-table th.gutter {
+    display: table-cell !important;
+  }
+  
+  .el-table colgroup.gutter {
+    display: table-cell !important;
+  }
+
+  /deep/.el-button{
+    min-width: 80px;
+  }
+  .el-bottom {
+    line-height: 107px;
+    position: relative;
+    bottom: -10px;
+    .el-checkbox {
+      margin-left: 8px;
+    }
+  }
+  
+  .el-table__body-wrapper,
+  .el-table__fixed-body-wrapper{
+    border-top: 1px solid #EBEEF5;
+  }
+  .el-pagination {
+    text-align: right;
+    padding:20px;
+  }
+}

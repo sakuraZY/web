@@ -1,0 +1,138 @@
+<template>
+    <mainBox ref="mbox">
+        <!-- 主要内容 -->
+       <template slot="main-content">
+          <div class="flex-content">
+            <div class="flex-main">
+              <div class="stepwrap">
+                <step :stepNum="stepNum"></step>
+              </div>
+               <div v-if="stepNum===2" key="2">
+                 <query-upload  ref="children2" :infoJson="infoJson" @func="handleNext">
+                 </query-upload>
+              </div>
+                <el-row  v-if="arrflowstep.includes(1)" v-show="stepNum === 1" key="1">
+                    <el-col :span="21">
+                      <yszydy ref="children" @btnDisabled='btnDisabled'
+                      @funcNext="handleNext"></yszydy>
+                    </el-col>
+                    <el-col :span="3">
+                      <scorllTabs :list = "menulist" :indexs="indexs"
+                       v-if="stepNum===1"></scorllTabs>
+                    </el-col>
+                </el-row>
+               <query-success v-if="arrflowstep.includes(3)" v-show="stepNum === 3"
+             ref="children" :infoJson="infoJson" key="3"
+             ></query-success>
+            </div>
+          </div>
+        </template>
+      <!-- 底部暂存和提交栏 -->
+    <template slot="foot-banner">
+      <div class="footflex" v-if="stepNum<3">
+        <div class="foot-btn">
+          <ul class="btnList">
+            <li v-if="arrflowstep.includes(2)" v-show="stepNum === 2">
+              <el-button type="primary" @click.stop="handlerPrev" plain>上一步</el-button>
+            </li>
+            <li v-if="arrflowstep.includes(1)" v-show="stepNum === 1">
+              <el-button type="primary" :disabled="isDisabled"
+              @click.stop="handlerStorage('children')">暂存</el-button>
+            </li>
+            <li v-if="arrflowstep.includes(2)" v-show="stepNum === 2">
+              <el-button type="primary" @click.stop="handlerUp('children2')">提交</el-button>
+            </li>
+            <li v-if="arrflowstep.includes(1)" v-show="stepNum === 1">
+              <el-button type="primary" :disabled="isDisabled"
+              @click.stop="handlerUp('children')">下一步</el-button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </template>
+    </mainBox>
+</template>
+
+<script>
+import mainBox from '@/layouts/Impersonal/mainBox';
+import step from '@/components/step';
+import scorllTabs from '@/components/scrollTabs';
+import yszydy from '@/components/realReg/yszydy';
+import { mapState, mapMutations } from 'vuex';
+import QueryUpload from '@/components/queryUpload';
+import QuerySuccess from '@/components/querySuccess';
+import { submitUrlYSZYDY } from '@/apis/nres/ygdy';
+
+export default {
+  data() {
+    return {
+      menulist: ['不动产数据检验'],
+      stepNum: 1,
+      indexs: 0,
+      infoJson: {
+        messJson: ['yszydy', 'MESSAGEJSON'],
+        nodeName: ['yszydy', 'NODENAME'],
+        submitUrl: submitUrlYSZYDY,
+        parentPnode: 'yszydy',
+      },
+      isDisabled: true,
+    };
+  },
+  components: {
+    mainBox,
+    step,
+    scorllTabs,
+    yszydy,
+    QueryUpload,
+    QuerySuccess,
+  },
+  computed: {
+    ...mapState('yszydy', { arrflowstep: state => state.ARRFLOWSTEP }),
+  },
+  methods: {
+    ...mapMutations('yszydy', {
+      GO_NEXT: 'GO_NEXT',
+      SET_ARRFLOWSTEP: 'SET_ARRFLOWSTEP',
+      ADD_ARRFLOWSTEP: 'ADD_ARRFLOWSTEP',
+      RESET_ARRFLOWSTEP: 'RESET_ARRFLOWSTEP',
+      SET_SCROLLTOBOTTOM: 'SET_SCROLLTOBOTTOM',
+      REST_STATE: 'REST_STATE',
+    }),
+    handleNext() {
+      this.stepNum += 1;
+      this.ADD_ARRFLOWSTEP(this.stepNum);
+      this.GO_NEXT(this.stepNum);
+    },
+    handlerUp(cname) { // 触发子组件里的上传事件
+      this.$refs[cname].handlerUp();
+    },
+    handlerStorage(cname) { // 触发子组件里的暂存事件
+      this.$refs[cname].handlerStorage();
+    },
+    handlerPrev() {
+      this.stepNum -= 1;
+    },
+    btnDisabled(bdisabled) {
+      this.isDisabled = bdisabled;
+      if (bdisabled) {
+        this.menulist = ['不动产数据检验'];
+      } else {
+        this.menulist = ['不动产数据检验', '权利人信息', '抵押权人信息', '义务人信息', '不动产权信息', '第三方债务人信息', '抵押信息'];
+      }
+    },
+  },
+  mounted() {
+    this.scrollDom = this.$refs.mbox.$refs.maincontent;
+  },
+  destroyed() {
+    this.RESET_ARRFLOWSTEP([1]);
+  },
+};
+</script>
+<style lang="scss" scoped>
+  .stepwrap{
+    width: 80%;
+    margin: 30px auto;
+  }
+
+</style>

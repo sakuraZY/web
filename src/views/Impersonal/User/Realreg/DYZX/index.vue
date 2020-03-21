@@ -1,0 +1,155 @@
+<!--
+ * @Description: 抵押注销
+ * @Author: wangjiayu
+ * @Date: 2020-03-07 15:06:35
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-19 11:41:40
+ -->
+
+<template>
+  <main-box ref="mbox">
+    <!-- 主要内容 -->
+    <template slot="main-content">
+      <div class="flex-content">
+        <!-- 步骤条 -->
+        <div class="step-wrap">
+          <step :stepNum="stepNum"></step>
+        </div>
+        <!-- 附件上传 -->
+        <div v-if="stepNum === 2" key="2">
+          <query-upload
+            ref="children2"
+            :infoJson="infoJson"
+            @func="handleNext"
+          ></query-upload>
+        </div>
+        <!-- 抵押注销详情页面 -->
+        <el-row v-if="arrFlowStep.includes(1)" v-show="stepNum === 1" key="1">
+          <el-col :span="21">
+            <dyzx
+              ref="children1"
+              @setDisabled="setDisabled"
+              @funcNext="handleNext"
+            ></dyzx>
+          </el-col>
+          <el-col :span="3">
+            <scorllTabs :list = "menulist" :indexs="indexs" v-if="stepNum===1"></scorllTabs>
+          </el-col>
+        </el-row>
+        <!-- 提交完成 -->
+        <query-success
+          v-if="arrFlowStep.includes(3)"
+          v-show="stepNum === 3"
+          ref="children3"
+          :infoJson="infoJson"
+          key="3"
+        ></query-success>
+      </div>
+    </template>
+    <!-- 底部暂存和提交栏 -->
+    <template slot="foot-banner">
+      <div class="footflex" v-if="stepNum<3">
+        <div class="foot-btn">
+          <ul class="btnList">
+            <li v-if="arrFlowStep.includes(2)" v-show="stepNum === 2">
+              <el-button type="primary" @click.stop="handlePrev" plain>上一步</el-button>
+            </li>
+            <li v-if="arrFlowStep.includes(1)" v-show="stepNum === 1">
+              <el-button class="btnBorder" :disabled="isDisabled"
+              @click.stop="handlerStorage('children1')">暂存</el-button>
+            </li>
+            <li v-if="arrFlowStep.includes(2)" v-show="stepNum === 2">
+              <el-button type="primary" @click.stop="handlerUp('children2')">提交</el-button>
+            </li>
+            <li v-if="arrFlowStep.includes(1)" v-show="stepNum === 1">
+              <el-button type="primary" :disabled="isDisabled"
+              @click.stop="handlerUp('children1')">下一步</el-button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </template>
+  </main-box>
+</template>
+
+<script>
+import mainBox from '@/layouts/Impersonal/mainBox';
+import step from '@/components/step';
+import dyzx from '@/components/realReg/dyzx';
+import scorllTabs from '@/components/scrollTabs';
+import QueryUpload from '@/components/queryUpload';
+import QuerySuccess from '@/components/querySuccess';
+import { mapState, mapMutations } from 'vuex';
+import { submitUrlDYZX } from '@/apis/nres/zxtj';
+
+export default {
+  name: 'RealRegdyzx',
+  components: {
+    mainBox,
+    step,
+    dyzx,
+    scorllTabs,
+    QueryUpload,
+    QuerySuccess,
+  },
+  data() {
+    return {
+      stepNum: 1, // 当前步骤顺序
+      menulist: ['不动产数据检验'], // 右侧导航栏节点数据
+      indexs: 0, // 右侧导航栏当前激活节点
+      isDisabled: true, // 是否允许保存信息
+      infoJson: { // 业务流程相关数据
+        messJson: ['dyzx', 'MESSAGEJSON'],
+        nodeName: ['dyzx', 'NODENAME'],
+        submitUrl: submitUrlDYZX,
+        parentPnode: 'dyzx',
+      },
+    };
+  },
+  computed: {
+    // 当前业务渲染过的步骤
+    ...mapState('dyzx', { arrFlowStep: state => state.ARRFLOWSTEP }),
+  },
+  methods: {
+    // 设置状态方法
+    ...mapMutations('dyzx', {
+      GO_NEXT: 'GO_NEXT',
+      SET_ARRFLOWSTEP: 'SET_ARRFLOWSTEP',
+      ADD_ARRFLOWSTEP: 'ADD_ARRFLOWSTEP',
+      RESET_ARRFLOWSTEP: 'RESET_ARRFLOWSTEP',
+      SET_SCROLLTOBOTTOM: 'SET_SCROLLTOBOTTOM',
+    }),
+    // 设置按钮禁用状态
+    setDisabled(isDisabled) {
+      this.isDisabled = isDisabled;
+      if (isDisabled) {
+        this.menulist = ['不动产数据检验'];
+      } else {
+        this.menulist = ['不动产数据检验', '不动产权信息', '抵押信息'];
+      }
+    },
+    // 上一页
+    handlePrev() {
+      this.stepNum -= 1;
+    },
+    // 下一页/提交
+    handlerUp(componentName) {
+      this.$refs[componentName].handlerUp();
+    },
+    // 暂存
+    handlerStorage(componentName) {
+      this.$refs[componentName].handlerStorage();
+    },
+    // 跳转下一页
+    handleNext() {
+      this.stepNum += 1;
+      this.ADD_ARRFLOWSTEP(this.stepNum);
+      this.GO_NEXT(this.stepNum);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

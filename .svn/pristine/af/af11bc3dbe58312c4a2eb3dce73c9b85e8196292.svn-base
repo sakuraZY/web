@@ -1,0 +1,47 @@
+.geo-login-card{
+  background: $--color-white;
+  padding: 20px 36px 36px 36px;
+  &-tab{
+    &-pane{
+      margin-top: 10px;
+    }
+  }
+  .btn-group{
+    .btn-block{
+      width: 100%;
+    }
+    .register-content{
+      position: relative;
+      border-top: $--border-dashed;
+      margin-top: 40px;
+      text-align: center;
+      &-text{
+        position: relative;
+        top: -10px;
+        background-color: $--color-white;
+        padding: 0 20px;
+      }
+      &-link{
+        text-decoration: none;
+        color: $--color-primary;
+      }
+    }
+  }
+  .forget-password{
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 25px;
+    &-text{
+      cursor: pointer;
+      &:hover{
+        color: $--color-primary;
+      }
+    }
+  }
+  &-title{
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    padding: 30px 0 40px;
+  }
+}

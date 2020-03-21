@@ -1,0 +1,32 @@
+/*
+ * @Descripttion:  暂存件中去提交配置
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-03-10 17:30:14
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-10 17:39:29
+ */
+
+// 对应的是暂存件去提交的配置。
+const submitSetting = [
+  {
+    ywlxbm: 'scdj', path: '/u/scdj', step: 2,
+  }, {
+    ywlxbm: 'ygdj', path: '/u/ygdj', step: 1,
+  }, {
+    ywlxbm: 'dydj', path: '/u/dydj', step: 1,
+  }, {
+    ywlxbm: 'ygjygdy', path: '/u/ygygdy', step: 1,
+  }, {
+    ywlxbm: 'ygdy', path: '/u/ygdy', step: 1,
+  }, {
+    ywlxbm: 'yszydy', path: '/u/yszydy', step: 1,
+  }, {
+    ywlxbm: 'dyzx', path: '/u/dyzx', step: 1,
+  }, {
+    ywlxbm: 'cfdj', path: '/u/cfdj', step: 1,
+  }];
+
+export default {
+  submitSetting,
+};

@@ -1,0 +1,423 @@
+<template>
+  <div class="role-manage-container">
+    <auth-layout
+      paneLeftTitle="角色结构"
+      :btnList="paneLeftBtn"
+      :listData="nodes"
+      @handlePaneLeftBtn="handlePaneLeftBtn"
+    >
+      <template slot="pane-left-body">
+        <div class="role-tree-contaner">
+          <vue-giant-tree
+            :setting="setting"
+            :nodes="nodes"
+            class="role-tree"
+            @onClick="onHandleNode"
+            @onCreated="handleCreated"
+          ></vue-giant-tree>
+        </div>
+      </template>
+      <template slot="paneR">
+        <user-connect
+          :roleId="currentNodeId"
+          :isRole="isRole"
+          :roleState="roleState"
+        ></user-connect>
+      </template>
+    </auth-layout>
+    <el-dialog
+      :title="title"
+      :visible.sync="roleAttrVisible"
+      append-to-body
+      @close="closeRoleAttrDialog"
+    >
+      <el-form
+        :model="roleAttrForm"
+        :rules="roleAttrRules"
+        size="medium"
+        label-width="80px"
+        ref="roleAttrForm"
+      >
+        <el-form-item label="角色名称" prop="roleName">
+          <el-input v-model="roleAttrForm.roleName" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="角色全名" prop="roleFullname">
+          <el-input v-model="roleAttrForm.roleFullname" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="角色类型" prop="roleType">
+          <el-input
+            v-model="roleAttrForm.roleType"
+            autocomplete="off"
+            :disabled="editRoleType"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="状态" prop="roleState">
+          <el-select v-model="roleAttrForm.roleState" placeholder="请选择" style="width: 100%">
+            <el-option label="启用" value="启用"></el-option>
+            <el-option label="禁用" value="禁用"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="排序序号" prop="roleSortnum">
+          <el-input
+            v-model.number="roleAttrForm.roleSortnum"
+            autocomplete="off"
+            type="number"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="区域权限" prop="rolePopedom">
+          <el-input v-model="roleAttrForm.rolePopedom" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="描述" prop="roleNote">
+          <el-input v-model="roleAttrForm.roleNote" type="textarea" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <template v-slot:footer>
+        <el-button
+          size="medium"
+          type="primary"
+          @click="handleSubmit"
+        >确定</el-button>
+        <el-button size="medium" plain @click="roleAttrVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog
+      title="角色定位"
+      :visible.sync="roleLocationVisible"
+      append-to-body
+      @close="closeRoleLocationDialog"
+    >
+      <el-form
+        :model="roleLocationForm"
+        size="medium"
+        label-width="90px"
+        ref="roleLocationForm"
+      >
+        <el-form-item label="按角色查找" prop="roleName">
+          <el-input
+            v-model="roleLocationForm.roleName"
+            autocomplete="off"
+            placeholder="模糊查询"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="按职员查找" prop="userName">
+          <el-input
+            v-model="roleLocationForm.userName"
+            autocomplete="off"
+            placeholder="精确查询"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template v-slot:footer>
+        <el-button
+          size="medium"
+          type="primary"
+          @click="submitRoleLocation"
+        >确定</el-button>
+        <el-button size="medium" plain @click="roleLocationVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import AuthLayout from '@/layouts/Impersonal/auth';
+import {
+  getRole, deleteRole, addRole, getRoleById, updateRole, getRoleByUsername,
+} from '@/apis/auth/role';
+import VueGiantTree from '@/components/vueGiantTree';
+import UserConnect from './UserConnect';
+
+export default {
+  components: {
+    AuthLayout,
+    UserConnect,
+    VueGiantTree,
+  },
+  data() {
+    return {
+      data: [],
+      roleTree: null,
+      currentNodeId: '',
+      currentNode: {},
+      roleAttrVisible: false,
+      showFilter: false,
+      filter: '',
+      roleLocationVisible: false,
+      operateType: '',
+      editRoleType: false,
+      isRole: false,
+      roleState: false,
+      operateTypeMap: {
+        add: '新增',
+        update: '修改',
+      },
+      paneLeftBtn: [
+        { name: '定位', icon: 'location' },
+        { name: '添加', icon: 'add', hide: false },
+        { name: '编辑', icon: 'edit', hide: true },
+        { name: '删除', icon: 'delete', hide: true },
+      ],
+      roleAttrForm: {
+        roleName: '',
+        roleFullname: '',
+        roleType: '',
+        roleState: '启用',
+        roleSortnum: '',
+        rolePopedom: '',
+        roleNote: '',
+      },
+      roleLocationForm: {
+        roleName: '',
+        userName: '',
+      },
+      roleAttrRules: {
+        roleName: [
+          { required: true, message: '请输入角色名称', trigger: 'blur' },
+        ],
+        roleType: [
+          { required: true, message: '请输入角色类型', trigger: 'blur' },
+        ],
+        roleSortnum: [
+          { required: true, message: '请输入排序序号', trigger: 'blur' },
+        ],
+      },
+      setting: {
+        data: {
+          simpleData: {
+            enable: true,
+            pIdKey: 'pId',
+          },
+        },
+      },
+      nodes: [],
+    };
+  },
+  created() {
+    this.getRoles();
+  },
+  computed: {
+    title() {
+      return `${this.operateTypeMap[this.operateType]}角色`;
+    },
+  },
+  methods: {
+    resetFields(ref) {
+      this.$refs[ref].resetFields();
+    },
+    handleCreated(roleTree) {
+      // onCreated 中操作展开第一个节点
+      roleTree.expandNode(roleTree.getNodes()[0], true);
+      this.roleTree = roleTree;
+    },
+    handleSubmit() {
+      this.$refs.roleAttrForm.validate((valid) => {
+        if (!valid) {
+          return false;
+        }
+        const operatePromise = {
+          add: addRole,
+          update: updateRole,
+        };
+        return operatePromise[this.operateType]({
+          ...this.roleAttrForm,
+          roleId: this.operateType !== 'add' ? this.currentNodeId : undefined,
+        }).then(({ code, msg }) => {
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: msg || `${this.operateTypeMap[this.operateType]}成功`,
+            });
+            this.closeRoleAttrDialog();
+            this.getRoles();
+          } else {
+            throw new Error(msg || `${this.operateTypeMap[this.operateType]}失败`);
+          }
+        }).catch((err) => {
+          this.$message.error(err.message);
+        });
+      });
+    },
+    submitRoleLocation() {
+      const { roleName, userName } = this.roleLocationForm;
+      if (!roleName && !userName) {
+        this.$message({
+          type: 'warning',
+          message: '请输入查询条件',
+        });
+        return;
+      }
+      let hasTemp = false; // 是否有查询结果
+      if (roleName) {
+        const nodes = this.roleTree.getNodesByParamFuzzy('name', roleName, null);
+        if (nodes.length > 0) {
+          nodes.forEach((item) => {
+            this.roleTree.selectNode(item, true);
+          });
+          hasTemp = true;
+        }
+        if (!hasTemp) {
+          this.$message({
+            type: 'warning',
+            message: '无查询结果',
+          });
+        } else {
+          this.closeRoleLocationDialog();
+        }
+      }
+      if (userName) {
+        getRoleByUsername(userName).then((res) => {
+          if (res.code === 0) {
+            const { roleIds } = res.resData;
+            let nodes = [];
+            if (roleIds && roleIds.length > 0) {
+              roleIds.forEach((item) => {
+                nodes = [nodes, ...this.roleTree.getNodesByParam('id', item, null)];
+              });
+            }
+            if (nodes.length > 0) {
+              nodes.forEach((item) => {
+                this.roleTree.selectNode(item, true); // 会让节点自动滚到到可视区域内，设置节点可以多选
+              });
+              this.closeRoleLocationDialog();
+            } else {
+              throw new Error('无查询结果, 请确认职员名称输入是否正确');
+            }
+          } else {
+            throw new Error(res.msg);
+          }
+        });
+      }
+    },
+    handlePaneLeftBtn(item) {
+      if (item.hide) {
+        return false;
+      }
+      switch (item.name) {
+        case '定位': {
+          this.roleLocationVisible = true;
+          break;
+        }
+        case '编辑': {
+          this.roleAttrVisible = true;
+          this.operateType = 'update';
+          this.editRoleType = true;
+          this.getRoleInfo();
+          break;
+        }
+        case '添加': {
+          this.roleAttrVisible = true;
+          this.operateType = 'add';
+          this.editRoleType = false;
+          const { name, id } = this.currentNode;
+          this.roleAttrForm.roleType = id === 'root' ? '' : name;
+          break;
+        }
+        case '删除': {
+          this.deleteRole();
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      return true;
+    },
+    getRoleInfo() {
+      getRoleById(this.currentNodeId).then(({
+        code,
+        msg,
+        resData: {
+          roleInfo,
+        } = {},
+      } = {}) => {
+        if (code === 0) {
+          this.roleAttrForm = { ...this.roleAttrForm, ...roleInfo };
+        } else {
+          throw new Error(msg || '获取角色信息失败');
+        }
+      });
+    },
+    deleteRole() {
+      if (!this.currentNodeId) {
+        return;
+      }
+      this.$confirm('确定删除吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        deleteRole(this.currentNodeId).then(({ code, msg }) => {
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: '删除成功',
+            });
+            this.roleTree.removeNode(this.currentNode);
+          } else {
+            throw new Error(msg || '删除失败');
+          }
+        });
+      });
+    },
+    closeRoleAttrDialog() {
+      this.roleAttrVisible = false;
+      this.resetFields('roleAttrForm');
+    },
+    closeRoleLocationDialog() {
+      this.roleLocationVisible = false;
+      this.resetFields('roleLocationForm');
+    },
+    onHandleNode(evt, treeId, node) {
+      const { type, id, state } = node;
+      if (id === this.currentNodeId) {
+        return;
+      }
+      this.currentNode = node;
+      this.currentNodeId = id;
+      this.roleState = state === '启用';
+      let isRole = false;
+      switch (type) {
+        case '角色': {
+          this.paneLeftBtn[1].hide = true;
+          this.paneLeftBtn[2].hide = false;
+          this.paneLeftBtn[3].hide = false;
+          isRole = true;
+          break;
+        }
+        case '角色类型': {
+          this.paneLeftBtn[1].hide = false;
+          this.paneLeftBtn[2].hide = true;
+          this.paneLeftBtn[3].hide = false;
+          break;
+        }
+        case 'root':
+        default: {
+          this.paneLeftBtn[1].hide = false;
+          this.paneLeftBtn[2].hide = true;
+          this.paneLeftBtn[3].hide = true;
+          break;
+        }
+      }
+      this.isRole = isRole;
+    },
+    getRoles() {
+      getRole().then(({ code, resData: { roleTree = [] } = {} }) => {
+        if (code === 0) {
+          this.nodes = roleTree.map((item) => {
+            item.icon = item.type === '角色' ? 'user2' : 'groups';
+            item.iconSkin = item.state === '禁用' ? 'state-close' : 'state-open';
+            if (item.sortnum) {
+              item.name = `${item.sortnum} - ${item.name}`;
+            }
+            return item;
+          });
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

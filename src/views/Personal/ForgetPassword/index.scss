@@ -1,0 +1,42 @@
+/deep/.geo-layout-base-main{
+  background:$--background-color-base; 
+}
+.forgetPassword {
+  .tit {
+    width: 100%;
+    margin: 0 auto;
+    line-height: 90px;
+    background: linear-gradient(
+      0deg,
+      rgba(54, 121, 228, 1) 0%,
+      rgba(26, 134, 255, 1) 100%
+    );
+    .tit-wrap {
+      max-width: 1210px;
+      margin: 0 auto;
+      h3 {
+        color: $--color-white;
+        font-size: 27px;
+        margin: 0 0 0 72px;
+      }
+    }
+  }
+  .main{
+    max-width: 1210px;
+    margin: 20px auto;
+    background: $--color-white;
+    border: 1px solid #EAE8EB;
+    .main-tit{
+      width: 90%;
+      height: 40px;
+      position: relative;
+      margin: 20px auto 0;
+      border-bottom: 1px solid $--border-color-base;
+      h3{ 
+        padding-bottom: 12px;
+        font-size: 18px;
+        margin: 0; 
+      }
+    }
+  }
+}

@@ -1,0 +1,230 @@
+<template>
+  <el-dialog
+      :title="title"
+      :visible.sync="visible"
+      :before-close="modalClose"
+      :modal-append-to-body='false'
+      :close-on-click-modal ='false'
+      :close-on-press-escape='false'
+      :destroy-on-close='true'
+      width='55%'>
+     <el-form :model="info" ref="infoForm" :rules="infoRules" size="small" label-width="130px">
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="姓名:" prop="name">
+              <el-input v-model.trim="info.name"
+              :disabled="inputDisabled"
+              placeholder="请输入姓名"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="权利人性质:" prop="qlrxz">
+               <el-select v-model.trim="info.qlrxz" style="width: 100%;">
+                 <el-option
+                    v-for="item in qlrxzlist"
+                    :key="item.name"
+                    :label="item.name"
+                    :value="item.itemValue">
+                  </el-option>
+                </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="证件类型:" prop="zjlbmc">
+                <el-select v-model="info.zjlbmc"  style="width:100%"
+                 @change="getZJLBMC" ref='newText' >
+                  <el-option
+                    v-for="item in zjlxlist"
+                    :key="item.name"
+                    :label="item.name"
+                    :value="item.itemValue" >
+                  </el-option>
+                </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="证件号码:" prop="zjhm">
+              <el-input v-model.trim="info.zjhm" placeholder="请输入证件号码"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="联系电话:" prop="lxdh">
+              <el-input v-model.trim="info.lxdh" placeholder="请输入联系电话"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="法人代表名称:" prop="frdbmc">
+              <el-input v-model.trim="info.frdbmc" placeholder="请输入法人代表名称"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="法人代表证件类型:" prop="frzjlx">
+               <el-select v-model="info.frzjlx" placeholder="请选择"
+               style="width:100%">
+                    <el-option
+                      v-for="item in zjlxlist"
+                      :key="item.name"
+                      :label="item.name"
+                      :value="item.itemValue">
+                    </el-option>
+                  </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="法人代表证件号码:" prop="fqzjhm">
+              <el-input v-model.trim="info.fqzjhm" placeholder="请输入证件号码"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item
+              label="法人代表联系电话:"
+              prop="fqlxdh"
+            >
+              <el-input v-model.trim="info.fqlxdh" placeholder="请输入联系电话"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="readCard" size="medium">读 证</el-button>
+        <el-button type="primary" @click="submitInfoForm" size="medium">确 定</el-button>
+      </div>
+    </el-dialog>
+  </template>
+
+<script>
+
+import { validCardId, validPhone } from '@/libs/validate';
+
+export default {
+  data() {
+    const regId = (rule, value, callback) => {
+      if (this.info.zjlb === '1' || this.info.zjlbmc === '身份证') {
+        if (validCardId(value)) {
+          callback();
+        } else {
+          callback(new Error('请填写正确的身份证号'));
+        }
+      } else if (value === '') {
+        callback(new Error('请填写证件号码'));
+      } else {
+        callback();
+      }
+    };
+    const regPhone = (rule, value, callback) => {
+      if (validPhone(value)) {
+        callback();
+      } else {
+        callback(new Error('请填写正确的手机号码'));
+      }
+    };
+    return {
+      info: {
+        qlrxz: '1',
+        zjlbmc: '身份证',
+        zjlb: '1',
+        zjhm: '',
+        lxdz: '',
+        lxdh: '',
+        frdbmc: '',
+        frzjlx: '',
+        fqzjhm: '',
+        fqlxdh: '',
+        name: '',
+      },
+      // 验证规则
+      infoRules: {
+        name: [
+          { required: true, message: '姓名不能为空' },
+        ],
+        lxdh: [{
+          required: true,
+          validator: regPhone,
+          trigger: 'blur',
+        }],
+        zjhm: [{ required: true, validator: regId }],
+      },
+    };
+  },
+  props: {
+    visible: {
+      type: Boolean,
+      default: false,
+    },
+    inputDisabled: {
+      type: Boolean,
+      default: false,
+    },
+    title: {
+      type: String,
+      default: '添加信息',
+    },
+    zjlxlist: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+    qlrxzlist: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+  },
+  methods: {
+    getZJLBMC(id) {
+      const obj = this.zjlxlist.find(item => item.itemValue === id);
+      this.info.zjlbmc = obj.name;
+      this.info.zjlb = id;
+    },
+    submitInfoForm() {
+      this.$refs.infoForm.validate((validate) => {
+        if (!validate) {
+          return;
+        }
+        this.$emit('getInfoFn', { ...this.info });
+        this.closeInfoDialog();
+      });
+    },
+    readCard() {
+      // 读证操作
+    },
+    closeInfoDialog() {
+      // this.resetFields('zwrForm');
+      this.info = {
+        qlrxz: '1',
+        zjlbmc: '身份证',
+        zjlb: '1',
+        zjhm: '',
+        lxdz: '',
+        lxdh: '',
+        frdbmc: '',
+        frzjlx: '',
+        fqzjhm: '',
+        fqlxdh: '',
+        name: '',
+      };
+      this.$parent.dialogFormVisible = false;
+    },
+    modalClose() {
+      this.$emit('update:visible', false); // 直接修改父组件的属性
+    },
+  },
+};
+</script>
+<style scoped>
+  .dialog-footer{
+    display: inline-block;
+    width: 100%;
+    text-align: right;
+  }
+</style>

@@ -1,0 +1,143 @@
+<!--
+ * @Descripttion:  查封清单
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-03-13 16:13:18
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-19 11:52:42
+ -->
+<!-- 组件说明 -->
+<template>
+  <div class="cf-info-container" v-show="isVisible">
+    <div class="table-title">
+      <h3 id="t2" ref="t2">查封清单</h3>
+      <div class="menu-bar">
+        <el-button class="btnBorder" size="medium" @click="deleteDY">批量删除</el-button>
+      </div>
+    </div>
+    <div class="table-content">
+      <el-form>
+        <el-row :gutter="20">
+          <el-table :data="tableData" highlight-current-row tooltip-effect="dark" border stripe
+            v-loading="showLoading" element-loading-text="拼命加载中" :cell-style="{padding:'8px 3px'}"
+            :header-cell-style="{padding:'8px 3px',background:'#F2F6FC'}" width="80%"
+            @selection-change="onSelectionChanged">
+            <el-table-column type="selection" width="48"></el-table-column>
+            <el-table-column type="index" label="序号" width="60" :index="indexMethod" align="center">
+            </el-table-column>
+            <el-table-column v-for="(item,index) in columnNames" :key="index+item.name"
+              :class-name="item.class" :width="item.width" :minWidth="item.minWidth"
+              :prop="item.prop" :label="item.name" align="center" resizable
+              :show-overflow-tooltip="item.tooltip" :sortable="item.sortable">
+            </el-table-column>
+            <el-table-column label="操作" width="60" fixed="right" align="center">
+              <template v-slot="scope">
+                <el-button type="text" size="medium"
+                  @click.native.prevent="deleteRow(scope.$index, tableData)">
+                  删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-row>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    tableInfo: Array,
+    isVisible: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      columnNames: [
+        {
+          name: '不动产证号', prop: 'bdczh', sortable: false, minWidth: 200, class: 't-blue',
+        },
+        {
+          name: '不动产单元号', prop: 'bdcdyh', sortable: false, minWidth: 200,
+        },
+        {
+          name: '坐落', prop: 'zl', sortable: false, minWidth: 200,
+        },
+        {
+          name: '权利人名称', prop: 'qlrmc', sortable: false, minWidth: 200,
+        },
+        {
+          name: '权利人证件号', prop: 'qlrzjhm', sortable: false, minWidth: 200,
+        },
+      ],
+      tableData: [],
+      showLoading: false,
+    };
+  },
+  computed: {
+
+  },
+  methods: {
+    // 选项改变监听事件
+    onSelectionChanged(selection) {
+      this.selection = selection;
+    },
+    deleteDY() {
+      if (!this.selection.length) {
+        this.$message.error('请选择一条数据');
+        return;
+      }
+      // if (this.selection.length === this.tableData.length) {
+      //   this.$message.error('至少要保留一条进行登记');
+      //   return;
+      // }
+      this.tableData = this.tableData.filter(item => !this.selection.includes(item));
+      this.handleCQZ();
+    },
+    deleteRow(index, data) {
+      data.splice(index, 1);
+      this.handleCQZ();
+    },
+    getTableData() {
+      this.tableData = this.tableInfo;
+    },
+    indexMethod(index) {
+      return index + 1;
+    },
+    handleCQZ() {
+      const arrCQZ = this.tableData.map(p => p.bdczh);
+      this.vueEvent.$emit('changeCFCQZ', arrCQZ ? arrCQZ.join(',') : '');
+    },
+  },
+  mounted() {
+    this.getTableData();
+  },
+  watch: {
+    isVisible(val) {
+      if (val) {
+        this.getTableData();
+      }
+    },
+    tableInfo() {
+      this.getTableData();
+    },
+  },
+};
+</script>
+
+<style lang='scss' scoped>
+@import "@/components/queryBuildings/index.scss";
+.cf-info-container {
+  @extend .form-building;
+  padding: 5px 0;
+  .table-title {
+    display: flex;
+    justify-content: space-between;
+    .menu-bar {
+      align-self: center;
+    }
+  }
+}
+</style>

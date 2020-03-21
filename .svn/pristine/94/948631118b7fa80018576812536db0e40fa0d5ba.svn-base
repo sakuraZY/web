@@ -1,0 +1,177 @@
+<template>
+  <div
+    class="geo-card-custom"
+    :class="[{ 'full-height': fullHeight }, shadowClass]"
+    v-if="custom"
+  >
+    <div
+      class="geo-card-custom-header"
+      :style="customHeaderStyle"
+      v-if="showHeader"
+      ref="geoCardHeader"
+    >
+      <slot name="header">
+        <slot name="headerLeft">
+          <icon-svg :iconClass="headerIconL" className="geo-card-header-icon-left"></icon-svg>
+          {{ title }}
+        </slot>
+        <slot name="headerRight">
+          <el-button
+            style="float: right; padding: 3px 0"
+            type="text"
+            size="medium"
+            @click="handleTitleRight"
+            class="geo-card-header-right-btn"
+          >
+            {{ titleRight }}
+            <icon-svg :iconClass="headerIconR" className="geo-card-header-icon-right"></icon-svg>
+          </el-button>
+        </slot>
+      </slot>
+    </div>
+    <div class="geo-card-custom-body" :style="[cardBodyStyle, bodyStyle]">
+      <slot v-if="listData.length">
+        <div
+          class="list-item"
+          v-for="(item, index) in listData"
+          :key="item+index"
+          @click="handlelistItem(item, index)"
+        >
+        {{ typeof item === 'string' ? item : (item.name ? item.name : '') }}
+        </div>
+      </slot>
+      <empty-data v-else></empty-data>
+    </div>
+  </div>
+  <el-card
+    class="geo-card"
+    body-style='bodyStyle'
+    :class="{ 'full-height': fullHeight }"
+    :shadow="shadow"
+    v-else
+  >
+    <template slot="header">
+      <slot name="header">
+        <div slot="header" class="clearfix geo-card-header" v-if="showHeader">
+          <slot name="headerLeft">
+            <icon-svg :iconClass="headerIconL" className="geo-card-header-icon-left"></icon-svg>
+            {{ title }}
+          </slot>
+          <slot name="headerRight">
+            <el-button
+              style="float: right; padding: 3px 0"
+              type="text"
+              size="medium"
+              @click="handleTitleRight"
+              class="geo-card-header-right-btn"
+            >
+              {{ titleRight }}
+              <icon-svg :iconClass="headerIconR" className="geo-card-header-icon-right"></icon-svg>
+            </el-button>
+          </slot>
+        </div>
+      </slot>
+    </template>
+    <template v-if="listData.length">
+      <slot>
+        <div
+          class="list-item"
+          v-for="(item, index) in listData"
+          :key="item+index"
+          @click="handlelistItem(item, index)"
+        >
+        {{ typeof item === 'string' ? item : (item.name ? item.name : '') }}
+        </div>
+      </slot>
+    </template>
+    <template v-else>
+      <empty-data></empty-data>
+    </template>
+  </el-card>
+</template>
+
+<script>
+import EmptyData from '@/components/emptyData';
+
+export default {
+  props: {
+    showHeader: {
+      type: Boolean,
+      default: true,
+    },
+    customHeaderStyle: {
+      type: Object,
+      default: () => ({}),
+    },
+    bodyStyle: {
+      type: Object,
+      default: () => ({}),
+    },
+    shadow: {
+      validator(val) {
+        return ['hover', 'never', 'always'].indexOf(val) !== -1;
+      },
+      default: 'hover',
+    },
+    custom: {
+      type: Boolean,
+      default: false,
+    },
+    fullHeight: {
+      type: Boolean,
+      default: false,
+    },
+    title: {
+      type: String,
+    },
+    titleRight: {
+      type: String,
+      default: '更多',
+    },
+    headerIconL: {
+      type: String,
+      default: 'menu',
+    },
+    headerIconR: {
+      type: String,
+      default: 'double-right',
+    },
+    listData: {
+      type: Array,
+      default: () => ([]),
+    },
+  },
+  data() {
+    return {
+      cardBodyStyle: null,
+      shadowClass: `is-${this.shadow}-shadow`,
+    };
+  },
+  created() {
+    this.$nextTick(() => {
+      this.cardBodyStyle = this.fullHeight
+        ? {
+          height: this.custom && this.showHeader
+            ? `calc(100% - ${this.$refs.geoCardHeader.offsetHeight || 0}px)`
+            : '100%',
+        }
+        : {};
+    });
+  },
+  components: {
+    EmptyData,
+  },
+  methods: {
+    handleTitleRight() {
+      this.$emit('more');
+    },
+    handlelistItem(item, index) {
+      this.$emit('item-click', item, index);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

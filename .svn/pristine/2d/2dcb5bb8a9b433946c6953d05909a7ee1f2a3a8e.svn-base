@@ -1,0 +1,3 @@
+.auth-table-container{
+  height: 100%;
+}

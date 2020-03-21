@@ -1,0 +1,43 @@
+.form-message-box{
+  margin: 30px;
+  .info-head{
+    position: relative;
+    .add {
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+  }
+  h3{
+    font-size: 22px;
+  }
+  .workcode{
+    p{
+      font-size: 18px;
+    }
+    .type{
+      display: block;
+      margin-bottom:10px;
+    }
+  }
+  .testinfo{
+    margin-top: 20px;
+    button{
+      margin-top: 40px;
+    }
+  }
+  .info-body{
+    border: 1px solid $--border-color-grey-leftMenu;
+    border-bottom: none;
+  }
+  .infoselect{
+    margin-top: 20px;
+    label{ 
+      display: block;
+      margin-bottom: 10px;
+      span{
+        color: $--color-danger;
+      }
+    }
+  }
+}

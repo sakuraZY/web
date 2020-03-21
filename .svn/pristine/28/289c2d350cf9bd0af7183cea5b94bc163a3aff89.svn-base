@@ -1,0 +1,13 @@
+{
+  "systemName": "不动产线上综合服务大厅",
+  "subSystemName": "wfu.geostar.com.cn",
+  "urlType": {
+    "ios": "http://192.168.37.201:8088/ios",
+    "nres": "http://192.168.37.201:8089/nres"
+  },
+  "personalId": "A2020030502204825F2A1AB",
+  "enterpriseId": "A20200305022457E8338AE7",
+  "personalQueryId": "A2020030502260653419663",
+  "needTicketUrlType": ["nres"],
+  "ticketExpiry": 180000
+}

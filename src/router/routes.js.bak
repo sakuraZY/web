@@ -1,0 +1,137 @@
+/*
+ * @Descripttion: v1.00
+ * @version: v1.00
+ * @Author: huwei
+ * @Date: 2020-01-08 10:43:13
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-02-17 15:35:51
+ */
+
+const routes = [
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/Impersonal/Home'),
+    meta: {
+      requireAuth: true,
+      title: '首页',
+    },
+  },
+  {
+    path: '/p',
+    name: 'PersonHome',
+    component: () => import('@/views/Personal/Home'),
+    meta: { requireAuth: false },
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Personal/Login'),
+    meta: { requireAuth: false, title: '首页' },
+  },
+  {
+    path: '/p/register',
+    name: 'Register',
+    component: () => import('@/views/Personal/Register'),
+    meta: { requireAuth: false, title: '注册' },
+  },
+  {
+    path: '/user',
+    component: () => import('@/views/Impersonal/User'),
+    // redirect: '/u/userhome',
+    // 是否验证登录和页面需要的权限
+    meta: { requireAuth: true },
+    children: [
+      {
+        path: '/',
+        name: 'User',
+        component: () => import('@/views/Impersonal/User/UserHome'),
+        meta: { requireAuth: true },
+      },
+      {
+        path: 'mortgage',
+        name: 'UserMortgage',
+        component: () => import('@/views/Impersonal/User/Mortgage'),
+        meta: { requireAuth: true },
+      },
+      // {
+      //   path: 'ygdy',
+      //   name: 'realRegygdy',
+      //   component: () => import('@/views/Impersonal/User/Realreg/YGDY'),
+      //   meta: { requireAuth: true },
+      // },
+      {
+        path: 'beforehand',
+        name: 'UserBeforehand',
+        component: () => import('@/views/Impersonal/User/Beforehand'),
+        meta: { requireAuth: true },
+      },
+      {
+        path: 'firsthand',
+        name: 'UserFirsthand',
+        component: () => import('@/views/Impersonal/User/Firsthand'),
+        meta: { requireAuth: true, title: '首次登记' },
+      },
+    ],
+  },
+  {
+    path: '/querybuildings',
+    name: 'QueryBuildings',
+    component: () => import('@/components/queryBuildings'),
+    // meta: { requireAuth: true, title: '幢查询' },
+  },
+  {
+    path: '/queryhouses',
+    name: 'QueryHouses',
+    component: () => import('@/components/queryHouses'),
+    // meta: { requireAuth: true, title: '楼盘户查询' },
+  },
+  {
+    path: '/buildingtable',
+    name: 'BuildingTable',
+    component: () => import('@/components/buildingTable'),
+    // meta: { requireAuth: true, title: '楼盘表' },
+  },
+  {
+    path: '/org',
+    component: () => import('@/views/Impersonal/OrgManage'),
+    children: [
+      {
+        path: '/',
+        name: 'UserManage',
+        component: () => import('@/components/userManage'),
+        meta: { requireAuth: true, title: '组织管理' },
+      },
+      {
+        path: '/org/:orgPid/:orgId',
+        name: 'OrgInfo',
+        component: () => import('@/components/orgInfo'),
+        props: true,
+        meta: { requireAuth: true, titele: '组织信息管理' },
+      },
+      {
+        path: 'user/:userId',
+        name: 'UserFromOrg',
+        props: true,
+        component: () => import('@/components/userInfo'),
+        meta: { requireAuth: true, titele: '用户管理' },
+      },
+    ],
+  },
+  {
+    path: '/role',
+    component: () => import('@/views/Impersonal/RoleManage'),
+  },
+  {
+    path: '/auth',
+    component: () => import('@/views/Impersonal/AuthManage'),
+  },
+  {
+    path: '*',
+    name: 'NotFound',
+    component: () => import('@/components/errorPage'),
+    props: () => ({ errorCode: 404 }),
+    meta: { requireAuth: false },
+  },
+];
+export default routes;

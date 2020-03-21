@@ -1,0 +1,178 @@
+<!--
+ * @Descripttion:  查封信息
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-03-13 11:12:26
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-21 18:17:01
+ -->
+<template>
+  <div class="cfxxDiv" v-show="isVisible" :class="{'disabled':isDisabled}">
+    <h3 id="t4" ref="t4">查封信息</h3>
+    <el-form :model="cfxxForm" :rules="rules" ref="cfxxForm" size="medium">
+      <el-row :gutter="20">
+        <el-col :span='8'>
+          <el-form-item label="查封机关" prop='cfjg'>
+            <el-input v-model.trim.lazy="cfxxForm.cfjg" placeholder="请输入查封机关"
+              :disabled="isDisabled">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="查封文号" prop='cfwh'>
+            <el-input v-model.trim.lazy="cfxxForm.cfwh" placeholder="请输入查封文号"
+              :disabled="isDisabled">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="查封类型" prop='cflx'>
+            <el-select v-model="cfxxForm.cflx" placeholder="请选择查封类型" style="width:100%">
+              <el-option v-for="item in cflxlist" :key="item.name" :label="item.name"
+                :value="item.itemValue">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="申请执行人" prop='sqzxr'>
+            <el-input v-model.trim.lazy="cfxxForm.sqzxr" placeholder="请输入申请执行人"
+              :disabled="isDisabled"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="查封开始时间" prop='cfkssj'>
+            <el-date-picker type="date" v-model.trim="cfxxForm.cfkssj" placeholder="查封开始时间"
+              value-format="yyyy-MM-dd" style="width: 100%;" :picker-options="start_Date"
+              :disabled="isDisabled">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="查封结束时间" prop='cfjssj'>
+            <el-date-picker type="date" placeholder="查封结束时间" v-model.trim="cfxxForm.cfjssj"
+              value-format="yyyy-MM-dd" style="width: 100%;" :picker-options="end_Date"
+              :disabled="isDisabled">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="被执行人姓名" prop='bzxr'>
+            <el-input v-model.trim.lazy="cfxxForm.bzxr" placeholder="请输入被执行人姓名"
+              :disabled="isDisabled"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="联系电话" prop='lxdh'>
+            <el-input v-model.trim.lazy="cfxxForm.lxdh" placeholder="请输入联系电话"
+              :disabled="isDisabled">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="查封冻结原因" prop='cfdjyy'>
+            <el-input v-model.trim.lazy="cfxxForm.cfdjyy" placeholder="请输入查封冻结原因"
+              :disabled="isDisabled"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import getDicData from '@/mixins/getDicData';
+import { validPhone } from '@/libs/validate';
+
+export default {
+  mixins: [getDicData],
+  data() {
+    const checkPhone = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('联系电话不能为空'));
+      }
+      if (validPhone(value)) {
+        callback();
+      } else {
+        callback(new Error('请填写正确的联系电话'));
+      }
+    };
+    return {
+      cfxxForm: {
+        cfjg: '', // 查封机关
+        cfwh: '', // 查封文号
+        cflx: '', // 查封类型
+        cfkssj: '', // 查封开始时间
+        cfjssj: '', // 查封结束时间
+        sqzxr: '', // 申请执行人
+        bzxr: '', // 被执行人姓名
+        lxdh: '', // 联系电话
+        cfdjyy: '', // 查封冻结原因
+      },
+      start_Date: {
+        disabledDate: (time) => {
+          if (this.cfxxForm.cfjssj) {
+            return time.getTime() < Date.now() - 8.64e7
+              || time.getTime() > new Date(this.cfxxForm.cfjssj).getTime();
+          }
+          return time.getTime() < Date.now() - 8.64e7;
+        },
+      },
+      end_Date: {
+        disabledDate: (time) => {
+          if (this.cfxxForm.cfkssj) {
+            return time.getTime() < Date.now() - 8.64e7
+              || time.getTime() < new Date(this.cfxxForm.cfkssj).getTime();
+          }
+          return time.getTime() < Date.now() - 8.64e7;
+        },
+      },
+      cflxlist: [],
+      rules: {
+        cfjg: [{ required: true, message: '请输入查封机关', trigger: 'blur' }],
+        cfwh: [{ required: true, message: '请输入查封文号', trigger: 'blur' }],
+        cflx: [{ required: true, message: '请输入查封类型', trigger: 'change' }],
+        cfkssj: [{ required: true, message: '请输入查封开始时间', trigger: 'change' }],
+        cfjssj: [{ required: true, message: '请输入查封结束时间', trigger: 'change' }],
+        sqzxr: [{ required: true, message: '请输入申请执行人', trigger: 'blur' }],
+        bzxr: [{ required: true, message: '请输入被执行人姓名', trigger: 'blur' }],
+        lxdh: [{ required: true, trigger: 'blur', validator: checkPhone }],
+        cfdjyy: [{ required: true, message: '请输入查封冻结原因', trigger: 'blur' }],
+      },
+    };
+  },
+  props: {
+    isVisible: {
+      type: Boolean,
+      default: false,
+    },
+    isDisabled: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  methods: {
+    checkForm() {
+      return this.$refs.cfxxForm.validate();
+    },
+    async initDic() {
+      const t = this;
+      const { resData } = await t.getDicList('查封类型');
+      if (resData) {
+        const { dicitemTree } = resData;
+        if (dicitemTree) {
+          this.cflxlist = dicitemTree.filter(item => item.name);
+        }
+      }
+    },
+  },
+  created() {
+    this.initDic();
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import "./index.scss";
+@import "@/styles/disabled.scss";
+</style>

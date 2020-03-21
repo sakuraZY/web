@@ -1,0 +1,190 @@
+<!--
+ * @Description: 抵押注销填写页面
+ * @Author: wangjiayu
+ * @Date: 2020-03-07 11:04:22
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-20 09:46:04
+ -->
+
+<template>
+  <div class="dyzx-box">
+    <!-- 证明验证信息 -->
+    <check-data
+      ref="checkBDC"
+      :baseInfo="baseInfo"
+      isDY="2"
+      @setDisalbed="setDisalbed"
+    ></check-data>
+    <!-- 不动产单元信息 -->
+    <info-table
+      ref="bdcList"
+      :tableInfo="bdcdyList"
+      :isVisible="show"
+      :queryInfo="queryInfo"
+    ></info-table>
+    <!-- 抵押信息 -->
+    <dyxx
+      ref="dyxx"
+      :isVisible="show"
+      :dyxx="dyxx"
+      :isDisabled="true"
+      :index="3"
+    ></dyxx>
+  </div>
+</template>
+
+<script>
+import CheckData from '@/components/realReg/checkData';
+import dyxx from '@/components/realReg/dyxx';
+import { mapState, mapMutations } from 'vuex';
+import { submitUrlDYZX, handleSave } from '@/apis/nres/zxtj';
+import InfoTable from './InfoTable.vue';
+
+export default {
+  components: {
+    CheckData,
+    InfoTable,
+    dyxx,
+  },
+  data() {
+    return {
+      typeName: '流程实例', // 附件类型
+      parentPnode: 'dyzx', // 附件节点类型
+      baseInfo: { // 验证证明号信息
+        zsm: '不动产证明',
+        labelmc: '不动产证明',
+        labelqlr: '抵押人名称',
+        ywlx: 'dyzmh',
+        nodeName: '宜昌',
+      },
+      show: false, // 是否显示详细信息
+      info: null, // 抵押证明相关信息
+      queryInfo: { // 查询信息（证明号和抵押人）
+        ywlx: 'dyzmh',
+        nodeName: '宜昌',
+        isDY: '1',
+      },
+      bdcdyList: [], // 抵押清单信息
+      dyxx: {}, // 抵押信息
+      businessData: { // 要保存的业务信息
+        lcmc: '抵押注销登记',
+        djxl: '抵押注销',
+        djdl: '400',
+        ajzt: '0',
+        sqr: '',
+        xgzh: '',
+        sqbh: 'W',
+        tsgl: [],
+        dyxx: {},
+      },
+    };
+  },
+  computed: {
+    ...mapState('queryData', { flowDatas: state => state.FlOWDATA }),
+    ...mapState('dyzx', { nodeName: state => state.NODENAME }),
+  },
+  watch: {
+    info(val) {
+      if (!val) {
+        return;
+      }
+      const obj = JSON.parse(val);
+      const { ygzmh, qlrmc } = this.$refs.checkBDC.checkform;
+      this.queryInfo.zh = ygzmh;
+      this.queryInfo.qlrmc = qlrmc;
+      this.bdcdyList = obj.bdcdylists || [];
+      this.$refs.dyxx.dyxxForm = obj.dyxx || {};
+    },
+    nodeName(val) {
+      this.queryInfo.nodeName = val;
+    },
+  },
+  mounted() {
+    this.$refs.checkBDC.parentPnode = this.parentPnode;
+    this.$nextTick(() => {
+      const { sqbh } = this.$route.params;
+      if (sqbh === null || sqbh === undefined) {
+        return;
+      }
+      // 读取业务数据
+      const flowData = this.flowDatas.filter(p => p.sqbh === sqbh);
+      this.businessData = { ...flowData[0].flowdata };
+      this.setBusinessData();
+    });
+  },
+  methods: {
+    // 获取状态处理方法
+    ...mapMutations('dyzx', {
+      SET_MESSAGEJSON: 'SET_MESSAGEJSON',
+      SET_NODENAME: 'SET_NODENAME',
+    }),
+    setDisalbed(isDisabled) {
+      this.$parent.isDisabled = isDisabled;
+      this.$emit('setDisabled', isDisabled);
+    },
+    // 从页面获取业务数据
+    getBusinessData() {
+      const { sqbh, ygzmh, qlrmc } = this.$refs.checkBDC.checkform;
+      return Object.assign(this.businessData, {
+        sqbh,
+        sqr: sessionStorage.userId,
+        xgzh: ygzmh,
+        qlrmc,
+        gyfs: 0,
+        ywlxbm: this.parentPnode,
+        dyxx: { ...this.$refs.dyxx.getDyxx() },
+        tsgl: this.$refs.bdcList.getTSXX(),
+      });
+    },
+    // 设置业务数据
+    setBusinessData() {
+      const { sqbh, xgzh, qlrmc } = this.businessData;
+      const checkForm = this.$refs.checkBDC.checkform;
+      checkForm.sqbh = sqbh;
+      checkForm.ygzmh = xgzh;
+      checkForm.qlrmc = qlrmc;
+      this.queryInfo.zh = xgzh;
+      this.queryInfo.qlrmc = qlrmc;
+      if (this.businessData.tsgl && this.businessData.tsgl.length) {
+        this.show = true;
+        this.bdcdyList = this.businessData.tsgl;
+        this.$refs.dyxx.dyxxForm = { ...this.businessData.dyxx };
+        this.$emit('setDisabled', false);
+      }
+    },
+    // 下一步/提交
+    handlerUp() {
+      // 设置业务数据
+      const businessData = this.getBusinessData();
+      this.SET_MESSAGEJSON(businessData);
+      // 保存业务数据
+      this.handlerStorage(businessData);
+      // 跳转下一步
+      this.$emit('funcNext', 1);
+    },
+    // 保存业务数据
+    handlerStorage(businessData) {
+      let newData = businessData;
+      // 设置业务数据
+      if (!newData) {
+        newData = this.getBusinessData();
+        this.SET_MESSAGEJSON(businessData);
+      }
+      // 保存申请数据
+      handleSave({
+        data: newData,
+        nodeName: this.nodeName,
+        url: submitUrlDYZX,
+      }).then(({ code } = {}) => {
+        if (code === 0) {
+          this.$message.success('保存成功');
+        } else {
+          this.$message.error('保存失败！请稍后重试或联系管理员');
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+  },
+};
+</script>

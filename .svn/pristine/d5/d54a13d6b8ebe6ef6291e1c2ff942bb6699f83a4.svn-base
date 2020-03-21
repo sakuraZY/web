@@ -1,0 +1,105 @@
+<!--
+ * @Description: 功能菜单管理
+ * @Author: wangjiayu
+ * @Date: 2020-02-29 13:16:53
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-06 17:00:29
+ -->
+
+<template>
+  <div class="menu-manage-container">
+    <auth-layout>
+      <template slot="paneL">
+        <div class="role-tree-container">
+          <empty-data v-if="!roleNodes.length"></empty-data>
+          <vue-giant-tree
+            v-else
+            :setting="setting"
+            :nodes="roleNodes"
+            class="role-tree"
+            @onCreated="handleCreated"
+            @onClick="onHandleNode"
+            :v-loading="loading"
+          ></vue-giant-tree>
+        </div>
+      </template>
+      <template slot="paneR">
+        <menu-connect
+          :roleId="currentNodeId"
+          :roleName="currentNodeName"
+        ></menu-connect>
+      </template>
+    </auth-layout>
+  </div>
+</template>
+
+<script>
+import { getRole } from '@/apis/auth/role';
+import AuthLayout from '@/layouts/Impersonal/auth';
+import EmptyData from '@/components/emptyData';
+import VueGiantTree from '@/components/vueGiantTree';
+import MenuConnect from './MenuConnect';
+
+export default {
+  name: 'MenuManage',
+  components: {
+    AuthLayout,
+    EmptyData,
+    VueGiantTree,
+    MenuConnect,
+  },
+  data() {
+    return {
+      setting: { // 树设置参数
+        data: {
+          simpleData: {
+            enable: true,
+            pIdKey: 'pId',
+          },
+        },
+      },
+      roleNodes: [], // 角色树节点数据
+      currentNodeId: '', // 当前选中角色id
+      currentNodeName: '', // 当前选中角色名称
+      loading: false, // 是否开启加载动画
+    };
+  },
+  created() {
+    this.getRoles();
+  },
+  methods: {
+    // 树创建成功事件
+    handleCreated(roleTree) {
+      // 默认展开第一个节点
+      roleTree.expandNode(roleTree.getNodes()[0], true);
+    },
+    // 点击树节点事件
+    onHandleNode(evt, treeId, node) {
+      const { type, id, name } = node;
+      if (id === this.currentNodeId) {
+        return;
+      }
+      this.currentNodeId = type === '角色' ? id : '';
+      this.currentNodeName = name;
+    },
+    // 获取用户角色数据
+    getRoles() {
+      this.loading = true;
+      getRole('启用').then(({ code, resData: { roleTree = [] } = {} }) => {
+        if (code === 0) {
+          this.roleNodes = roleTree.map((item) => {
+            item.icon = item.type === '角色' ? 'user2' : 'groups';
+            item.iconSkin = item.state === '禁用' ? 'state-close' : 'state-open';
+            return item;
+          });
+          this.loading = true;
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import "./index.scss";
+</style>

@@ -1,0 +1,83 @@
+/**
+ * @File: 状态管理app模块
+ * @Author: qiwei
+ * @Date: 2020-02-12 15:38:52
+ * @Last Modified by: qiwei
+ * @Last Modified time: 2020-03-06 13:51:26
+ */
+import { TICKET_KEY, TICKET_TIME_KEY } from '@/libs/authTypes';
+import {
+  setItem, getItem,
+} from '@/libs/common';
+import { getTicketForThird } from '@/apis/auth/appExtend';
+
+const state = {
+  ticket: getItem(TICKET_KEY),
+  ticketTime: getItem(TICKET_TIME_KEY),
+  sidebar: {
+    opened: getItem('sidebarStatus') ? !!+getItem('sidebarStatus') : true,
+    withoutAnimation: false,
+  },
+  device: 'desktop',
+};
+
+const mutations = {
+  SET_TICKET(state, ticket) {
+    state.ticket = ticket;
+    setItem(TICKET_KEY, ticket);
+  },
+  SET_TICKET_TIME(state, ticketTime) {
+    state.ticketTime = ticketTime;
+    setItem(TICKET_TIME_KEY, ticketTime);
+  },
+  TOGGLE_SIDEBAR(state) {
+    state.sidebar.opened = !state.sidebar.opened;
+    state.sidebar.withoutAnimation = false;
+    if (state.sidebar.opened) {
+      setItem('sidebarStatus', 1);
+    } else {
+      setItem('sidebarStatus', 0);
+    }
+  },
+  CLOSE_SIDEBAR: (state, withoutAnimation) => {
+    setItem('sidebarStatus', 0);
+    state.sidebar.opened = false;
+    state.sidebar.withoutAnimation = withoutAnimation;
+  },
+  TOGGLE_DEVICE: (state, device) => {
+    state.device = device;
+  },
+};
+
+const actions = {
+  async getTicket({ commit }, payload) {
+    const {
+      code,
+      msg,
+      resData: {
+        ticket,
+      } = {},
+    } = await getTicketForThird(payload) || {};
+    if (code !== 0 || !ticket) {
+      throw new Error(msg || '获取票据失败');
+    }
+    commit('SET_TICKET', ticket);
+    commit('SET_TICKET_TIME', new Date().getTime());
+  },
+  toggleSideBar({ commit }) {
+    commit('TOGGLE_SIDEBAR');
+  },
+  closeSideBar({ commit }, { withoutAnimation }) {
+    commit('CLOSE_SIDEBAR', withoutAnimation);
+  },
+  toggleDevice({ commit }, device) {
+    commit('TOGGLE_DEVICE', device);
+  },
+};
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions,
+};

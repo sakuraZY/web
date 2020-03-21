@@ -1,0 +1,15 @@
+.infodiv {
+  padding: 0 15px 0 20px;
+  .tableDiv {
+    height: 260px;
+    display: block;
+    div {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    .el-table .cell{
+      white-space:pre-line;
+    }
+  
+  }
+}

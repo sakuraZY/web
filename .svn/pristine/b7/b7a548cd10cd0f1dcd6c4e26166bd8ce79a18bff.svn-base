@@ -1,0 +1,224 @@
+<template>
+  <div class="org-manage-container">
+    <auth-layout
+      paneLeftTitle="组织管理"
+      :btnList="paneLeftBtn"
+      :listData="data"
+      @handlePaneLeftBtn="handlePaneLeftBtn"
+      @onSaved="orgUpdated"
+    >
+      <template slot="pane-left-body">
+        <div class="org-tree-contaner">
+          <el-input
+            v-model="filter"
+            placeholder="请输入组织名称或职员名称"
+            size="medium"
+            v-show="showFilter"
+            ref="filter"
+            clearable
+          ></el-input>
+          <el-tree
+            :data="data"
+            @node-click="onHandleNode"
+            :default-expanded-keys="['root']"
+            node-key="id"
+            :expand-on-click-node="false"
+            ref="orgTree"
+            :filter-node-method="filterNode"
+          >
+            <template v-slot="{ node, data }">
+              <div>
+                <icon-svg
+                  :iconClass="data.type === '组织' ? 'organization' : 'user2'"
+                  :className="(data.status === '禁用' ? 'state-close' : 'state-open') + ' icon'"
+                ></icon-svg>
+                <span>{{ data.name }}</span>
+              </div>
+            </template>
+          </el-tree>
+        </div>
+      </template>
+    </auth-layout>
+    <el-dialog
+      title="添加组织"
+      :visible.sync="addOrgVisible"
+      append-to-body
+      @close="closeAddOrgDialog"
+    >
+      <org-attributes
+        @onSubmited="addOrgSuccessed"
+        @onCancel="addOrgVisible = false"
+        ref="orgAttr"
+        :parentId="currentNodeId"
+      >
+      </org-attributes>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import AuthLayout from '@/layouts/Impersonal/auth';
+import { getOrgTree, deleteOrg } from '@/apis/auth/org';
+import { coverArray } from '@/libs/utils';
+import OrgAttributes from './OrgAttributes';
+
+export default {
+  name: 'OrgManage',
+  components: {
+    AuthLayout,
+    OrgAttributes,
+  },
+  data() {
+    return {
+      data: [],
+      currentNodeId: undefined,
+      addOrgVisible: false,
+      showFilter: false,
+      filter: '',
+      paneLeftBtn: [
+        { name: '定位', icon: 'location' },
+        { name: '添加', icon: 'add', hide: true },
+        { name: '删除', icon: 'delete', hide: true },
+      ],
+    };
+  },
+  created() {
+    this.getOrgs();
+  },
+  watch: {
+    filter(val) {
+      this.$refs.orgTree.filter(val);
+    },
+  },
+  methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
+    handlePaneLeftBtn(item) {
+      if (item.hide) {
+        return false;
+      }
+      switch (item.name) {
+        case '定位': {
+          this.showFilter = true;
+          this.paneLeftBtn[0].name = '取消';
+          this.$nextTick(() => {
+            this.$refs.filter.$el.querySelector('input').focus();
+          });
+          break;
+        }
+        case '取消': {
+          this.showFilter = false;
+          this.paneLeftBtn[0].name = '定位';
+          break;
+        }
+        case '添加': {
+          this.addOrgVisible = true;
+          break;
+        }
+        case '删除': {
+          this.deleteOrg();
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      return true;
+    },
+    deleteOrg() {
+      if (!this.currentNodeId) {
+        return;
+      }
+      this.$confirm('确定删除吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }).then(() => {
+        deleteOrg(this.currentNodeId).then(({ code, msg }) => {
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: '删除成功',
+            });
+            const deleteNode = this.$refs.orgTree.getNode(this.currentNodeId);
+            this.$refs.orgTree.remove(deleteNode);
+          } else {
+            throw new Error(msg || '删除失败');
+          }
+        }).catch((err) => {
+          this.$message.error(err.message || '删除失败');
+        });
+      });
+    },
+    addOrgSuccessed() {
+      this.addOrgVisible = false;
+      this.getOrgs();
+    },
+    closeAddOrgDialog() {
+      this.$refs.orgAttr.cancelEdit();
+    },
+    onHandleNode({ id, type, pId }) {
+      this.currentNodeId = id;
+      let routerOptions = null;
+      switch (type) {
+        case '组织': {
+          if (id === 'root') {
+            routerOptions = {
+              name: 'UserManage',
+            };
+            this.paneLeftBtn[2].hide = true;
+          } else {
+            routerOptions = {
+              name: 'OrgInfo',
+              params: {
+                orgId: id,
+                orgPid: pId,
+              },
+            };
+            this.paneLeftBtn[2].hide = false;
+          }
+          this.paneLeftBtn[1].hide = false;
+          break;
+        }
+        case '职员': {
+          routerOptions = {
+            name: 'UserFromOrg',
+            params: {
+              userId: id,
+            },
+          };
+          this.paneLeftBtn[1].hide = true;
+          this.paneLeftBtn[2].hide = true;
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      if (routerOptions) {
+        this.$router.replace(routerOptions);
+      }
+    },
+    getOrgs() {
+      getOrgTree(true).then(({ code, resData: { orgTree = [] } = {} }) => {
+        if (code === 0) {
+          this.data = coverArray(orgTree);
+        }
+      });
+    },
+    orgUpdated({ orgId, orgName }) {
+      const currentNode = this.$refs.orgTree.getNode(orgId);
+      if (!currentNode || !currentNode.data) {
+        return;
+      }
+      this.$set(currentNode.data, 'name', orgName);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

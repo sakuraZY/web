@@ -1,0 +1,72 @@
+// .infodiv {
+//   padding: 0 15px 0 20px;
+//   .tableDiv {
+//     display: block;
+//     div {
+//       text-align: right;
+//       margin-bottom: 10px;
+//       margin-top: 10px;
+//     }
+//     .el-table .cell{
+//       white-space:pre-line;
+//     }
+//     .add{
+//       height:32px;
+//       border:1px solid  $--color-primary;;
+//       border-radius:3px;
+//       color:$--color-primary;
+//       line-height: 10px;
+//     }
+//   }
+// }
+
+.form-message-box{
+  margin: 0 15px 0 20px;
+  .info-head{
+    position: relative;
+    margin-top: 30px;
+    .add {
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+  }
+  h3{
+    height:19px;
+    font-size:20px;
+    font-family:Microsoft YaHei;
+    font-weight:400;
+    color:rgba(51,51,51,1);
+    line-height:30px;
+  }
+  .workcode{
+    p{
+      font-size: 18px;
+    }
+    .type{
+      display: block;
+      margin-bottom:10px;
+    }
+  }
+  .testinfo{
+    margin-top: 20px;
+    button{
+      margin-top: 40px;
+    }
+  }
+  .info-body{
+    border: 1px solid $--border-color-grey-leftMenu;
+    border-bottom: none;
+  }
+  .infoselect{
+    margin-top: 20px;
+    label{ 
+      display: block;
+      margin-bottom: 10px;
+      span{
+        color: $--color-danger;
+      }
+    }
+  }
+}
+.butBorder {border:1px solid $--color-primary; color:$--color-primary;}

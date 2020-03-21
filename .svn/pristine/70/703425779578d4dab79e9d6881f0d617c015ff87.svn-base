@@ -1,0 +1,134 @@
+.layout-header{
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px solid $--color-primary;
+  &-left{
+    display: flex;
+    align-items: center;
+    .logo-content{
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      .system{
+        &-logo{
+          min-width: 52px;
+          width: 52px;
+          height: 52px;
+          margin: 0 35px;
+        }
+        &-name{
+          font-size: 22px;
+          font-weight: bold;
+          color: $--color-black;
+        }
+      }
+    }
+    .zone-select{
+      position: relative;
+      font-size: 16px;
+      border: $--border-base;
+      background-color: $--background-color-base;
+      margin: 0 10px;
+      padding: 5px 28px;
+      cursor: pointer;
+      position: relative;
+      max-width: 66px;
+      min-width: 66px;
+      overflow: hidden;
+      .icon-loaction{
+        color: $--color-primary;
+        position: absolute;
+        left: 8px;
+        top: 8px;
+      }
+      .empty{
+        color: $--color-text-placeholder;
+      }
+      .arrow-down{
+        display: inline-block;
+        border: 6px solid transparent;
+        border-top-color: $--color-text-placeholder;
+        position: absolute;
+        right: 8px;
+        top: 13px;
+      }
+    }
+  }
+  &-right{
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-right: 35px;
+    .icon-search{
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 38px;
+      position: absolute;
+      top: 10px;
+      right: 5px;
+    }
+    .layout-navmenu{
+      border: none;
+      z-index: 10;
+      flex-grow: 1;
+      .mobile &{
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        border-top: $--border-base;
+        &-item{
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 50px;
+          line-height: 50px;
+          .nav-icon{
+            height: 20px;
+            line-height: 20px;
+            margin: 0;
+          }
+          &-name{
+            height: 20px;
+            line-height: 20px;
+          }
+        }
+      }
+      &-item{
+        border: none;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        height: 80px;
+        line-height: 80px;
+        .nav-icon{
+          margin-right: 5px;
+        }
+        &.is-active{
+          color: $--color-primary;
+        }
+      }
+    }
+    .icon-bell{
+      font-size: 24px;
+      color: $--color-info;
+      cursor: pointer;
+    }
+    .user-info{
+      flex-grow: 1;
+      text-align: right;
+      .button{
+        font-size: 16px;
+      }
+    }
+    .search-content, .user-info, .msg-badge{
+      margin: 0 10px;
+    }
+  }
+}

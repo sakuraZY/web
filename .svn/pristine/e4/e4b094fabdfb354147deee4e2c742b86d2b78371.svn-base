@@ -1,0 +1,70 @@
+<template>
+  <div>
+    <template v-if="!item.children">
+      <app-link :to="item.href" @click.native="addTags(item)">
+        <el-menu-item
+          :index="item.id || ''"
+        >
+          <item
+            :icon="item.icon"
+            :title="item.title"
+          />
+        </el-menu-item>
+      </app-link>
+    </template>
+
+    <el-submenu
+      v-else
+      ref="subMenu"
+      :index="item.id || ''"
+      popper-append-to-body
+    >
+      <template slot="title">
+        <item :icon="item.icon" :title="item.title" />
+      </template>
+      <sidebar-item
+        v-for="child in item.children"
+        :key="child.id"
+        :item="child"
+        class="nest-menu"
+      />
+    </el-submenu>
+  </div>
+</template>
+
+<script>
+import { mapState, mapActions } from 'vuex';
+import Item from './item';
+import AppLink from './link';
+import FixiOSBug from './mixin/fixiOSBug';
+
+export default {
+  name: 'SidebarItem',
+  components: { Item, AppLink },
+  mixins: [FixiOSBug],
+  props: {
+    item: {
+      type: Object,
+      required: true,
+    },
+    isNest: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  computed: {
+    ...mapState('app', [
+      'activeCenter',
+    ]),
+  },
+  methods: {
+    ...mapActions('tagsView', ['addView']),
+    addTags(tag) {
+      const { href } = tag;
+      if (href) {
+        this.addView({ tag, centerId: this.activeCenter.centerId });
+      }
+    },
+  },
+};
+</script>

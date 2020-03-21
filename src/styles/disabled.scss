@@ -1,0 +1,16 @@
+.disabled {
+  /deep/button {
+    display: none;
+  }
+  /deep/.el-input  {
+    .el-input__inner{
+      color: rgba(51, 51, 51, 1);
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+    }
+    .el-input__suffix{
+      display: none;
+    }
+  }
+}

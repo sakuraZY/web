@@ -1,0 +1,744 @@
+<template>
+  <div class="infodiv"  v-show="isVisable">
+     <h3 id="t2" ref="t2">义务人信息</h3>
+    <div id="ywrDiv" ref="ywrDiv" class="tableDiv">
+       <el-table
+          :data="ywrData"
+          highlight-current-row
+          tooltip-effect="dark"
+          border
+          stripe
+          width="80%"
+          :cell-style="{padding:'3px'}"
+          :header-cell-style="tableHeaderColor"
+          height="200px"
+          :index="indexMethod"
+          >
+          <template v-for="(item,index) in headNames">
+          <el-table-column :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :minWidth="item.minWidth"
+            :width="item.width"
+            :align="item.align"
+            :type="item.type"
+            show-overflow-tooltip
+            >
+            <template v-if="item.children">
+              <el-table-column  v-for="(tmp, index) in item.children" :key="index"
+                  :prop="tmp.prop"
+                  :label="tmp.label"
+                  :minWidth="tmp.minWidth"
+                  :width="tmp.width"
+                  :align="tmp.align"
+                  :type="tmp.type"
+                  show-overflow-tooltip
+                  ></el-table-column>
+            </template>
+          </el-table-column>
+          </template>
+          <el-table-column prop="frzjlx" label="法人代表类别" align="center"
+         resizable v-if='isShow'></el-table-column>
+        </el-table>
+    </div>
+    <h3 id="t3" ref="t3">抵押人信息</h3>
+    <div id="dyrDiv" ref="dyrDiv" class="tableDiv">
+       <el-table
+          :data="dyrData"
+          highlight-current-row
+          tooltip-effect="dark"
+          border
+          stripe
+          width="80%"
+          :header-cell-style="tableHeaderColor"
+          height="200px"
+          :index="indexMethod"
+          >
+          <template v-for="(item,index) in headNames">
+          <el-table-column :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :minWidth="item.minWidth"
+            :width="item.width"
+            :align="item.align"
+            :type="item.type"
+            v-if="item.show"
+            show-overflow-tooltip
+            >
+            <template v-if="item.children">
+              <el-table-column  v-for="(tmp, index) in item.children" :key="index"
+                  :prop="tmp.prop"
+                  :label="tmp.label"
+                  :minWidth="tmp.minWidth"
+                  :width="tmp.width"
+                  :align="tmp.align"
+                  :type="tmp.type"
+                  show-overflow-tooltip
+                  ></el-table-column>
+            </template>
+          </el-table-column>
+          </template>
+        </el-table>
+    </div>
+    <h3 id="t4" ref="t4">抵押权人信息</h3>
+    <div id="dyqrDiv" ref="dyqrDiv" class="tableDiv">
+       <div>
+        <el-button type="primary" class="add"
+        size="medium" @click="addDyqr">新增</el-button>
+      </div>
+      <el-table
+        :data = "dyqrData"
+        highlight-current-row
+        tooltip-effect="dark"
+        border
+        stripe
+        width="80%"
+        :cell-style="{padding:'3px'}"
+        :header-cell-style="tableHeaderColor"
+        height="200px"
+        :index="indexMethod"
+      >
+       <template v-for="(item,index) in headNames">
+          <el-table-column :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :minWidth="item.minWidth"
+            :width="item.width"
+            :align="item.align"
+            :type="item.type"
+            show-overflow-tooltip
+            >
+            <template v-if="item.children">
+              <el-table-column  v-for="(tmp, index) in item.children" :key="index"
+                  :prop="tmp.prop"
+                  :label="tmp.label"
+                  :minWidth="tmp.minWidth"
+                  :width="tmp.width"
+                  :align="tmp.align"
+                  :type="tmp.type"
+                  show-overflow-tooltip
+                  ></el-table-column>
+            </template>
+          </el-table-column>
+          </template>
+        <el-table-column prop="zjlb" label="类别" align="center"
+         resizable v-if='isShow'></el-table-column>
+        <el-table-column label="操作" fixed="right" align="center" width="90px">
+          <template v-slot="scope">
+            <el-button @click="editDyqr(scope.row,scope.$index)"
+            type="text" size="small">编辑</el-button>
+            <el-button type="text" size="small" @click="delDyqr(scope.$index)"
+             v-if="1 <=scope.$index">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <h3 id="t5" ref="t5">不动产权信息</h3>
+    <div id="bdcxxDiv" ref="bdcxxDiv" class="tableDiv">
+      <el-table
+        :data="bdcData"
+        highlight-current-row
+        tooltip-effect="dark"
+        border
+        stripe
+        width="80%"
+        :cell-style="{padding:'3px'}"
+        :header-cell-style="tableHeaderColor"
+        height="200px"
+        :index="indexMethod"
+      >
+        <el-table-column v-for="(item,index) in bdcHeadNames" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :minWidth="item.minWidth"
+            :width="item.width"
+            :align="item.align"
+            :type="item.type"
+            show-overflow-tooltip
+            >
+          </el-table-column>
+      </el-table>
+    </div>
+    <el-form  :rules="rules" ref="gyform" size="medium">
+      <div class="check-data-content">
+        <el-form-item label="共有情况" class="check-data-content-item">
+          <el-select v-model="gyfs"  size="medium" placeholder="请选择" >
+            <el-option
+              v-for="item in gyfslist"
+              :key="item.name"
+              :label="item.name"
+              :value="item.itemValue" >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </div>
+    </el-form>
+    <h3 id="t6" ref="t6">第三方债务人信息</h3>
+    <div id="zwrDiv" class="tableDiv">
+      <div>
+        <el-button type="primary" class="add"
+        size="medium" @click="addZwr">新增</el-button>
+      </div>
+      <el-table
+        :data="zwrData"
+        highlight-current-row
+        tooltip-effect="dark"
+        border
+        stripe
+        width="80%"
+        :cell-style="{padding:'3px'}"
+        :header-cell-style="tableHeaderColor"
+        height="200px"
+        :index="indexMethod"
+      >
+        <template v-for="(item,index) in headNames">
+          <el-table-column :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :minWidth="item.minWidth"
+            :width="item.width"
+            :align="item.align"
+            :type="item.type"
+            show-overflow-tooltip
+            >
+            <template v-if="item.children">
+              <el-table-column  v-for="(tmp, index) in item.children" :key="index"
+                  :prop="tmp.prop"
+                  :label="tmp.label"
+                  :minWidth="tmp.minWidth"
+                  :width="tmp.width"
+                  :align="tmp.align"
+                  :type="tmp.type"
+                  show-overflow-tooltip
+                  ></el-table-column>
+            </template>
+          </el-table-column>
+          </template>
+             <el-table-column prop="zjlb" label="类别" align="center"
+         resizable v-if='isShow'></el-table-column>
+        <el-table-column label="操作" fixed="right" align="center" width="90px">
+          <template v-slot="scope">
+            <el-button @click="editZWR(scope.row,scope.$index)"
+            type="text" size="small">编辑</el-button>
+            <el-button type="text" size="small" @click="delZWR(scope.$index)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <el-dialog
+      :title="title"
+      :visible.sync="dialogFormVisible"
+      @close="closeZWRDialog"
+      :modal-append-to-body='false'
+      :close-on-click-modal ='false'
+      :close-on-press-escape='false'
+      :destroy-on-close='true'
+      width='55%'
+    >
+      <el-form :model="zwrinfo" ref="zwrForm" :rules="zwrRules" size="small" label-width="130px">
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="姓名:" prop="name">
+              <el-input v-model.trim="zwrinfo.name"
+              :disabled="inputDisabled"
+              placeholder="请输入姓名"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="权利人性质:" prop="qlrxz">
+               <el-select v-model.trim="zwrinfo.qlrxz" style="width: 100%;">
+                 <el-option
+                    v-for="item in qlrxzlist"
+                    :key="item.name"
+                    :label="item.name"
+                    :value="item.itemValue">
+                  </el-option>
+                </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="证件类型:" prop="zjlbmc">
+                <el-select v-model="zwrinfo.zjlbmc"  style="width:100%"
+                 @change="getZJLBMC" ref='newText' >
+                  <el-option
+                    v-for="item in zjlxlist"
+                    :key="item.name"
+                    :label="item.name"
+                    :value="item.itemValue" >
+                  </el-option>
+                </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="证件号码:" prop="zjhm">
+              <el-input v-model.trim="zwrinfo.zjhm" placeholder="请输入证件号码"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="联系电话:" prop="lxdh">
+              <el-input v-model.trim="zwrinfo.lxdh" placeholder="请输入联系电话"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="法人代表名称:" prop="frdbmc">
+              <el-input v-model.trim="zwrinfo.frdbmc" placeholder="请输入法人代表名称"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item label="法人代表证件类型:" prop="frzjlx">
+               <el-select v-model="zwrinfo.frzjlx" placeholder="请选择"
+               style="width:100%">
+                    <el-option
+                      v-for="item in zjlxlist"
+                      :key="item.name"
+                      :label="item.name"
+                      :value="item.itemValue">
+                    </el-option>
+                  </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :md="12">
+            <el-form-item label="法人代表证件号码:" prop="fqzjhm">
+              <el-input v-model.trim="zwrinfo.fqzjhm" placeholder="请输入证件号码"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :md="12">
+            <el-form-item
+              label="法人代表联系电话:"
+              prop="fqlxdh"
+            >
+              <el-input v-model.trim="zwrinfo.fqlxdh" placeholder="请输入联系电话"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogFormVisible = false" size="medium">读 证</el-button>
+        <el-button type="primary" @click="submitZwrForm" size="medium">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { queryByDicname } from '@/apis/realReg/dicItem';
+import { getEmployeeById } from '@/apis/auth/employee';
+import { mapState } from 'vuex';
+import { validCardId, validPhone } from '@/libs/validate';
+
+export default {
+  data() {
+    const regId = (rule, value, callback) => {
+      if (this.zwrinfo.zjlb === '1' || this.zwrinfo.zjlbmc === '身份证') {
+        if (validCardId(value)) {
+          callback();
+        } else {
+          callback(new Error('请填写正确的身份证号'));
+        }
+      } else if (value === '') {
+        callback(new Error('请填写证件号码'));
+      } else {
+        callback();
+      }
+    };
+    const regPhone = (rule, value, callback) => {
+      if (validPhone(value)) {
+        callback();
+      } else {
+        callback(new Error('请填写正确的手机号码'));
+      }
+    };
+    return {
+      headNames: [
+        {
+          label: '序号', prop: 'codes', width: '58px', align: 'center', type: 'index', show: true,
+        },
+        {
+          label: '姓名', prop: 'name', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '权利人性质', prop: 'qlrxz', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '证件类型', prop: 'zjlbmc', minWidth: '90px', align: 'center', show: true,
+        },
+        {
+          label: '证件号码', prop: 'zjhm', minWidth: '90px', align: 'center', show: true,
+        },
+        {
+          label: '通讯地址', prop: 'dz', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '法人代表',
+          align: 'center',
+          show: false,
+          children: [
+            {
+              label: '名称', prop: 'frdbmc', minWidth: '90px', align: 'center', show: false,
+            },
+            {
+              label: '证件类型', prop: 'frdbzjlxmc', minWidth: '90px', align: 'center', show: false,
+            },
+            {
+              label: '证件号码', prop: 'frdbzjhm', minWidth: '90px', align: 'center', show: false,
+            },
+            {
+              label: '联系电话', prop: 'frdblxdh', minWidth: '90px', align: 'center', show: false,
+            },
+          ],
+        },
+      ],
+      bdcHeadNames: [
+        {
+          label: '序号', prop: 'codes', width: '58px', align: 'center', type: 'index',
+        },
+        {
+          label: '坐落', prop: 'zl', minWidth: '160px', align: 'center',
+        },
+        {
+          label: '不动产单元', prop: 'bdcdyh', minWidth: '155px', align: 'center',
+        },
+        {
+          label: '土地使用权面积', prop: 'tdsyqmj', minWidth: '130px', align: 'center',
+        },
+        {
+          label: '房屋建筑面积', prop: 'fwjzmj', minWidth: '120px', align: 'center',
+        },
+        {
+          label: '土地用途', prop: 'tdytmc', minWidth: '100px', align: 'center',
+        },
+        {
+          label: '房屋用途', prop: 'fwytmc', minWidth: '90px', align: 'center',
+        },
+        {
+          label: '抵押情况', prop: 'dyqk', minWidth: '90px', align: 'center',
+        },
+        {
+          label: '查封情况', prop: 'cfqk', minWidth: '90px', align: 'center',
+        },
+      ],
+      ywrData: [],
+      dyrData: [],
+      dyqrData: [],
+      bdcData: [],
+      dialogFormVisible: false,
+      zwrData: [],
+      zwrinfo: {
+        qlrxz: '个人',
+        zjlbmc: '身份证',
+        zjlb: '1',
+        zjhm: '',
+        lxdz: '',
+        lxdh: '',
+        frdbmc: '',
+        frzjlx: '',
+        fqzjhm: '',
+        fqlxdh: '',
+        name: '',
+      },
+      zjlxlist: [],
+      qlrxzlist: [],
+      gyfslist: [],
+      isShow: false,
+      orgLen: 0, // 抵押权人原始数量 判断是否需要显示删除按钮
+      operateType: 'add',
+      zwrIndex: 0,
+      dyqrIndex: 0,
+      title: '添加第三方债务人信息',
+      gyfs: '0',
+      rules: {
+        gyfs: [
+          { required: true, message: '共有方式不能为空' },
+        ],
+      },
+      // 验证规则
+      zwrRules: {
+        name: [
+          { required: true, message: '姓名不能为空' },
+        ],
+        lxdh: [{
+          required: true,
+          validator: regPhone,
+          trigger: 'blur',
+        }],
+        zjhm: [{ required: true, validator: regId }],
+      },
+      isRule: false, // 判断抵押信息组件是否通过验证
+      inputDisabled: false,
+    };
+  },
+  props: ['isVisable', 'info'],
+  created() {
+    this.getDicItems('共有方式');
+    this.getDicItems('证件类型');
+    this.getDicItems('权利人性质');
+  },
+  methods: {
+    getTableInfo() {
+      if (this.info !== '' && this.info.length > 0) {
+        const info = JSON.parse(this.info);
+        const qlrinfo = info.qlrxx.qlr;
+        if (qlrinfo.length > 0) {
+          this.dyrData = qlrinfo.map((item) => {
+            item.name = item.qlrmc;
+            item.zjlbmc = this.tranZJLBM(item.zjlb);
+            return item;
+          });
+          this.ywrData = info.qlrxx.ywr.map((item) => {
+            item.name = item.qlrmc;
+            item.zjlbmc = this.tranZJLBM(item.zjlb);
+            if (item.frdbzjlx !== null || item.frdbzjlx !== '' || item.frdbzjlx.length > 0) {
+              item.frdbzjlxmc = this.tranZJLBM(item.frdbzjlx);
+            }
+            return item;
+          });
+          this.orgLen = qlrinfo.length;
+          this.bdcData = info.bdcdylists;
+          if (this.dyqrData === [] || this.dyqrData.length === 0) {
+            this.getUserInfo();
+          }
+        } else {
+          this.dyrData = [];
+          this.ywrData = [];
+          this.orgLen = 0;
+          this.bdcData = [];
+        }
+      }
+    },
+    indexMethod(index) {
+      return index + 1;
+    },
+    addZwr() {
+      this.inputDisabled = false;
+      this.title = '添加第三方债务人信息';
+      this.dialogFormVisible = true;
+      this.operateType = 'add';
+    },
+    addDyqr() {
+      this.inputDisabled = false;
+      this.title = '添加抵押权人信息';
+      this.dialogFormVisible = true;
+      this.operateType = 'addDyqr';
+    },
+    submitZwrForm() {
+      this.$refs.zwrForm.validate((validate) => {
+        if (!validate) {
+          return;
+        }
+        // this.zwrinfo.name = this.zwrinfo.qlrmc;
+        if (this.operateType === 'add') {
+          this.zwrData = [...this.zwrData, { ...this.zwrinfo }];
+        } else if (this.operateType === 'addDyqr') {
+          this.dyqrData = [...this.dyqrData, { ...this.zwrinfo }];
+        } else if (this.operateType === 'edit') {
+          this.$set(this.zwrData, this.zwrIndex, { ...this.zwrinfo });
+        } else {
+          this.$set(this.dyqrData, this.dyqrIndex, { ...this.zwrinfo });
+        }
+        this.closeZWRDialog();
+      });
+    },
+    editZWR(item, index) {
+      this.title = '修改第三方债务人信息';
+      this.zwrIndex = index;
+      this.zwrinfo = {
+        name: item.name,
+        qlrxz: item.qlrxz,
+        zjlbmc: item.zjlbmc,
+        zjhm: item.zjhm,
+        lxdh: item.lxdh,
+        frdbmc: item.frdbmc,
+        frzjlx: item.frzjlx,
+        fqzjhm: item.fqzjhm,
+        fqlxdh: item.fqlxdh,
+      };
+      this.operateType = 'edit';
+      this.dialogFormVisible = true;
+    },
+    editDyqr(item, index) {
+      this.inputDisabled = index <= this.orgLen;
+      this.title = '修改抵押权人信息';
+      this.dyqrIndex = index;
+      this.zwrinfo = {
+        name: item.name,
+        qlrxz: item.qlrxz,
+        zjlbmc: item.zjlbmc,
+        zjhm: item.zjhm,
+        lxdh: item.lxdh,
+        frdbmc: item.frdbmc,
+        frzjlx: item.frzjlx,
+        fqzjhm: item.fqzjhm,
+        fqlxdh: item.fqlxdh,
+      };
+      this.operateType = 'editDyqr';
+      this.dialogFormVisible = true;
+    },
+    delZWR(idx) {
+      this.$confirm('确认删除选中数据吗？').then(() => {
+        this.zwrData.splice(idx, 1);
+      });
+    },
+    delDyqr(idx) {
+      this.$confirm('确认删除选中数据吗？').then(() => {
+        this.dyqrData.splice(idx, 1);
+      });
+    },
+    closeZWRDialog() {
+      // this.resetFields('zwrForm');
+      this.zwrinfo = {
+        qlrxz: '个人',
+        zjlbmc: '身份证',
+        zjlb: '1',
+        zjhm: '',
+        lxdz: '',
+        lxdh: '',
+        frdbmc: '',
+        frzjlx: '',
+        fqzjhm: '',
+        fqlxdh: '',
+        name: '',
+      };
+      this.dialogFormVisible = false;
+    },
+    resetFields(formRef) {
+      this.$refs[formRef].resetFields();
+    },
+    getDicItems(dicname) {
+      const datas = {
+        dicName: dicname,
+      };
+      new Promise((resolve) => {
+        queryByDicname(datas).then((res) => {
+          resolve(res);
+        });
+      }).then((res) => {
+        if (res.code === 0) {
+          if (dicname === '证件类型') {
+            this.zjlxlist = res.resData.dicitemTree.filter(item => item.name);
+          } else if (dicname === '权利人性质') {
+            this.qlrxzlist = res.resData.dicitemTree.filter(item => item.name);
+          } else {
+            this.gyfslist = res.resData.dicitemTree.filter(item => item.name);
+          }
+        }
+      });
+    },
+    getUserInfo() {
+      getEmployeeById(this.userId).then((data) => {
+        let arr = [];
+        if (!Array.isArray(data.resData)) {
+          arr.push(data.resData);
+        } else {
+          arr = data.resData;
+        }
+        arr.forEach((item) => {
+          let obj = {};
+          obj.name = item.user.userName;
+          obj.userId = item.user.userId;
+          obj.zjlb = item.employee.empCardtype;
+          obj.zjhm = item.employee.empIdcardno;
+          const zjobj = this.zjlxlist.find(tmp => tmp.itemValue === obj.zjlb);
+          obj.zjlbmc = zjobj.name;
+          obj = Object.assign({
+            qlrxz: '',
+            zjlb: '',
+            zjhm: '',
+            dz: '',
+            frdbrxm: '',
+            frdbzjlx: '',
+            frdbzjh: '',
+            frdbdhhm: '',
+          }, obj);
+          this.dyqrData.push(obj);
+        });
+      }, (err) => {
+        // throw new Error(err);
+        this.$message.error(`获取抵押权人信息失败！${err.message}`);
+      });
+    },
+    getZJLBMC(id) {
+      const obj = this.zjlxlist.find(item => item.itemValue === id);
+      this.zwrinfo.zjlbmc = obj.name;
+      this.zwrinfo.zjlb = id;
+    },
+    tranZJLBM(id) {
+      let val = id;
+      const obj = this.zjlxlist.find(item => item.itemValue === id);
+      if (obj === null || obj === undefined) {
+        val = id;
+      } else {
+        val = obj.name;
+      }
+      return val;
+    },
+    // 修改table header的背景色
+    tableHeaderColor({ rowIndex }) {
+      let sty = 'padding:5px 1px;background:#F2F6FC;';
+      if (rowIndex === 0 || rowIndex === 1) {
+        sty = 'padding:5px 1px;background:#F2F6FC;font-size:14px;color:rgba(102,102,102,1);font-weight:400; height:15px;';
+      }
+      return sty;
+    },
+    getTSXX() {
+      return this.bdcData.map(item => ({
+        tstybm: item.tstybm,
+        bdcdyh: item.bdcdyh,
+        bdclx: '房屋',
+        djzl: '预告抵押',
+      }));
+    },
+  },
+  mounted() {
+    // this.getTableInfo();
+  },
+  computed: {
+    ...mapState('user', { userId: state => state.userId }),
+    ...mapState('ygygdy', { datainfo: state => state.INFO }),
+    ...mapState('ygygdy', { bdc: state => state.BDC }),
+  },
+  watch: {
+    // dyrData: {
+    //   handler(val) {
+    //     if (val.length > 0 && this.dyqrData.length === 0) {
+    //       this.getUserInfo();
+    //     }
+    //   },
+    // },
+    isVisable(val) {
+      if (val) {
+        this.getTableInfo();
+        // this.getUserInfo();
+      }
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+.infodiv {
+  padding: 0 15px 0 20px;
+  .check-data-content{
+    display: flex;
+    &-item{
+      width: 33%;
+      box-sizing: border-box;
+    }
+  }
+  /* 设置表头的高度 */
+
+  .el-table__header td,.el-table__header th{
+
+  padding:300px 300px;
+
+  }
+}
+</style>

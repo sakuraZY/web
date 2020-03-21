@@ -1,0 +1,15 @@
+export const TOKEN_KEY = 'authck';
+export const COOKIE_KEY = 'cookie';
+export const LGUSER_KEY = 'lguser';
+export const GSVER_KEY = 'gsver';
+export const METHODS_KEY = 'methods';
+export const ROLE_KEY = 'roleId';
+export const USER_KEY = 'userId';
+export const SYSRIGHT_KEY = 'sysRight';
+export const TICKET_KEY = 'ticket';
+export const TICKET_TIME_KEY = 'ticketTime';
+export const USERNAME_KEY = 'userName';
+export const USERTYPE_KEY = 'userType';
+export const REGIONCODE_KEY = 'regionCode';
+export const EXPIRYDATE_KEY = 'expiryDate';
+export const AREA_KEY = 'area';

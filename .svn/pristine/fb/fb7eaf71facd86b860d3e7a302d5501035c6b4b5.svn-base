@@ -1,0 +1,17 @@
+.geo-banner{
+  height: 440px;
+  position: relative;
+  background: linear-gradient($--color-primary, mix($--color-black, $--color-primary, 15%));
+  &-container{
+    @extend container;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+    z-index: 100;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+  }
+}

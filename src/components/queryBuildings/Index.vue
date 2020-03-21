@@ -1,0 +1,251 @@
+<!--
+ * @Descripttion: 房屋幢查询
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-02-06 13:41:55
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-20 17:48:51
+ -->
+<template >
+  <div class='form-box'>
+    <div class='form-building'>
+      <!-- <h3>选择楼盘</h3> -->
+      <el-form :model="buildingform" :rules="rules" ref="buildingform" class="demo-ruleForm">
+        <el-row :gutter="20" class='rowCondition'>
+          <!-- <el-col :span='8'>
+            <el-form-item label="不动产所在区域" prop='nodeName'>
+              <el-input v-model.trim="buildingform.nodeName" placeholder="请输入所在区域"
+                @keyup.enter.native="handlerQuery()" @change="clearPageInfo()"></el-input>
+            </el-form-item>
+          </el-col> -->
+          <el-col :span='8'>
+            <el-form-item label="房屋编号" prop='fwbh'>
+              <el-input v-model.trim="buildingform.fwbh" placeholder="请输入房屋编号"
+                @keyup.enter.native="handlerQuery()" @change="clearPageInfo()"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='8'>
+            <el-form-item label="项目名称" prop='xmmc'>
+              <el-input v-model.trim="buildingform.xmmc" placeholder="请输入项目名称"
+                @keyup.enter.native="handlerQuery()" @change="clearPageInfo()"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span='8'>
+            <el-form-item label="房屋地址" prop='fwzl'>
+              <el-input v-model.trim="buildingform.fwzl" placeholder="请输入房屋地址"
+                @keyup.enter.native="handlerQuery()" @change="clearPageInfo()"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20" class='rowCondition'>
+          <el-col :span='24' align='right'>
+            <div class="el-bottom">
+              <!-- icon="el-icon-search"  icon="el-icon-refresh-right" -->
+              <el-button type="primary" @click="handlerQuery()">查询
+              </el-button>
+              <el-button class="btnBorder" @click="handlerReset()">重置</el-button>
+              <el-checkbox v-model="buildingform.useLike">启用精确查询</el-checkbox>
+            </div>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-table :data="shouldShowData" highlight-current-row
+            @current-change="handlerCurrentChange" tooltip-effect="dark" border stripe
+            v-loading="showbuildloading" element-loading-text="拼命加载中" :cell-style="{padding:'3px'}"
+            :header-cell-style="{padding:'8px 3px',background:'#F2F6FC'}" min-height="500px"
+            width="80%">
+            <el-table-column type="index" label="序号" width="80" :index="indexMethod" align="center">
+            </el-table-column>
+            <el-table-column prop="cjh" label="产籍号" align="center" resizable show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column prop="fwbh" label="房屋编号" align="center" resizable
+              show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column prop="zh" label="自然幢号" align="center">
+            </el-table-column>
+            <el-table-column prop="xmmc" label="项目名称" align="center" resizable
+              show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column prop="ghytmc" label="房屋用途" align="center">
+            </el-table-column>
+            <el-table-column prop="fwjgmc" label="房屋结构" align="center">
+            </el-table-column>
+            <el-table-column prop="fwzl" label="房屋坐落" align="center" resizable
+              show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column prop="zcs" label="总层数" align="center">
+            </el-table-column>
+            <el-table-column prop="dscs" label="地上层数" align="center">
+            </el-table-column>
+            <el-table-column prop="dxcs" label="地下层数" align="center">
+            </el-table-column>
+            <el-table-column label="操作" width="120" fixed="right" align="center">
+              <template v-slot="scope">
+                <el-button type="text" size="medium" @click="handlerCurZ(scope.row)">
+                  选择楼盘表</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-pagination :hide-on-single-page="pageinfo.hidesinglePagination" background
+              layout="prev, pager, next" :page-size="pageinfo.pageSize" :pager-count="11"
+              :total="totalCount" @current-change="handlerCurrentChangePage">
+            </el-pagination>
+          </el-col>
+        </el-row>
+      </el-form>
+    </div>
+  </div>
+</template>
+
+<script>
+
+import { mapState, mapMutations } from 'vuex';
+import { getBuilding } from '@/apis/nres/lpb';
+// import { buildingData } from './data';
+
+export default {
+  data() {
+    return {
+      tableData: [],
+      totalCount: 0,
+      currentRow: null,
+      pageinfo: {
+        currentPage: 1,
+        pageSize: 10,
+        hidesinglePagination: true,
+      },
+      buildingform: {
+        pageTotal: true,
+        useLike: false,
+        fwbh: '',
+        xmmc: '',
+        fwzl: '',
+      },
+      rules: {
+        // nodeName: [
+        //   { required: true, message: '请输入所在区域', trigger: 'blur' },
+        // ],
+        fwbh: [
+          { required: false, message: '请输入房屋编号', trigger: 'blur' },
+        ],
+      },
+    };
+  },
+  computed: {
+    ...mapState('app', { area: state => state.area }),
+    ...mapState('firstHand', { zdtybm: state => state.ZDTYBM }),
+    ...mapState('firstHand', { ztstybm: state => state.ZTSTYBM }),
+    ...mapState('firstHand', { nodename: state => state.NODENAME }),
+    ...mapState('firstHand', { showbuildloading: state => state.SHOWBUILDLOADING }),
+    shouldShowData() {
+      return this.tableData ? this.tableData.filter(p => p.lifecycle === 0) : [];
+    },
+  },
+  props: {
+    fwbh: {
+      type: String,
+      // required: true,
+    },
+  },
+  methods: {
+    ...mapMutations('firstHand', [
+      'SET_NODENAME',
+      'SET_ZDTYBM',
+      'SET_ZTSTYBM',
+      'SET_SHOWHOUSE',
+      'SET_BUILDLOADING',
+    ]),
+    handlerQuery(formName = 'buildingform') {
+      const obj = this;
+      obj.$refs[formName].validate((valid) => {
+        if (!valid) {
+          return false;
+        }
+        if (!this.area) {
+          this.$message.error('所在区域不允许为空');
+          return false;
+        }
+        this.SET_BUILDLOADING(true);
+        const pageNo = obj.pageinfo.currentPage;
+        const { ...param } = obj.buildingform;
+        param.useLike = param.useLike ? '否' : '是';
+        const { fwbh, xmmc, fwzl } = param;
+        return getBuilding({
+          data: {
+            fwbh,
+            xmmc,
+            fwzl,
+          },
+          pageNo,
+          ...param,
+          nodeName: this.area,
+        }).then(({
+          code,
+          msg,
+          resData = {},
+        } = {}) => {
+          this.SET_BUILDLOADING(false);
+          if (code !== 0) {
+            throw new Error(msg || '获取幢信息失败');
+          } else {
+            const { fczQsdc: rows, total } = resData;
+            // console.log(data, rows, total);
+            obj.tableData = rows;
+            obj.totalCount = total;
+          }
+        }).catch((err) => {
+          this.SET_BUILDLOADING(false);
+          let sErrortip = '';
+          if (err.message.includes('timeout')) {
+            sErrortip = '网络请求超时';
+          }
+          obj.$message({
+            type: 'error',
+            message: sErrortip + (err.message || '获取户信息失败'),
+          });
+        });
+      });
+    },
+    handlerReset(formName = 'buildingform') {
+      this.$refs[formName].resetFields();
+    },
+    clearPageInfo() {
+      this.pageinfo.currentPage = 1;
+    },
+    indexMethod(index) {
+      const { currentPage, pageSize } = this.pageinfo;
+      return (currentPage - 1) * pageSize + (index + 1);
+    },
+    setCurrent(row) {
+      this.$refs.singleTable.setCurrentRow(row);
+    },
+    handlerCurZ(row) {
+      if (this.area && row.tstybm !== this.ztstybm) {
+        this.SET_BUILDLOADING(true);
+        this.SET_NODENAME(this.area);
+        this.SET_ZTSTYBM(row.tstybm);
+        this.SET_ZDTYBM(row.zdtybm);
+        this.SET_SHOWHOUSE(true);
+      }
+      // this.$emit('func', [row.tstybm, row.zdtybm, this.buildingform.nodeName]);
+    },
+    handlerCurrentChange(val) {
+      this.currentRow = val;
+    },
+    handlerCurrentChangePage(val) {
+      this.pageinfo.currentPage = val;
+      this.handlerQuery();
+    },
+  },
+  destroyed() {
+    this.SET_ZTSTYBM('');
+  },
+};
+</script>
+
+<style lang='scss' type="text/scss" scoped >
+@import "./index.scss";
+</style>

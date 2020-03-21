@@ -1,0 +1,58 @@
+/*
+ * @Author: huwei*
+ * @Date: 2020-03-08 22:24:02
+ * @
+# Description: 叫号getKeyCode 后 init 附件列表
+ */
+import { requestKey } from '@/apis/buildingTable/building';
+import { formatDate } from '@/libs/date';
+
+export default {
+  data() {
+    return {
+      typeName: '流程实例',
+      parentPnode: 'YGDJ',
+      rkey: 'W',
+      keyCode: '',
+    };
+  },
+  methods: {
+    getKeyCode() {
+      requestKey(this.rkey).then((data) => {
+        const { code, msg, resData } = data;
+        if (code === 0) {
+          let str = resData.reqkey.toString();
+          let arr = str.split('');
+          const len = arr.length;
+          if (4 - len > 0) {
+            for (let i = 0; i < 4 - len; i += 1) {
+              arr.unshift('0');
+            }
+          }
+          if (4 - len < 0) {
+            arr = arr.slice(0, 4);
+          }
+          str = arr.join('');
+          const today = formatDate(new Date());
+          this.keyCode = `${this.rkey}${today.split('-').join('')}${str}`;
+          // 获取申请编号的时候就初始化附件列表
+          // this.FJInit();
+        } else {
+          this.$message.error(msg);
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    // FJInit() { // 初始化上传附件列表信息
+    //   fjinit({
+    //     pNode: this.keyCode,
+    //     pType: this.typeName,
+    //     parentPnode: this.parentPnode,
+    //   }).then(() => {
+    //   }, (err) => {
+    //     throw new Error(err);
+    //   });
+    // },
+  },
+};

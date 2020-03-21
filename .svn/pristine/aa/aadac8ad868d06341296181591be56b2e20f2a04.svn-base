@@ -1,0 +1,249 @@
+<!--
+ * @Description: 日志管理
+ * @Author: wangjiayu
+ * @Date: 2020-02-24 09:10:13
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-04 10:35:36
+ -->
+
+<template>
+  <div class="log-info-container">
+    <el-form :model="logForm" ref="logForm" label-width="100px" class="demo-ruleForm">
+      <!-- 查询条件 -->
+      <el-row :gutter="20">
+        <el-col :span='8'>
+          <el-form-item label="模块名：" prop="mdlName">
+            <el-select clearable v-model="logForm.mdlName" placeholder="请选择">
+              <el-option v-for="(val, key, index) in mdlType" :key="index+key"
+                :label="val" :value="key"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="警告级别：" prop="warnType">
+            <el-select clearable v-model="logForm.warnType" placeholder="请选择">
+              <el-option v-for="(item, index) in warnLevel" :key="index+item.name"
+                :label="item.name" :value="item.value"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="用户名：" prop="userId">
+            <div class="user-item">
+              <el-input v-model.trim="logForm.userId" placeholder="用户名" disabled></el-input>
+              <el-button icon="el-icon-search" @click="handleChooseUser()">选择</el-button>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="记录时间：" prop="beginTime">
+            <el-date-picker type="datetime" placeholder="选择起始时间" v-model="logForm.beginTime"
+              value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="至：" prop="endTime">
+            <el-date-picker type="datetime" placeholder="选择终止时间" v-model="logForm.endTime"
+              value-format="yyyy-MM-dd HH:mm:ss"></el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="操作类型：" prop="operation">
+            <el-select clearable v-model="logForm.operation" placeholder="请选择">
+              <el-option v-for="(item, index) in oprateType" :key="index+item"
+                :label="item" :value="item"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8' :offset='16' class="btn-col">
+          <el-button type="primary" icon="el-icon-search"
+            @click="handleQuery(true)">查询</el-button>
+          <el-button icon="el-icon-refresh-right"
+            @click="handleReset()">重置</el-button>
+        </el-col>
+      </el-row>
+      <!-- 查询结果 -->
+      <div class="result">
+        <div class="result-table">
+          <el-table :data="tableData" highlight-current-row tooltip-effect="dark"
+            border stripe class="loading-area" :cell-style="{padding:'8px 3px'}"
+            :header-cell-style="{padding:'8px 3px',background:'#F2F6FC'}" height="100%">
+            <el-table-column type="index" label="序号" width="60" :index="indexMethod"
+              align="center"></el-table-column>
+            <el-table-column prop="logWarntype" label="警告级别" width="90" show-overflow-tooltip>
+              <template v-slot="scope">
+                <div class="icon-col">
+                  <icon-svg className="icon warn-icon" iconClass="bell" style="font-size:22px"
+                    :wlevel="scope.row.logWarntype"></icon-svg>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column v-for="(item,index) in columns" :key="index+item.name"
+              :prop="item.prop" :label="item.name" :align="item.align || 'center'"
+              :width="item.width" :min-width="item.minWidth" :formatter="item.formatter"
+              header-align="center" resizable show-overflow-tooltip>
+            </el-table-column>
+          </el-table>
+        </div>
+        <el-pagination :hide-on-single-page="pageInfo.hidesinglePagination" background
+            :page-sizes="[10, 20, 30, 50]" layout="sizes, prev, pager, next"
+            :page-size="pageInfo.pageSize" :pager-count="11" :total="totalCount"
+            @current-change="handleCurrentChangePage" @size-change="handleSizeChange">
+        </el-pagination>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import { queryLog } from '@/apis/auth/log';
+import { getNDaysBeforeEndDate } from '@/libs/common';
+
+export default {
+  data() {
+    return {
+      mdlType: {
+        sysmgr: '系统',
+        auth: '权限',
+        nres: '业务申请',
+      },
+      warnLevel: [
+        { name: '一级', value: '1' },
+        { name: '二级', value: '2' },
+        { name: '三级', value: '3' },
+        { name: '四级', value: '4' },
+      ],
+      oprateType: ['修改', '删除', '新增', '查询'],
+      logForm: {
+        mdlName: '',
+        warnType: '',
+        userId: '',
+        beginTime: getNDaysBeforeEndDate(new Date(), -3),
+        endTime: new Date(),
+        operation: '',
+      },
+      columns: [
+        { name: '用户名', prop: 'userId', width: 130 },
+        { name: '机器地址', prop: 'logIp', width: 130 },
+        { name: '应用程序名', prop: 'logAppname', width: 130 },
+        {
+          name: '模块名', prop: 'logMdlname', width: 120, formatter: this.formatMdlType,
+        },
+        {
+          name: '操作内容', prop: 'logDowhat', align: 'left', minWidth: 300,
+        },
+        { name: '记录时间', prop: 'logTime', width: 160 },
+        { name: '备注', prop: 'logNote', minWidth: 180 },
+        { name: '操作类型', prop: 'logOpertype', width: 100 },
+      ],
+      pageInfo: {
+        currentPage: 1,
+        pageSize: 10,
+        hidesinglePagination: false,
+      },
+      tableData: [],
+      totalCount: 0,
+      loadingInstance: null,
+    };
+  },
+  created() {
+    this.handleQuery(true);
+  },
+  methods: {
+    // 格式化日期
+    formatDate(date) {
+      let newDate = date || new Date();
+      if (typeof newDate === 'number') {
+        newDate = new Date(newDate);
+      }
+      return `${newDate.getFullYear()}-${newDate.getMonth() + 1}-${newDate.getDate()} ${newDate.getHours()}:${newDate.getMinutes()}:${newDate.getSeconds()}`;
+    },
+    // 格式化模块类型
+    formatMdlType(row, column, cellValue) {
+      return this.mdlType[cellValue] || cellValue;
+    },
+    // 选择用户
+    handleChooseUser() {
+      // TODO: 选择用户
+    },
+    // 格式化当前页数据索引列
+    indexMethod(index) {
+      const { currentPage, pageSize } = this.pageInfo;
+      return (currentPage - 1) * pageSize + (index + 1);
+    },
+    // 查询日志
+    handleQuery(isFirstPage = false) {
+      const vm = this;
+      vm.createloading();
+      if (isFirstPage) {
+        this.pageInfo.currentPage = 1;
+      }
+      const queryInfo = {
+        ...this.logForm,
+        pageNo: this.pageInfo.currentPage,
+        pageSize: this.pageInfo.pageSize,
+      };
+      if (queryInfo.beginTime && typeof queryInfo.beginTime !== 'string') {
+        queryInfo.beginTime = this.formatDate(queryInfo.beginTime);
+      }
+      if (queryInfo.endTime && typeof queryInfo.endTime !== 'string') {
+        queryInfo.endTime = this.formatDate(queryInfo.endTime);
+      }
+      return vm.$nextTick(() => {
+        queryLog(queryInfo).then(({ code, resData = {} } = {}) => {
+          vm.closeloading();
+          if (code !== 0) {
+            this.$message.error('获取日志失败');
+          } else {
+            const { total, logInfo = [] } = resData;
+            this.tableData = logInfo;
+            this.totalCount = total;
+          }
+        }, (err) => {
+          vm.closeloading();
+          throw new Error(err);
+        });
+      });
+    },
+    // 重置查询条件
+    handleReset(formName = 'logForm') {
+      if (this.$refs[formName] !== undefined) {
+        this.$refs[formName].resetFields();
+      }
+    },
+    // 改变页码
+    handleCurrentChangePage(val) {
+      this.pageInfo.currentPage = val;
+      this.handleQuery();
+    },
+    // 改变每页显示条数
+    handleSizeChange(val) {
+      this.pageInfo.pageSize = val;
+      this.handleQuery(true);
+    },
+    // 开始加载动画
+    createloading(el = '.loading-area') {
+      const obj = this.loadingInstance;
+      if (!obj) {
+        this.loadingInstance = this.$loading({
+          lock: true,
+          text: '拼命加载中',
+          target: document.querySelector(el),
+        });
+      }
+    },
+    // 关闭加载动画
+    closeloading() {
+      const obj = this.loadingInstance;
+      if (obj) {
+        obj.close();
+        this.loadingInstance = null;
+      }
+    },
+  },
+};
+</script>
+
+<style lang='scss' scoped>
+@import "./index.scss";
+</style>

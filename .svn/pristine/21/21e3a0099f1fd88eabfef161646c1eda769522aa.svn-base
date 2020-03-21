@@ -1,0 +1,31 @@
+.vue-splitter-container{
+  .splitter-pane{
+    &.splitter{
+      &-paneR{
+        box-sizing: border-box;
+        &.horizontal{
+          padding-top: 6px;
+        }
+        &.vertical{
+          padding-left: 6px;
+        }
+      }
+      &-paneL{
+        box-sizing: border-box;
+        &.horizontal{
+          padding-bottom: 6px;
+        }
+        &.vertical{
+          padding-right: 6px;
+        }
+      }
+    }
+  }
+  .splitter-pane-resizer{
+    background: $--background-color-base;
+    opacity: inherit;
+    &.horizontal, &.vertical{
+      border: none;
+    }
+  }
+}

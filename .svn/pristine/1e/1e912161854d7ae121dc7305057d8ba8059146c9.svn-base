@@ -1,0 +1,98 @@
+.breadcrumbs{
+    width: 100%;
+    height: 54px;
+    background: $--color-white;
+    display:flex;
+    align-items: center;
+    .breadcrumbs-icon{
+      width: 20px;
+      height: 20px;
+    }
+    .icon-home{
+      width: 14px;
+      height: 17px;
+    }
+    button{
+      flex: 0 0 32px;
+      line-height: 50px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      outline: none;
+    }
+    .menu-window{
+      flex:1;
+      height:54px;
+      width:100%;
+      overflow: hidden;
+      position: relative;
+      ul{
+        margin: 0;
+        padding: 0;
+        height:50px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: all .2s;
+        width: 100000px;
+      }
+      li{
+        float: left;
+        height: 54px;
+        padding: 0 12px;
+        list-style: none;
+        cursor: pointer;
+        box-sizing: border-box;
+        border-top: 2px solid transparent;
+        &:hover i{
+          background: $--color-primary;
+          color: $--color-white;
+        }
+        h3{
+          margin: 0;
+          font-size: 15px;
+          color: $--color-text-primary;
+          float: left;
+          margin-top: 15px;
+          font-weight: normal;
+        }
+        i{
+          float: left;
+          font-style: normal;
+          margin-left: 10px;
+          width: 16px;
+          height: 16px;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 12px;
+          line-height: 16px;
+          color: $--color-text-close;
+          margin-top: 15px;
+        }
+      }
+      .active{
+        border-top-color: $--color-primary;
+      }
+    }
+    .btn-down{
+      position: relative;
+      ul{
+        position: absolute;
+        right: 0;
+        top: 48px;
+        margin: 0;
+        padding: 0 20px;
+        list-style: none;
+        background: $--color-white;
+        box-shadow: $--box-shadow-base;
+        z-index: 10;
+        display: none;
+        li{
+          white-space: nowrap;
+        }
+      }
+      .ulshow{
+        display: block;
+      }
+    }
+}

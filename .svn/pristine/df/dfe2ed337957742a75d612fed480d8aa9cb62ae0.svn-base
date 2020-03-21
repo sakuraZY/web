@@ -1,0 +1,211 @@
+<!--
+ * @Description: 验证解封信息组件
+ * @Author: wangjiayu
+ * @Date: 2020-03-13 11:29:35
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-18 09:48:47
+ -->
+
+<template>
+  <div class="check-bdc">
+    <h3>不动产数据检验</h3>
+    <p>业务编号：<span>{{checkForm.sqbh}}</span></p>
+    <el-form
+      class="check-bdc-content"
+      ref="checkForm"
+      :model="checkForm"
+      :rules="checkFormRules"
+      size="medium"
+    >
+      <el-form-item label="查封文号" prop="cfwh" class="check-bdc-content-item">
+        <el-input v-model.trim="checkForm.cfwh" placeholder="请输入查封文号"></el-input>
+      </el-form-item>
+      <el-form-item label="不动产证号" prop="cqzh" class="check-bdc-content-item medium">
+        <el-input v-model.trim="checkForm.cqzh" placeholder="请输入不动产证号"></el-input>
+      </el-form-item>
+      <div class="btn-group">
+        <el-button type="primary" size="medium" @click="handleCheck()">数据验证</el-button>
+        <import-excel :on-success="handleSuccess" :before-upload="beforeUpload"
+          :name="`导入清单`" />
+        <el-button size="medium" @click="handleReset()">重置</el-button>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import { getCFXX } from '@/apis/nres/zxcx';
+import getKeyCode from '@/mixins/getKeyCode';
+import ImportExcel from '@/components/realReg/cfdj/ImportExcel.vue';
+
+export default {
+  components: {
+    ImportExcel,
+  },
+  mixins: [getKeyCode],
+  data() {
+    return {
+      nodeName: '宜昌',
+      checkForm: {
+        sqbh: '',
+        cfwh: '',
+        cqzh: '',
+        cfList: [],
+      },
+      checkFormRules: {
+        cfwh: [{ required: true, message: '请输入查封文号', trigger: 'blur' }],
+        cqzh: [{ required: true, message: '请输入不动产证号', trigger: 'blur' }],
+      },
+    };
+  },
+  watch: {
+    keyCode(val) {
+      this.checkForm.sqbh = val;
+    },
+  },
+  mounted() {
+    // 加载申请编号
+    this.$nextTick(() => {
+      const { sqbh } = this.$route.query;
+      if (!sqbh) {
+        this.getKeyCode();
+      } else {
+        this.checkForm.sqbh = sqbh;
+      }
+      this.bindChangeCFCQZ();
+    });
+  },
+  beforeDestroy() {
+    this.vueEvent.$off('changeCFCQZ');
+  },
+  methods: {
+    // 验证数据
+    handleCheck() {
+      this.$refs.checkForm.validate((valid) => {
+        if (!valid) {
+          return;
+        }
+        getCFXX(this.nodeName, this.checkForm.cfList)
+          .then(({ code, resData: { bdcdylists = [] } = {} } = {}) => {
+            if (code === 0 && bdcdylists.length) {
+              this.$parent.xgzhList = bdcdylists;
+              this.$parent.showJFXX = true;
+              this.$emit('setDisalbed', false);
+            } else {
+              this.$message.error('未找到相关查封信息，请重新输入');
+            }
+          }, (err) => {
+            throw new Error(err);
+          });
+      });
+    },
+    // 上传前验证
+    beforeUpload(file) {
+      const limitSize = file.size / 1024 / 1024 < 4;
+      if (limitSize) {
+        return true;
+      }
+      this.$message.warning('请不要导入大于4M的文件');
+      return false;
+    },
+    // 导入清单成功事件
+    handleSuccess({ results, header }) {
+      const warningTip = () => this.$message.warning('请导入正确的查封数据');
+      if (!header.length) {
+        warningTip();
+        return;
+      }
+      const hasCFWH = header.includes('cwfh') || header.includes('查封文号');
+      const hasBDCZH = header.includes('bdczh') || header.includes('不动产证号');
+      if (!hasCFWH || !hasBDCZH) {
+        warningTip();
+        return;
+      }
+      const cfwhArr = [];
+      const cqzhArr = [];
+      const queryData = [];
+      results.forEach((item) => {
+        const cfwh = item.cfwh || item['查封文号'] || '';
+        const cqzh = item.bdczh || item['不动产证号'] || '';
+        if (cfwh && cqzh) {
+          cfwhArr.push(cfwh);
+          cqzhArr.push(cqzh);
+          queryData.push({ cfbh: cfwh, cqzh });
+        }
+      });
+      if (cfwhArr.length) {
+        this.checkForm.cfwh = cfwhArr.join(',');
+        this.checkForm.cqzh = cqzhArr.join(',');
+        this.checkForm.cfList = queryData;
+        this.clear();
+      }
+    },
+    // 重置查询数据
+    handleReset() {
+      this.clear();
+      this.$refs.checkForm.resetFields();
+    },
+    // 清空查封信息
+    clear() {
+      this.$parent.info = null;
+      this.$parent.showJFXX = false;
+      this.$emit('setDisalbed', true);
+    },
+    // 根据相关证详细信息获取要加载的信息
+    getQueryInfo(xgzxx) {
+      if (!Array.isArray(xgzxx) || !xgzxx.length) {
+        return null;
+      }
+      const cfwhArr = [];
+      const cqzhArr = [];
+      const queryData = [];
+      xgzxx.forEach((item) => {
+        cfwhArr.push(item.cfwh);
+        cqzhArr.push(item.xgzh);
+        queryData.push({
+          cfbh: item.cfwh,
+          cqzh: item.xgzh,
+        });
+      });
+      return {
+        cfwhArr,
+        cqzhArr,
+        queryData,
+      };
+    },
+    bindChangeCFCQZ() {
+      this.vueEvent.$on('changeCFCQZ', (xgzxx) => {
+        this.changeCFCQZ(xgzxx);
+      });
+    },
+    // 根据解封清单的删除同步修改查询条件
+    changeCFCQZ(xgzxx) {
+      const queryInfo = this.getQueryInfo(xgzxx);
+      if (!queryInfo) {
+        this.clear();
+      }
+      this.checkForm.cfwh = queryInfo.cfwhArr.join(',');
+      this.checkForm.cqzh = queryInfo.cqzhArr.join(',');
+      this.checkForm.cfList = queryInfo.queryData;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.check-bdc {
+  &-content{
+    display: flex;
+    &-item{
+      width: 33%;
+      box-sizing: border-box;
+      &.medium{
+        margin: 0 20px;
+      }
+    }
+    .btn-group{
+      padding-top: 36px;
+    }
+  }
+}
+</style>

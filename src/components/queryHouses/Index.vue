@@ -1,0 +1,640 @@
+<!--
+ * @Descripttion:  房屋楼盘
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-02-10 12:11:39
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-20 14:46:24
+ -->
+<template >
+  <div class='form-houses'>
+    <el-container v-loading="showLoading" element-loading-text="拼命加载中">
+      <!-- <el-header class="f-header">
+        <label class="f-title">楼盘表信息</label>
+        <div class="f-menu">
+          <el-button>返回查询结果</el-button>
+        </div>
+      </el-header> -->
+      <el-container class="f-main" v-if="hdata.length !== 0">
+        <el-aside class="f-aside" v-show="!houseExpanded">
+          <el-container class="f-ljz" v-if='ljzhs.length !== 0'>
+            <el-header>逻辑幢号</el-header>
+            <div class="logic-Building">
+              <el-link icon="el-icon-office-building" v-for="(item,index) in ljzhs"
+                :key="'Ljz'+index" @click="setCurrentLJZ(item)" :class="{active:item === curLjzh}">
+                {{item}}</el-link>
+            </div>
+          </el-container>
+          <el-container class="f-zdxx" v-if="zdInfo">
+            <el-header>宗地基本信息</el-header>
+            <el-main class="f-zdxx-main">
+              <div class="row" v-if="zdInfo.sjzdtybm"><label class="left-title">
+                  上级宗地统一编码：</label>
+                <div>{{zdInfo.sjzdtybm}}</div>
+              </div>
+              <div class="row" v-if="zdInfo.zdtybm"><label class="left-title">宗地统一编号：</label>
+                <div>{{zdInfo.zdtybm}}</div>
+              </div>
+              <div class="row" v-if="zdInfo.tdytmc"><label class="left-title">土地用途：</label>
+                <div>{{zdInfo.tdytmc}}</div>
+              </div>
+              <div class="row" v-if="zdInfo.fzmj"><label class="left-title">土地面积：</label>
+                <div>{{zdInfo.fzmj}}㎡</div>
+              </div>
+              <div class="row" v-if="zdInfo.tdzl"><label class="left-title">土地坐落：</label>
+                <div>{{zdInfo.tdzl}}</div>
+              </div>
+            </el-main>
+          </el-container>
+        </el-aside>
+        <!-- <button id='scrollIntoView' v-show="false"></button> -->
+        <el-container class="f-houses">
+          <el-header class="f-title f-houses-title">
+            <div class="f-houses-menu">
+              <icon-svg class="house-expand-icon" :iconClass="setHouseExpand()"
+                @click="changeHouseExpand()"></icon-svg>
+              <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" class="p-left-common"
+                @change="handleCheckAllChange">全选</el-checkbox>
+              <!-- <el-button>position</el-button>document.querySelector("input[value='1760930']").
+              scrollIntoView({block: "start", inline: "nearest",behavior: 'smooth'}) -->
+            </div>
+            {{curLjzh}}逻辑幢
+          </el-header>
+          <el-main class="f-houses-main">
+            <el-container>
+              <el-aside class="f-houses-floor wrapper">
+                <div class="floor-col">
+                  <div class="floor-header">物理层</div>
+                  <div class="floor-body">
+                    <div v-for="(item,key) in arrSJC" :key="getRandom()+key"
+                      :class="{'zy-strip-color':item%2===0}">
+                      {{item===null?'未知':item}}</div>
+                  </div>
+                </div>
+                <div class=" floor-col">
+                  <div class="floor-header">名义层</div>
+                  <div class="floor-body">
+                    <div v-for="(item,key) in arrSJC" :key="getRandom()+key"
+                      :class="{'zy-strip-color':item%2===0}">
+                      {{item===null?'未知':item}}</div>
+                  </div>
+                </div>
+              </el-aside>
+              <el-main class="f-house-all">
+                <div class="house-tr-header">
+                  <div class="house-td-header" v-for="(item,key) in arrDYH" :key="getRandom()+key"
+                    :style="{width:getCurDYWidth(item),minWidth:getMinWidth(item)}">
+                    {{item===null?'未知':`${item}` }}单元(共{{getCurDYCount(item)}}户)
+                  </div>
+                </div>
+                <div class="house-body-unit">
+                  <div class="house-tr-unit" v-for="itemtr in dataTable"
+                    :key="'tr-'+getRandom()+itemtr.val">
+                    <div class="house-dy-unit" :class="{'zy-strip-color':itemtr.val%2===0}"
+                      v-for="itemdy in itemtr.data" :style="{width:getCurDYWidth(itemdy.val),
+                      minWidth:getMinWidth(itemdy.val)} " :key="'dy-'+getRandom()+itemdy.val">
+
+                      <div class="house-td-unit " v-for="itemtd in itemdy.data"
+                        @click.stop.prevent="handleCheckedHChange(itemtd.htstybm)"
+                        :key="'td-'+getRandom()+itemtd.fjh" :style="{
+                          width:`${100/itemdy.data.length}%`}">
+                        <el-checkbox v-model="checkedH" :label="itemtd.htstybm"
+                          @click.self="handleCheckedHChange(itemtd.htstybm)">{{itemtd.htstybm}}
+                        </el-checkbox>
+                        <div class="zy-state-balls">
+                          <i v-for="(itemState,index) in itemtd.state"
+                            v-show='setStateVisible(itemState.ztmc)'
+                            :key="'state-'+getRandom()+index"
+                            :style="{backgroundColor: itemState.ztys}"></i>
+                        </div>
+                        <!-- <icon-svg :iconClass=" setHouseFirstState(false)">
+                        </icon-svg> -->
+                        <!-- <el-tooltip effect="dark" :content="itemtd.fjh" placement="top">
+                          <div> -->
+                        {{(itemtd.fjh===null?"未知":itemtd.fjh )}}
+                        <!-- </div>
+                        </el-tooltip> -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </el-main>
+            </el-container>
+          </el-main>
+        </el-container>
+      </el-container>
+      <el-footer class="f-footer" v-show='allState.length !== 0'>
+        <div class="f-menu">
+          <el-checkbox-group v-model="checkList">
+            <el-checkbox v-for="(item,index) in allState" :key="index" v-show="!item.hide"
+              :label="item.ztmc" :count="item.count" :style="{background:item.ztys}"
+              :disabled="item.disabled">
+              {{item.ztmc+'('+item.count+')'}}
+            </el-checkbox>
+          </el-checkbox-group>
+        </div>
+      </el-footer>
+    </el-container>
+    <slot name="footbanner"></slot>
+  </div>
+
+</template>
+
+<script>
+import { mapState, mapMutations } from 'vuex';
+import { getHouses } from '@/apis/nres/lpb';
+
+export default {
+  components: {
+
+  },
+  data() {
+    return {
+      ljzhs: [],
+      curLjzh: '',
+      hdata: [],
+      zdInfo: {},
+      arrSJC: [],
+      arrDYH: [],
+      originTable: [],
+      dataTable: [],
+      maxFloorlength: 0,
+      allState: [],
+      mapDYHouseMaxCount: [],
+      mapDYHCount: [],
+      mapSJCCount: [],
+      params: {
+        zdtybm: '',
+        tstybm: '',
+        nodeName: '',
+      },
+      showLoading: false,
+      rules: {},
+      minWidth: 120,
+      checkList: [],
+      checkedH: [],
+      AllH: [],
+      checkAll: [],
+      isIndeterminate: false,
+      houseExpanded: false,
+      created: false,
+    };
+  },
+  computed: {
+    hasValueZDinfo() {
+      return this.filterEmptyParams(this.zdInfo);
+    },
+    setHouseUnit() {
+      return (this.maxFloorlength === 0 ? 100 : 100 / this.maxFloorlength);
+    },
+    ...mapState('firstHand', { zdtybm: state => state.ZDTYBM }),
+    ...mapState('firstHand', { ztstybm: state => state.ZTSTYBM }),
+    ...mapState('firstHand', { nodeName: state => state.NODENAME }),
+    ...mapState('app', { area: state => state.area }),
+  },
+  methods: {
+    ...mapMutations('firstHand', [
+      'ADD_H',
+      'REMOVE_H',
+      'SET_H',
+      'SET_SCROLLTOBOTTOM',
+      'SET_BUILDLOADING',
+    ]),
+    async init() {
+      const t = this;
+      try {
+        // feat:楼盘表查询中，仅显示幢查询的加载状态，现需求是不显示户的加载状态
+        // 后期，楼盘表信息功能独立使用时；另添加状态判断是否显示。
+        t.showLoading = false;
+        const { resData } = await t.queryHouses({ ...t.params });
+        if (resData) {
+          t.showLoading = false;
+          t.SET_BUILDLOADING(false);
+          // 处理逻辑幢信息
+          t.ljzhs = resData.ljzhs;
+          if (Array.isArray(t.ljzhs) && t.ljzhs.length > 0) {
+            [t.curLjzh] = t.ljzhs;
+          }
+          // 处理宗地信息
+          t.zdInfo = resData.zdInfo;
+          // 处理户信息
+          t.hdata = resData.hinfos;// rows
+          this.handerHouseInfo();
+          // this.SET_SCROLLTOBOTTOM(true);
+          // 处理页脚信息
+          // t.handleStateInfo();
+        }
+      } catch (e) {
+        t.showLoading = false;
+        this.$message.error(e);
+      }
+    },
+    queryHouses(params) {
+      const t = this;
+      // t.$nextTick(() => {});
+      return new Promise((resolve) => {
+        getHouses(params).then(({ ...res } = {}) => {
+          if (res.code !== 0) {
+            throw new Error(res.msg || '获取户信息失败');
+          } else {
+            resolve(res);
+          }
+        }).catch((err) => {
+          t.showLoading = false;
+          let sErrortip = '';
+          if (err.message.includes('timeout')) {
+            sErrortip = '网络请求超时';
+          }
+          this.$message({
+            type: 'error',
+            message: sErrortip + (err.message || '获取户信息失败'),
+          });
+          resolve('');
+        });
+      });
+    },
+    handleCheckedHChange(htstybm) {
+      // console.log('handleCheckedHChange', htstybm);
+      // 处理选中的单元
+      if (this.checkedH.includes(htstybm)) {
+        this.checkedH = this.checkedH.filter(a => a !== htstybm);
+      } else {
+        this.checkedH.push(htstybm);
+      }
+      this.setCheckAll();
+    },
+    // 是否全选
+    handleCheckAllChange(bChecked) {
+      this.checkedH = bChecked ? this.AllH : [];
+      this.isIndeterminate = false;
+    },
+    handleStateInfo(data) {
+      const t = this;
+      t.allState = [];
+      t.getArrState(data);
+    },
+    handerZDInfo() {
+      // 用来控制宗地信息的显示
+    },
+    handerHouseInfo() {
+      // 控制房屋信息的显示
+      const t = this;
+      //
+      // 获取有效的数据
+      const showData = t.shouldShowData();
+      const mapTable = t.getJCXX(showData);
+      // 根据户号进行排序
+      t.setJsonDataOrder({ arr: mapTable, target: 'hhVal', desc: false });
+      [...t.originTable] = mapTable;
+
+      // 单元状态信息
+      t.handleStateInfo(mapTable);
+      // 获取该逻辑幢下的户
+      this.getArrH(mapTable);
+      // 层信息有问题，需要处理
+      //
+      // 处理层信息；
+      t.getArrSJC(mapTable);
+      t.getMapSJCCount();
+      t.getMaxFloorCount();
+      // console.log('arrSJC', t.arrSJC, 'mapSJCCount', t.mapSJCCount,
+      // 'maxFloorlength', t.maxFloorlength);
+      const dataTable = t.tranJsonData({ mapObj: mapTable, arrObj: t.arrSJC, target: 'sjcVal' });
+
+      // 处理单元信息
+      t.getArrDYH(mapTable);
+      t.getMapDYHCount();
+      t.getMapDYHouseCount();
+      // console.log('arrDYH', t.arrDYH, 'mapDYHCount', t.mapDYHCount);
+
+      dataTable.forEach((item) => {
+        item.data = t.tranJsonData({ mapObj: item.data, arrObj: t.arrDYH, target: 'dyhVal' });
+      });
+      t.dataTable = dataTable;
+    },
+    setCheckAll() {
+      // 判断全选反选按钮状态
+      const checkedCount = this.checkedH.length;
+      // 选中的户数大于0 并且等于当前逻辑幢的户数 则切换全选状态
+      this.checkAll = (checkedCount !== 0) && (checkedCount === this.AllH.length);
+      this.isIndeterminate = checkedCount > 0 && checkedCount < this.AllH.length;
+      return false;
+    },
+    setHouseFirstState(hasFirstHand) {
+      return hasFirstHand ? 'redhouse' : 'whitehouse';
+    },
+    GoPosition() {
+      const bodyW = document.body.clientHeight;
+      if (bodyW > 0) {
+        const ele = document.querySelector('.form-houses .house-body-unit');
+        if (ele) {
+          // { block: 'center', behavior: 'smooth' }
+          ele.scrollIntoView();
+        }
+      }
+    },
+    setStateVisible(val) {
+      if (this.checkList.length === 0) {
+        return true;
+      }
+      return this.checkList.includes(val);
+    },
+    setHouseExpand() {
+      // 设置折叠侧边栏标识
+      if (this.houseExpanded) {
+        return 'shrink-right';
+      }
+      return 'shrink';
+    },
+    changeHouseExpand() {
+      // 修改折叠状态
+      this.houseExpanded = !this.houseExpanded;
+    },
+    setCurrentLJZ(val) {
+      this.curLjzh = val;
+    },
+    getArrSJC(mapObj) {
+      // 获取实际层
+      const t = this;
+      t.arrSJC = mapObj.map(p => p.sjcVal);
+      t.arrSJC = t.getUniqueKey({ arr: t.arrSJC });
+      // 实际层逆序
+      t.setJsonDataOrder({ arr: t.arrSJC });
+    },
+    getMapSJCCount() {
+      // 获取每层的户数
+      const t = this;
+      const mapSJCCount = t.arrSJC.map(p => ({
+        name: p,
+        val: t.originTable.filter(b => b.sjcVal === p).length,
+      }));
+      t.mapSJCCount = mapSJCCount;
+    },
+    getMapDYHCount() {
+      // 获取每个单元的户数
+      const t = this;
+      const mapDYHCount = t.arrDYH.map(p => ({
+        name: p,
+        val: t.originTable.filter(b => b.dyhVal === p).length,
+      }));
+      t.mapDYHCount = mapDYHCount;
+    },
+    getCurDYCount(dyh) {
+      // 获取单元户总数
+      if (!this.mapDYHCount) return 0;
+      const obj = this.mapDYHCount.filter(p => p.name === dyh);
+      if (obj && Array.isArray(obj) && obj.length > 0) {
+        const [{ val }] = obj;
+        return val;
+      }
+      return 0;
+    },
+    getCurDYWidth(dyh) {
+      // 获取该单元宽度
+      const sDYCount = this.getMaxDYCount(dyh);
+      if (sDYCount) {
+        return `${sDYCount * this.setHouseUnit}%`;
+      }
+      return '100%';
+    },
+    getMinWidth(dyh) {
+      // 获取单元最小宽度
+      const sDYCount = this.getMaxDYCount(dyh);
+      if (sDYCount) {
+        return `${sDYCount * this.minWidth}px`;
+      }
+      return this.minWidth;
+    },
+    getCurHouseWidth(dyh, countH) {
+      // 获取该户宽度
+      const sDYCount = this.getMaxDYCount(dyh);
+      const dyWidth = sDYCount * this.setHouseUnit;
+      if (!countH || countH === 0) {
+        return `${dyWidth}%`;
+      }
+      return `${dyWidth / countH}%`;
+    },
+    getHouseMinWidth(dyh, countH) {
+      // 获取该户最小宽度
+      const sDYCount = this.getMaxDYCount(dyh);
+      const dyWidth = sDYCount * this.minWidth;
+
+      if (!countH || countH === 0) {
+        return `${dyWidth}px`;
+      }
+      return `${dyWidth / countH}px`;
+    },
+    getMaxDYCount(dyh) {
+      // 指定单元中最大户数
+      if (!this.mapDYHouseMaxCount) return false;
+      const obj = this.mapDYHouseMaxCount.filter(p => p.dyh === dyh);
+      if (obj && Array.isArray(obj) && obj.length > 0) {
+        const [{ maxFloorHouse }] = obj;
+        return maxFloorHouse;
+      }
+      return false;
+    },
+    getMapDYHouseCount() {
+      // 获取每个单元所有层单元最大数
+      const t = this;
+      const dd = t.tranJsonData({ mapObj: t.originTable, arrObj: t.arrDYH, target: 'dyhVal' });
+      dd.forEach((item) => {
+        item.data = t.tranJsonData({ mapObj: item.data, arrObj: t.arrSJC, target: 'sjcVal' });
+      });
+      t.mapDYHouseMaxCount = dd.map(p => ({
+        dyh: p.val,
+        maxFloorHouse: Math.max(...p.data.map(item => item.data.length)),
+      }));
+    },
+    getMaxFloorCount() {
+      // 获取层的最大单元数
+      const t = this;
+      t.maxFloorlength = Math.max(...t.mapSJCCount.map(item => item.val));
+    },
+    getJCXX(mapObj) {
+      // 根据房间号获取基础信息
+      const arrFJH = mapObj.map(p => ({ fjh: p.fjh, htstybm: p.tstybm, state: p.dyzt }));
+      // arrFJH =  t.moveToEnd(arrFJH, null);
+      return arrFJH.map(p => ({
+        fjh: p.fjh,
+        // dyh: (p.fjh ? p.fjh.slice(0, 2) : p.fjh),
+        // sjc: (p.fjh ? p.fjh.slice(2, 4) : p.fjh),
+        // hh: (p.fjh ? p.fjh.slice(4, 6) : p.fjh),
+        dyhVal: (p.fjh ? parseFloat(p.fjh.slice(0, 2)) : p.fjh),
+        sjcVal: (p.fjh ? parseFloat(p.fjh.slice(2, 4)) : p.fjh),
+        hhVal: (p.fjh ? parseFloat(p.fjh.slice(4, 6)) : p.fjh),
+        htstybm: p.htstybm,
+        state: p.state,
+      }));
+    },
+    getArrState(mapObj) {
+      // 获取当前楼盘的所有状态并排序
+      try {
+        const t = this;
+        const State = mapObj.map(p => ((p.state
+          && p.state.map(a => ({ ...a, htstybm: p.htstybm })))));
+        if (State) {
+          // 扁平化
+          let StateOneDimensional = State.flat();
+          const [obj] = StateOneDimensional;
+          if (obj) {
+            StateOneDimensional = StateOneDimensional.filter(p => p && p.ztmc);
+            const uniqState = t.SetArrObjUnique({ arr: StateOneDimensional, target: 'ztmc' });
+            t.setJsonDataOrder({ arr: uniqState, target: 'ztsx', desc: false });
+            t.allState = uniqState.map(p => ({
+              ...p,
+              allH: StateOneDimensional.filter(a => a.ztsx === p.ztsx).map(b => b.htstybm),
+              count: StateOneDimensional.filter(a => a.ztsx === p.ztsx).length,
+              hide: false,
+              disabled: false,
+            }));
+          }
+        }
+      } catch (ex) {
+        throw new Error(ex.message);
+        // console.error(ex);
+      }
+    },
+    getArrH(mapObj) {
+      // 获取HID
+      this.AllH = mapObj.map(p => p.htstybm);
+    },
+    getArrDYH(mapObj) {
+      const t = this;
+      let arrDYH = mapObj.map(p => p.dyhVal);
+      arrDYH = t.getUniqueKey({ arr: arrDYH });
+      // 单元顺序
+      t.setJsonDataOrder({ arr: arrDYH, desc: false });
+      arrDYH = t.moveToEnd(arrDYH, null);
+      t.arrDYH = arrDYH;
+      // console.log('arrDYH', arrDYH);
+    },
+    tranJsonData({ mapObj = [], arrObj = [], target = '' } = {}) {
+      // 将一层对象转换为二层嵌套对象
+      // jsonObj 匹配对象
+      // arrObj数组对象，为target的数组
+      // target 为key存在与jsonObj中
+      return arrObj.map(i => (
+        { k: target, val: i, data: mapObj.filter(m => m[target] === i) }));
+    },
+    moveToEnd(arr, target) {
+      return [...arr.filter(a => a !== target), ...arr.filter(a => a === target)];
+    },
+    shouldShowData() {
+      const t = this;
+      // 过滤历史数据
+      // 当前幢数据
+      return t.hdata.filter(p => (p.lifecycle === 0 && p.ljzh === t.curLjzh));
+    },
+    filterEmptyParams(obj) {
+      // 过滤json中值为空的属性
+      let strParam = JSON.stringify(obj);
+      // eslint-disable-next-line
+      strParam = strParam.replace(/\"[^\"]+\":null,/g, '');
+      return JSON.parse(strParam);
+    },
+    SetArrObjUnique({ arr = [], target = '' } = {}) {
+      // 对象数组去重
+      const obj = {};
+      return arr.reduce((cur, next) => {
+        // eslint-disable-next-line no-unused-expressions
+        next && next[target] && (obj[next[target]] ? '' : obj[next[target]] = true) && cur.push(next);
+        return cur;
+      }, []);
+    },
+    getUniqueKey({ arr = [], target = '' } = {}) {
+      // 数组去重
+      // arr 数组
+      // target
+      if (arr.length === 0) return arr;
+      return Array.from(new Set(target === '' ? arr : arr.map(i => i[target])));
+    },
+    // 取随机数
+    getRandom() {
+      return Math.random();
+    },
+    // 定义排序方法
+    setJsonDataOrder({ arr = [], target = '', desc = true } = {}) {
+      // 数组长度为0
+      if (arr.length === 0) return;
+      if (target === '') {
+        // 简单数组：[1,2,3]
+        if (desc) {
+          // 降序
+          arr.sort((a, b) => parseFloat(b - a));
+        } else {
+          //
+          // 升序
+          arr.sort((a, b) => parseFloat(a - b));
+        }
+      } else if (target !== '') {
+        if (desc) {
+          arr.sort((a, b) => parseFloat(b[target] - a[target]));
+        } else {
+          arr.sort((a, b) => parseFloat(a[target] - b[target]));
+        }
+      }
+      // console.dir(arr);
+    },
+  },
+  created() {
+    // console.log('mounted', this.created, this.params.tstybm, this.ztstybm);
+    if (!this.params.tstybm && this.params.tstybm !== this.ztstybm) {
+      this.params.zdtybm = this.zdtybm;
+      this.params.tstybm = this.ztstybm;
+      this.params.nodeName = this.nodeName;
+      // await this.init();
+      // this.GoPosition();
+    }
+  },
+  destroyed() {
+    this.params.tstybm = '';
+    this.created = false;
+  },
+  watch: {
+    // $route: {
+    //   handler(val, oldVal) {
+    //     if (val !== oldVal) {
+    //       // this.init();
+    //       return true;
+    //     }
+    //     return false;
+    //   },
+    // },
+    curLjzh(val, oldVal) {
+      if (oldVal !== '' && val !== oldVal) {
+        // this.checkedH.splice(0);
+        this.checkedH = [];
+        this.setCheckAll();
+        this.handerHouseInfo();
+        // 切换逻辑幢 情况选中的户信息
+        return true;
+      }
+      return false;
+    },
+    checkedH(val) {
+      // if (val !== oldVal) {
+      this.SET_H(val);
+      // }
+    },
+    ztstybm: {
+      async handler(val, oldVal) {
+        if (val && val !== oldVal) {
+          if (this.ztstybm && this.params.tstybm !== this.ztstybm) {
+            this.params.zdtybm = this.zdtybm;
+            this.params.tstybm = this.ztstybm;
+            this.params.nodeName = this.nodeName;
+            await this.init();
+            this.GoPosition();
+          }
+        }
+      },
+      immediate: true,
+    },
+  },
+};
+</script>
+
+<style lang='scss' type="text/scss" scoped>
+@import "./index.scss";
+</style>

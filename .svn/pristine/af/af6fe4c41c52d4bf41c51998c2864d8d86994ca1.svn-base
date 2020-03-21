@@ -1,0 +1,270 @@
+<template>
+  <div class="checkBDCDiv">
+    <h3 id="t1" ref="t1" >不动产数据检验</h3>
+      <p>业务编号：<span>{{checkform.sqbh}}</span></p>
+    <el-form :model="checkform" :rules="rules" ref="checkform" size="medium">
+      <div class="check-data-content">
+        <el-form-item :label="baseInfo.labelmc" prop="ygzmh"
+        class="check-data-content-item" v-if='!showHT'>
+          <el-input
+            v-model.trim="checkform.ygzmh"
+            :placeholder="`请输入${baseInfo.labelmc}`"
+          ></el-input>
+        </el-form-item>
+         <el-form-item label="合同编号" prop="htbh" class="check-data-content-item" v-if='showHT'>
+          <el-input
+            v-model.trim="checkform.htbh"
+            placeholder="请输入合同编号"
+          ></el-input>
+        </el-form-item>
+        <el-form-item :label="baseInfo.labelqlr || '权利人名称'" prop="qlrmc"
+          class="check-data-content-item medium">
+          <el-input
+            v-model.trim="checkform.qlrmc"
+            :placeholder="`请输入${baseInfo.labelqlr || '权利人名称'}`"
+          ></el-input>
+        </el-form-item>
+        <div class="check-data-content-item button-group">
+          <el-button type="primary"  size="medium"
+           @click="handleCheck()">数据验证</el-button>
+          <el-button  class="btnBorder" @click="handleReset()" size="medium">重置</el-button>
+        </div>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import { requestKey, checkBDC, checkHT } from '@/apis/nres/ygdy';
+import { formatDate } from '@/libs/date';
+import getKeyCode from '@/mixins/getKeyCode';
+
+export default {
+  mixins: [getKeyCode],
+  data() {
+    return {
+      checkform: {
+        ygzmh: '',
+        qlrmc: '',
+        sqbh: '',
+        htbh: '',
+      },
+      rules: {
+        ygzmh: [{ required: true, message: '请输入不动产证明号', trigger: 'blur' }],
+        qlrmc: [
+          { required: true, message: '请输入权利人名称', trigger: 'blur' },
+        ],
+        htbh: [{ required: true, message: '请输入合同编号', trigger: 'blur' }],
+      },
+      rkey: 'W', // 在getSQBH中使用了
+      fwzl: '',
+    };
+  },
+  props: {
+    ygzmh: {
+      type: String,
+    },
+    qlrmc: {
+      type: String,
+    },
+    htbh: {
+      type: String,
+    },
+    info: Object,
+    baseInfo: Object,
+    showHT: {
+      type: Boolean,
+    },
+    isDY: {
+      type: String,
+      default: '3',
+    },
+  },
+  methods: {
+    async getSQBH() {
+      try {
+        const { code, msg, resData } = await requestKey(this.rkey);
+        if (code === 0) {
+          let str = resData.reqkey.toString();
+          let arr = str.split('');
+          const len = arr.length;
+          if (4 - len > 0) {
+            for (let i = 0; i < 4 - len; i += 1) {
+              arr.unshift('0');
+            }
+          }
+          if (4 - len < 0) {
+            arr = arr.slice(0, 4);
+          }
+          str = arr.join('');
+          const today = formatDate(new Date());
+          const bh = `${this.rkey}-${today.split('-').join('')}${str}`;
+          this.checkform.sqbh = bh;
+          this.disabled = false;
+          this.$parent.FJInit();
+        } else {
+          this.$message.error(`获取业务编号失败，请重试或联系管理员${msg}`);
+        }
+      } catch (err) {
+        this.$message.error('获取业务编号失败，请重试或联系管理员');
+        throw new Error(err);
+      }
+    },
+    handleCheck() {
+      this.$refs.checkform.validate((valid) => {
+        if (valid) {
+          if (this.showHT) {
+            //
+            const data = {
+              qlrmc: this.checkform.qlrmc,
+              htbh: this.checkform.htbh,
+              isDY: '3',
+            };
+            checkHT({
+              nodeName: this.baseInfo.nodeName,
+              data,
+            })
+              .then((response) => {
+                if (response.code === 0) {
+                  const infos = response.resData;
+                  if (infos.bdcdylists != null && infos.qlrxx != null) {
+                    // 有值设置按钮是可用的
+                    this.$parent.info = JSON.stringify(infos);
+                    this.$parent.show = true;
+                    this.fwzl = infos.bdcdylists[0].zl;
+                    this.$emit('setDisalbed', false);
+                  } else {
+                    this.$message({
+                      message: '未找到相关登记信息，请重新输入',
+                      type: 'warning',
+                    });
+                    this.clear();
+                    this.$emit('setDisalbed', true);
+                  }
+                } else {
+                  this.$message({
+                    message: '未找到相关登记信息，请重新输入',
+                    type: 'warning',
+                  });
+                  this.clear();
+                }
+              }).catch((err) => {
+                this.$message({
+                  type: 'error',
+                  message: err.message || '获取信息失败',
+                });
+                this.clear();
+              });
+          } else {
+            const { ywlx } = this.baseInfo;// 'cqzh';
+            const data = {
+              qlrmc: this.checkform.qlrmc,
+              ygzmh: this.checkform.ygzmh,
+              ywlx,
+              isDY: this.isDY,
+            };
+            checkBDC({
+              nodeName: this.baseInfo.nodeName,
+              data,
+            }).then((response) => {
+              if (response.code === 0) {
+                const infos = response.resData;
+                if (infos.bdcdylists != null && (infos.qlrxx != null || this.baseInfo.ywlx === 'dyzmh')) {
+                  this.$parent.info = JSON.stringify(infos);
+                  this.$parent.show = true;
+                  this.checkform.ygzmh = infos.bdcdylists[0].bdczh;
+                  this.fwzl = infos.bdcdylists[0].zl;
+                  this.$emit('setDisalbed', false);
+                } else {
+                  this.$message({
+                    message: '未找到相关登记信息，请重新输入',
+                    type: 'warning',
+                  });
+                  this.clear();
+                  this.$emit('setDisalbed', true);
+                }
+              } else {
+                this.$message({
+                  message: '未找到相关登记信息，请重新输入',
+                  type: 'warning',
+                });
+                this.clear();
+              }
+            }).catch((err) => {
+              this.$message({
+                type: 'error',
+                message: err.message || '获取信息失败',
+              });
+              this.clear();
+            });
+          }
+          return true;
+        }
+        return false;
+      });
+    },
+    handleReset() {
+      this.clear();
+      this.checkform.ygzmh = '';
+      this.checkform.qlrmc = '';
+      this.checkform.htbh = '';
+    },
+    clear() {
+      this.$parent.info = '';
+      this.$parent.show = false;
+      this.$emit('setDisalbed', true);
+    },
+  },
+  created() {
+    // todo
+  },
+  mounted() {
+    this.$nextTick(() => {
+      const { sqbh } = this.$route.params;
+      if (sqbh === null || sqbh === undefined) {
+        // this.getSQBH();
+        this.getKeyCode();
+      } else {
+        this.checkform.sqbh = sqbh;
+      }
+    });
+  },
+  computed: {
+
+  },
+  destroyed() {
+  },
+  watch: {
+    keyCode(nval) {
+      this.checkform.sqbh = nval;
+      this.disabled = false;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.checkBDCDiv {
+  padding: 0 15px 0 20px;
+  .check-data-content{
+    display: flex;
+    .certificate{
+      width: 100%;
+      display: flex;
+    }
+    &-item{
+      width: 33%;
+      box-sizing: border-box;
+      &.medium{
+        margin: 0 20px;
+      }
+      &.button-group{
+        padding-top: 36px;
+      }
+    }
+  }
+}
+</style>
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

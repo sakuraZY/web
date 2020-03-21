@@ -1,0 +1,820 @@
+<template>
+  <div class="dictionary-manage-container">
+    <input type="file" v-show="false" ref="importDictionary" @change="importDictionary" />
+    <auth-layout
+      paneLeftTitle="字典管理"
+      :btnList="paneLeftBtn"
+      :listData="nodes"
+      @handlePaneLeftBtn="handlePaneLeftBtn"
+    >
+      <template slot="pane-left-body">
+        <div class="dictionary-tree-contaner">
+          <vue-giant-tree
+            :setting="setting"
+            :nodes="nodes"
+            class="dictionary-tree"
+            @onClick="onHandleNode"
+            @onCreated="handleCreated"
+          ></vue-giant-tree>
+        </div>
+      </template>
+      <template slot="paneR">
+        <div class="dictionary-item-contaner">
+          <div class="dictionary-cate" v-if="isNotDictionary">
+            <empty-data name="请点击左侧字典查看"></empty-data>
+          </div>
+          <div class="content" v-else>
+            <div class="operate-bar">
+              <el-input
+                placeholder="字典项名称/首字母/全拼"
+                size="medium"
+                v-model.trim.lazy="search"
+                v-show="showFilter"
+                clearable
+              ></el-input>
+              <div class="operate-bar-btns">
+                <el-button size="medium" type="primary" @click="operatDicitem(true)">
+                  <!-- <icon-svg iconClass="add"></icon-svg> -->
+                  添加
+                </el-button>
+                <el-button size="medium" type="danger" @click="deleteDicitem">
+                  <!-- <icon-svg iconClass="delete"></icon-svg> -->
+                  删除
+                </el-button>
+              </div>
+            </div>
+            <div class="dictionary-table" v-loading="loading">
+              <dictionary-item
+                :data="dicitemData"
+                :columns="columns"
+                ref="dicitem"
+                @onOperate="operatDicitem"
+                :showTreeType="showTreeType"
+                :search="search"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
+    </auth-layout>
+    <el-dialog
+      :title="title"
+      :visible.sync="dictionaryAttrVisible"
+      append-to-body
+      @close="closeDictionaryAttrDialog"
+    >
+      <dictionary-attributes
+        :isAdd="isAdd"
+        :data="currentNode"
+        :show="dictionaryAttrVisible"
+        ref="dictionaryAttr"
+        @onSubmit="onSubmit"
+        @onCancel="dictionaryAttrVisible = false"
+      ></dictionary-attributes>
+      <template v-slot:footer>
+        <el-button
+          size="medium"
+          type="primary"
+          @click="handleConfirm('dictionaryAttr')"
+        >确定</el-button>
+        <el-button size="medium" plain @click="handleCancel('dictionaryAttr')">取消</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog
+      title="字典查找"
+      :visible.sync="findDictionaryVisible"
+      append-to-body
+      @close="closeFindDictionaryDialog"
+    >
+      <find-dictionary
+        ref="findDictionary"
+        @onSubmit="onFindDictionary"
+        @onCancel="findDictionaryVisible = false"
+      ></find-dictionary>
+      <template v-slot:footer>
+        <el-button
+          size="medium"
+          type="primary"
+          @click="handleConfirm('findDictionary')"
+        >确定</el-button>
+        <el-button size="medium" plain @click="handleCancel('findDictionary')">取消</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog
+      :title="dictionaryItemTitle"
+      :visible.sync="dicitemAttrVisible"
+      append-to-body
+      @close="closeDicitemAttrDialog"
+    >
+      <dictionary-item-attributes
+        ref="dicitemAttr"
+        @onSubmit="onSubmitDicitem"
+        @onCancel="dicitemAttrVisible = false"
+        :formItems="columns"
+        :data="dicitemAttrData"
+        :show="dicitemAttrVisible"
+        :isAdd="isAddDicitem"
+      ></dictionary-item-attributes>
+      <template v-slot:footer>
+        <el-button size="medium" type="primary" @click="handleConfirm('dicitemAttr')">确定</el-button>
+        <el-button size="medium" plain @click="handleCancel('dicitemAttr')">取消</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog
+      title="导出字典"
+      :visible.sync="exportDicmainVisible"
+      append-to-body
+    >
+      <vue-giant-tree
+        :setting="exportSetting"
+        :nodes="exportDicNodes"
+        class="dictionary-tree"
+        @onCreated="handleExportTreeCreated"
+      ></vue-giant-tree>
+      <template v-slot:footer>
+        <span class="is-required tips">注意：暂不支持自定义字典导出！</span>
+        <el-button size="medium" type="primary" @click="handleExportDicmain">确定</el-button>
+        <el-button size="medium" plain @click="exportDicmainVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import {
+  importDicmain,
+  queryAllDicmain,
+  addDicmain,
+  updateDicmain,
+  deleteDicmain,
+  exportDicmain,
+} from '@/apis/sysmgr/dicmain';
+import {
+  queryDicitem,
+  selectCustomDicitem,
+  deleteCustomDicitem,
+  deleteDicitem,
+  addDicitem,
+  addCustomDicitem,
+  updateDicitem,
+  updateCustomDicitem,
+} from '@/apis/sysmgr/dicItem';
+import { getDatasrcTableField } from '@/apis/form/datasrc';
+import AuthLayout from '@/layouts/Impersonal/auth';
+import VueGiantTree from '@/components/vueGiantTree';
+import EmptyData from '@/components/emptyData';
+import { coverArray } from '@/libs/utils';
+import { downloadStream } from '@/libs/common';
+import { formatDate } from '@/libs/date';
+import DictionaryItem from './DictionaryItem';
+import DictionaryAttributes from './DictionaryAttributes';
+import FindDictionary from './FindDictionary';
+import DictionaryItemAttributes from './DictionaryItemAttributes';
+
+export default {
+  components: {
+    AuthLayout,
+    VueGiantTree,
+    EmptyData,
+    DictionaryItem,
+    DictionaryAttributes,
+    FindDictionary,
+    DictionaryItemAttributes,
+  },
+  data() {
+    return {
+      isNotDictionary: true,
+      paneLeftBtn: [
+        { name: '定位', icon: 'location' },
+        { name: '导入', icon: 'import' },
+        { name: '导出', icon: 'export' },
+      ],
+      dictionaryAttrVisible: false,
+      findDictionaryVisible: false,
+      dicitemAttrVisible: false,
+      dicitemAttrData: {},
+      isAdd: true,
+      isAddDicitem: true,
+      isCategory: true,
+      nodes: [],
+      exportDicNodes: [],
+      search: '',
+      showFilter: false,
+      dicitemData: [],
+      columns: [],
+      loading: false,
+      showTreeType: false,
+      exportTreeNodes: [],
+      exportDicmainVisible: false,
+      exportSetting: {
+        check: {
+          enable: true,
+        },
+        data: {
+          simpleData: {
+            enable: true,
+            pIdKey: 'pid',
+          },
+        },
+      },
+      setting: {
+        view: {
+          selectedMulti: true,
+          autoCancelSelected: false,
+          dblClickExpand: true,
+          addHoverDom: this.addHoverDom,
+          removeHoverDom: this.removeHoverDom,
+        },
+        data: {
+          simpleData: {
+            enable: true,
+            pIdKey: 'pid',
+          },
+        },
+      },
+      dicTree: null,
+      exportTree: null,
+      currentNode: undefined,
+    };
+  },
+  created() {
+    this.queryAllDicmain();
+  },
+  computed: {
+    title() {
+      return `${this.isAdd ? '新增' : '修改'}字典${this.isCategory ? '目录' : ''}信息`;
+    },
+    dictionaryItemTitle() {
+      return `${this.isAddDicitem ? '新增' : '修改'}字典项信息`;
+    },
+  },
+  methods: {
+    operatDicitem(isAdd, data = {}) {
+      this.isAddDicitem = isAdd;
+      this.dicitemAttrVisible = true;
+      this.dicitemAttrData = data;
+    },
+    onSubmitDicitem(data = {}) {
+      const {
+        dicTypeShow, dicTablename, dicPrimarykey, id, dicParentkey,
+      } = this.currentNode;
+      const { id: dicitemAttrId } = this.dicitemAttrData;
+      const isCustom = dicTypeShow === '自定义字典';
+      let promiseFn = null;
+      let params = {};
+      let options = {};
+      if (isCustom) {
+        promiseFn = this.isAddDicitem ? addCustomDicitem : updateCustomDicitem;
+        params = {
+          tableName: dicTablename,
+          fieldIdName: dicPrimarykey,
+        };
+        options = {
+          ...data,
+          DICCODE: id,
+        };
+        if (this.isAddDicitem) {
+          options = { ...options, [dicParentkey]: this.dicitemAttrData[dicPrimarykey] || 'root' };
+        } else {
+          params = {
+            ...params,
+            fieldIdValue: this.dicitemAttrData[dicPrimarykey],
+          };
+        }
+      } else {
+        promiseFn = this.isAddDicitem ? addDicitem : updateDicitem;
+        params = {
+          dicCode: id,
+          ...data,
+          itemName: data.name,
+        };
+        if (this.isAddDicitem) {
+          params = {
+            ...params,
+            itemParentid: dicitemAttrId,
+          };
+        } else {
+          params = {
+            ...params,
+            itemId: dicitemAttrId,
+          };
+        }
+      }
+      promiseFn(params, options).then(({
+        code,
+        msg,
+      } = {}) => {
+        if (code !== 0) {
+          throw new Error(msg || `${this.isAddDicitem ? '新增' : '修改'}字典项失败`);
+        }
+        this.$message({
+          type: 'success',
+          message: `${this.isAddDicitem ? '新增' : '修改'}字典项成功`,
+        });
+        this.getDicitem(this.currentNode);
+        this.dicitemAttrVisible = false;
+      });
+    },
+    deleteDicitem() {
+      const checkedRows = this.$refs.dicitem.getCheckedRow();
+      if (!checkedRows.length) {
+        this.$message({
+          type: 'warning',
+          message: '请选择需要删除的字典项',
+        });
+        return;
+      }
+      this.$confirm('确定删除吗', '提示').then(() => {
+        const {
+          dicTypeShow, dicTablename, dicPrimarykey, dicParentkey,
+        } = this.currentNode;
+        const isCustomDictionary = dicTypeShow === '自定义字典';
+        const fnPromise = isCustomDictionary ? deleteCustomDicitem : deleteDicitem;
+        let params = null;
+        let data = null;
+        if (isCustomDictionary) {
+          params = {
+            tableName: dicTablename,
+            fieldIdName: dicPrimarykey,
+            fieldParentName: dicParentkey,
+          };
+          data = checkedRows.map(item => item[dicPrimarykey]);
+        } else {
+          params = checkedRows.map(item => item.id).join(':');
+        }
+        fnPromise(params, data).then(({
+          code,
+          msg,
+        } = {}) => {
+          if (code !== 0) {
+            throw new Error(msg || '删除失败');
+          }
+          this.$message({
+            type: 'success',
+            message: msg || '删除成功',
+          });
+          this.getDicitem(this.currentNode);
+        });
+      }).catch(() => {});
+    },
+    onSubmit(data) {
+      const { dicTypeShow, name } = data;
+      const { id, pid, dicType } = this.currentNode;
+      const options = {
+        ...data,
+      };
+      const fnPromise = this.isAdd ? addDicmain : updateDicmain;
+      options[dicTypeShow === '目录' ? 'dicSysname' : 'dicName'] = name;
+      if (this.isAdd) {
+        options.dicType = dicTypeShow;
+        options.dicParentcode = id;
+      } else {
+        options.dicCode = id;
+        options.dicParentcode = pid;
+        options.dicType = dicType;
+      }
+      fnPromise(options).then(({
+        code,
+        msg,
+      } = {}) => {
+        if (code !== 0) {
+          throw new Error(msg || `${this.title}失败`);
+        }
+        this.$message({
+          type: 'success',
+          message: msg || `${this.title}成功`,
+        });
+        this.dictionaryAttrVisible = false;
+        this.queryAllDicmain();
+        this.currentNode = null;
+        this.isNotDictionary = true;
+      });
+    },
+    queryAllDicmain() {
+      queryAllDicmain().then(({
+        code,
+        msg,
+        resData: {
+          dicmainTree,
+        } = {},
+      }) => {
+        if (code !== 0) {
+          throw new Error(msg || '加载字典目录失败');
+        }
+        const nodes = dicmainTree || [];
+        this.nodes = nodes.map((item) => {
+          item.iconSkin = item.dicState === '禁用' ? 'state-close' : 'state-open';
+          item.icon = item.dicType === '角色' ? 'user2' : 'groups';
+          item.dicTypeShow = item.dicType;
+          switch (item.dicType) {
+            case '目录': {
+              item.icon = 'dictionary';
+              break;
+            }
+            case '自定义字典': {
+              item.icon = 'customDictionary';
+              item.iconSkin += ' custom-dicmain';
+              break;
+            }
+            case '列表字典': {
+              item.icon = 'list';
+              break;
+            }
+            case '树形字典': {
+              item.icon = 'treeDictionary';
+              break;
+            }
+            case '通用字典': {
+              item.dicTypeShow = '列表字典';
+              break;
+            }
+            default: {
+              item.icon = 'otherDictionary';
+              item.dicTypeShow = '自定义字典';
+              break;
+            }
+          }
+          return item;
+        });
+      });
+    },
+    getDicitem(node) {
+      this.loading = true;
+      const { dicTypeShow } = node;
+      if (dicTypeShow === '自定义字典') {
+        this.loadCustomDicitem(node);
+        return;
+      }
+      this.loadDicitem(node);
+    },
+    loadDicitem({ id, dicTypeShow }) {
+      queryDicitem(id).then(({
+        code,
+        msg,
+        resData: {
+          dicitemTree,
+        } = {},
+      }) => {
+        this.loading = false;
+        if (code !== 0) {
+          throw new Error(msg || '加载字典项失败');
+        }
+        this.columns = [
+          {
+            field: 'name',
+            title: '字典项名称',
+            minWidth: 200,
+            align: 'left',
+            treeNode: ['自定义字典', '树形字典'].includes(dicTypeShow),
+            rules: [
+              { required: true, message: '域名不能为空', trigger: 'blur' },
+            ],
+          },
+          {
+            field: 'itemValue',
+            title: '字典项值',
+            minWidth: 100,
+            showValType: true,
+            cellRender: {
+              name: 'CustomCell',
+              templet: (d) => {
+                const value = d.itemValue ? d.itemValue : '';
+                let strHtml = '';
+                if (d.itemNote === '颜色') {
+                  strHtml = `
+                  <span style="
+                      display:inline-block;
+                      margin-right: 3px;
+                      width: 10px;
+                      border-radius: 50%;
+                      height: 10px;
+                      background: ${d.itemValue}"
+                  ></span>`;
+                }
+                strHtml += `<span>${value}</span>`;
+                return strHtml;
+              },
+              events: { click: this.operate },
+            },
+          },
+          {
+            field: 'itemSortnum',
+            title: '排序序号',
+            width: 80,
+            rules: [
+              { required: true, message: '排序序号不能为空', trigger: 'blur' },
+            ],
+          },
+          { field: 'itemNote', title: '字典项描述', minWidth: 100 },
+          { field: 'itemValue2', title: '扩展值一', minWidth: 100 },
+          { field: 'itemValue3', title: '扩展值二', minWidth: 100 },
+          { field: 'itemValue4', title: '扩展值三', minWidth: 100 },
+          { field: 'itemValue5', title: '扩展值四', minWidth: 100 },
+          { field: 'itemValue6', title: '扩展值五', minWidth: 100 },
+          { field: 'itemValue7', title: '扩展值六', minWidth: 100 },
+          { field: 'itemValue8', title: '扩展值七', minWidth: 100 },
+          { field: 'itemValue9', title: '扩展值八', minWidth: 100 },
+          { field: 'itemValue10', title: '扩展值九', minWidth: 100 },
+        ];
+        this.dicitemData = coverArray(dicitemTree || [], 'pid');
+      }).catch((err) => {
+        this.loading = false;
+        this.$message.error(err.message || '加载字典项失败');
+      });
+    },
+    async getDatasrcTableField(tableName) {
+      const {
+        code,
+        msg,
+        resData: {
+          tableField,
+        } = {},
+      } = await getDatasrcTableField({
+        tableName,
+        srcName: '公共数据',
+      }) || {};
+      if (code !== 0) {
+        throw new Error(msg || '获取表字段信息失败');
+      }
+      return tableField || [];
+    },
+    loadCustomDicitem({
+      id, dicTablename, dicPrimarykey, dicParentkey,
+    }) {
+      this.getDatasrcTableField(dicTablename).then(async (tableFields) => {
+        const fieldNames = [];
+        let hasTreeNode = false;
+        this.columns = tableFields.map(({ field, fieldNote }) => {
+          fieldNames.push(field || '');
+          const visible = ![dicPrimarykey, dicParentkey, 'DICCODE'].includes(field);
+          let treeNode = false;
+          if (visible && !hasTreeNode) {
+            treeNode = true;
+            hasTreeNode = true;
+          }
+          return {
+            field,
+            title: fieldNote,
+            visible,
+            treeNode,
+            align: treeNode ? 'left' : 'center',
+            minWidth: treeNode ? 200 : 100,
+          };
+        });
+        const {
+          code: resCode,
+          msg: message,
+          resData: { dicItems } = {},
+        } = await selectCustomDicitem({ dicCode: id, fieldName: fieldNames.join(','), tableName: dicTablename }) || {};
+        if (resCode !== 0) {
+          throw new Error(message || '获取字典项失败');
+        }
+        const dicItemsInfo = dicItems || [];
+        this.dicitemData = coverArray(dicItemsInfo, dicParentkey, dicPrimarykey);
+        this.loading = false;
+      }).catch((err) => {
+        this.loading = false;
+        this.$message.error(err.message || '获取表字段信息失败');
+      });
+    },
+    onHandleNode(evt, treeId, node) {
+      const { dicType, dicTypeShow } = node;
+      this.currentNode = node;
+      this.isNotDictionary = dicType === '目录';
+      this.showFilter = !['自定义字典', '目录'].includes(dicTypeShow);
+      this.showTreeType = ['自定义字典', '树形字典'].includes(dicTypeShow);
+      if (dicTypeShow === '目录') {
+        return;
+      }
+      this.getDicitem(node);
+    },
+    handleCreated(dicTree) {
+      this.expandTreeNodes(dicTree);
+      this.dicTree = dicTree;
+    },
+    expandTreeNodes(tree) {
+      const expandNodes = [
+        ...tree.getNodesByParam('pid', '0', null),
+        ...tree.getNodesByParam('pid', '', null),
+        ...tree.getNodesByParam('pid', null, null),
+        ...tree.getNodesByParam('pid', undefined, null),
+      ];
+      expandNodes.forEach((node) => {
+        tree.expandNode(node, true);
+      });
+    },
+    handleExportTreeCreated(dicTree) {
+      this.expandTreeNodes(dicTree);
+      this.exportTree = dicTree;
+    },
+    handlePaneLeftBtn(item) {
+      switch (item.name) {
+        case '定位': {
+          this.findDictionaryVisible = true;
+          break;
+        }
+        case '导入': {
+          this.$refs.importDictionary.click();
+          break;
+        }
+        case '导出': {
+          this.exportDicmainVisible = true;
+          this.exportDicNodes = this.nodes.map(node => ({
+            ...node,
+            nocheck: node.dicTypeShow === '自定义字典',
+          }));
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+      return true;
+    },
+    addHoverDom(treeId, treeNode) {
+      const aObj = document.getElementById(`${treeNode.tId}_a`);
+      if (!aObj || aObj.querySelector('.tree_extra_btn')) {
+        return;
+      }
+      const extra = document.createElement('span');
+      extra.classList.add('tree_extra_btn');
+      const showAddBtn = treeNode.dicType === '目录';
+      const showEditDeletBtn = treeNode.pid !== '0' && treeNode.pid;
+      const editStr = `
+        ${showAddBtn ? `<span title="新增" id="tree_extra_btn${treeId}_add">
+          <svg class="svg-icon add" aria-hidden="true">
+            <use href="#icon-add" />
+          </svg>
+        </span>` : ''}
+        ${showEditDeletBtn ? `<span title="修改" id="tree_extra_btn${treeId}_edit">
+          <svg class="svg-icon edit" aria-hidden="true">
+            <use href="#icon-edit" />
+          </svg>
+        </span>` : ''}
+        ${showEditDeletBtn ? `<span title="删除" id="tree_extra_btn${treeId}_delete">
+          <svg class="svg-icon delete" aria-hidden="true">
+            <use href="#icon-delete" />
+          </svg>
+        </span>` : ''}
+      `;
+      extra.innerHTML = editStr;
+      aObj.appendChild(extra);
+      if (showAddBtn) {
+        document.getElementById(`tree_extra_btn${treeId}_add`).addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.operate(true, treeNode, e, treeId);
+        });
+      }
+      if (showEditDeletBtn) {
+        document.getElementById(`tree_extra_btn${treeId}_edit`).addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.operate(false, treeNode, e, treeId);
+        });
+        document.getElementById(`tree_extra_btn${treeId}_delete`).addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.removeDicmain(treeNode, e, treeId);
+        });
+      }
+    },
+    operate(isAdd, treeNode, e, treeId) {
+      if (this.dicTree) {
+        this.onHandleNode(e, treeId, treeNode);
+        this.dicTree.selectNode(treeNode);
+      }
+      const { dicType } = treeNode;
+      this.isAdd = isAdd;
+      this.isCategory = dicType === '目录';
+      this.dictionaryAttrVisible = true;
+    },
+    removeDicmain(treeNode, e, treeId) {
+      if (this.dicTree) {
+        this.onHandleNode(e, treeId, treeNode);
+        this.dicTree.selectNode(treeNode);
+      }
+      const { dicType, id } = treeNode;
+      this.$confirm(`确实删除当前节点${dicType === '目录' ? '及其所有子节点' : ''}`, '提示').then(() => {
+        deleteDicmain(id).then(({
+          code,
+          msg,
+        } = {}) => {
+          if (code !== 0) {
+            throw new Error(msg || '删除失败');
+          }
+          this.$message({
+            type: 'success',
+            message: msg || '删除成功',
+          });
+          if (this.dicTree) {
+            this.dicTree.removeNode(treeNode);
+            this.isNotDictionary = true;
+          }
+        }).catch((err) => {
+          this.$message.error(err.message || '删除失败');
+        });
+      }).catch(() => {});
+    },
+    removeHoverDom(treeId, treeNode) {
+      const aObj = document.getElementById(`${treeNode.tId}_a`);
+      if (!aObj) {
+        return;
+      }
+      const extra = aObj.querySelector('.tree_extra_btn');
+      if (!extra) {
+        return;
+      }
+      aObj.removeChild(extra);
+    },
+    importDictionary(e) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      importDicmain(formData).then(({
+        code,
+        msg,
+      }) => {
+        if (code !== 0) {
+          throw new Error(msg || '导入失败');
+        }
+        this.$message({
+          type: 'success',
+          message: msg || '导入成功',
+        });
+        this.queryAllDicmain();
+        this.currentNode = null;
+        this.isNotDictionary = true;
+      });
+    },
+    closeDictionaryAttrDialog() {
+      this.$refs.dictionaryAttr.resetFields();
+    },
+    closeFindDictionaryDialog() {
+      this.$refs.findDictionary.resetFields();
+    },
+    closeDicitemAttrDialog() {
+      this.$refs.dicitemAttr.resetFields();
+    },
+    onFindDictionary({ name, findType }) {
+      this.findDictionaryVisible = false;
+      if (!this.dicTree) {
+        return;
+      }
+      const findTypeFn = findType === '2' ? 'getNodesByParamFuzzy' : 'getNodesByParam';
+      const findNodes = this.dicTree[findTypeFn]('name', name);
+      if (!findNodes.length) {
+        this.$message({
+          type: 'info',
+          message: '无查询结果',
+        });
+        return;
+      }
+      findNodes.forEach((node) => {
+        this.dicTree.selectNode(node, true);
+      });
+    },
+    handleConfirm(ref) {
+      if (this.$refs[ref]) {
+        this.$refs[ref].handleSubmit();
+      }
+    },
+    handleCancel(ref) {
+      if (this.$refs[ref]) {
+        this.$refs[ref].cancelEdit();
+      }
+    },
+    handleExportDicmain() {
+      const checkedNodes = this.exportTree.getCheckedNodes(true);
+      if (!checkedNodes.length) {
+        this.$message({
+          type: 'warning',
+          message: '请选择需要导出的字典',
+        });
+        return;
+      }
+      const dicDires = [];
+      const dicCodes = [];
+      checkedNodes.forEach((node) => {
+        const { id, dicType } = node;
+        if (id === 'root') {
+          return;
+        }
+        if (dicType === '目录') {
+          dicDires.push(id);
+          return;
+        }
+        dicCodes.push(id);
+      });
+      exportDicmain({ dicDire: dicDires.join(':'), dicCode: dicCodes.join(':') })
+        .then((stream) => {
+          downloadStream(stream, 'xml', `GeoOnline_Dicmain_${formatDate(new Date(), 8)}`);
+          this.exportDicmainVisible = false;
+        }).catch((err) => {
+          this.$message.error(err.message || '导出失败');
+        });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

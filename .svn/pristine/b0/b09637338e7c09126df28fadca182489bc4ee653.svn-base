@@ -1,0 +1,30 @@
+.split-pane{
+  background-color: $--color-white;
+  .custom-card{
+    &-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 33px;
+      &-left{
+        flex-grow: 1;
+      }
+      &-right{
+        &-button{
+          padding: 4px;
+          border-color: transparent;
+          &:hover,&:focus{
+            border-color: $--color-primary;
+          }
+        }
+        .custom-card-header-right-button + .custom-card-header-right-button{
+          margin-left: 0px;
+        }
+      }
+    }
+  }
+  &-right-container{
+    height: 100%;
+    overflow: hidden;
+  }
+}

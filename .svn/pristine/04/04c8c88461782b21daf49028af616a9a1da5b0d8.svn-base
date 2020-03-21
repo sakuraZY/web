@@ -1,0 +1,28 @@
+/*
+ * @Author: huwei
+ *
+ * @Date: 2020-02-27 14:51:54
+ * @
+# Description: 预告登记相关接口
+ */
+/* eslint-disable */
+import axios from '@/libs/axios';
+
+export const testBuild = (data) => axios({
+  url: '/bdc/fwdt/zxcx/getHT',
+  method: 'get',
+  baseUrlType: 'nres',
+  params:data,
+});
+
+export const advanceSave = ({ data, nodeName }) => axios({
+  url: '/bdc/fwdt/zxsq/saveYGDJ',
+  method: 'post',
+  baseUrlType: 'nres',
+  params: {
+    nodeName
+  },
+  data,
+});
+
+export const submitUrlYGDJ = '/bdc/fwdt/zxtj/submitYGDJ';

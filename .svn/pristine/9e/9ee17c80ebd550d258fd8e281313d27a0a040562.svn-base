@@ -1,0 +1,236 @@
+<!--
+ * @Description: 功能菜单表格
+ * @Author: wangjiayu
+ * @Date: 2020-02-29 13:27:45
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-12 17:29:33
+ -->
+
+<template>
+  <div class="menu-connect">
+    <div class="menu-connect-operatebar">
+      <div class="filter">
+        <el-input
+          size="medium"
+          v-model.lazy="filter"
+          placeholder="输入菜单名称或地址查询"
+        ></el-input>
+      </div>
+      <div class="btn-group">
+        <el-button
+          size="medium"
+          type="primary"
+          class="btn-item"
+          @click="addMenu"
+        >
+          添加
+        </el-button>
+        <form ref="imporAuthForm" v-show="false">
+          <input
+            type="file"
+            ref="importMenu"
+            @change="importMenuFile"
+            accept="text/xml, application/xml"
+          />
+        </form>
+        <el-button
+          size="medium"
+          type="primary"
+          class="btn-item"
+          @click="$refs.importMenu.click()"
+        >
+          导入
+        </el-button>
+        <el-button
+          size="medium"
+          type="primary"
+          class="btn-item"
+          @click="exportMenuVisible = true"
+        >
+          导出
+        </el-button>
+      </div>
+    </div>
+    <div class="menu-connect-content">
+      <menu-table
+        ref="menuConnectTable"
+        :roleId="roleId"
+        :menuData="menuData"
+        :showCheckbox="!!roleId"
+        :defaultSelection="roleMenuIds"
+        v-loading="loading"
+        :filter="filter"
+        @onOperateSuccess="getMenu"
+        @onSelected="onSelected"
+      ></menu-table>
+    </div>
+    <el-dialog
+      title="导出功能菜单"
+      :visible.sync="exportMenuVisible"
+      append-to-body
+      @close="closeExportMenuDialog"
+    >
+      <el-input
+        v-model.lazy="filterExportMenu"
+        size="medium"
+        clearable
+        placeholder="输入菜单名称或地址查询"
+      ></el-input>
+      <menu-table
+        ref="exportMenuTable"
+        :menuData="menuData"
+        :showCheckbox="true"
+        :showOperate="false"
+        :filter="filterExportMenu"
+        style="min-height:600px;"
+      ></menu-table>
+      <template slot="footer">
+        <el-button type="primary" size="medium" @click="exportMenuFile">导出</el-button>
+        <el-button plain size="medium" @click="closeExportMenuDialog">取消</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+/* eslint-disable */
+import {
+  queryMenu, queryMenuByRoleId, bindMenuToRole, removeMenuFromRole, importMenu, exportMenu,
+} from '@/apis/sysmgr/menu';
+import { downloadStream } from '@/libs/common';
+import { formatDate } from '@/libs/date';
+import MenuTable from './MenuTable';
+
+export default {
+  components: {
+    MenuTable,
+  },
+  props: ['roleId', 'roleName'],
+  data() {
+    return {
+      filter: '', // 过滤条件
+      menuData: [], // 功能菜单数据
+      roleMenuIds: [], // 角色功能菜单数据id
+      loading: false, // 显示加载动画
+      exportMenuVisible: false, // 是否显示导出菜单对话框
+      filterExportMenu: '', // 导出菜单表格过滤条件
+    };
+  },
+  watch: {
+    roleId: {
+      handler() {
+        this.getRoleMenu();
+      },
+      immediate: true,
+    },
+  },
+  created() {
+    this.getMenu();
+  },
+  methods: {
+    // 获取功能菜单数据
+    getMenu() {
+      this.loading = true;
+      queryMenu().then(({ code, resData: { menuTree = [] } = {} } = {}) => {
+        this.loading = false;
+        if (code === 0) {
+          this.menuData = menuTree;
+        } else {
+          this.$message.error('获取功能菜单数据失败');
+        }
+      }, (err) => {
+        this.loading = false;
+        throw new Error(err);
+      });
+    },
+    // 根据角色获取功能菜单数据
+    getRoleMenu() {
+      if (!this.roleId) {
+        return;
+      }
+      this.loading = true;
+      queryMenuByRoleId(this.roleId).then(({ code, resData: { menus = [] } = {} } = {}) => {
+        this.loading = false;
+        if (code === 0) {
+          this.roleMenuIds = menus;
+        } else {
+          this.$message.error('获取角色功能菜单失败');
+        }
+      }, (err) => {
+        this.loading = false;
+        throw new Error(err);
+      });
+    },
+    // 绑定/解绑用户角色
+    onSelected(row, isChecked) {
+      const menuApi = isChecked ? bindMenuToRole : removeMenuFromRole;
+      const menuIds = [];
+      row.forEach((item) => {
+        // 去除已绑定的功能，避免重复绑定
+        if (!isChecked || (isChecked && !this.roleMenuIds.includes(item.menuId))) {
+          menuIds.push(item.menuId);
+        }
+      });
+      if (!menuIds.length) {
+        return;
+      }
+      const operateMsg = `${isChecked ? '绑定' : '解绑'}功能菜单`;
+      menuApi(this.roleId, this.roleName, menuIds)
+        .then(({ code } = {}) => {
+          if (code === 0) {
+            this.$message.success(`${operateMsg}成功`);
+          } else {
+            this.$message.error(`${operateMsg}失败`);
+          }
+        }, (err) => {
+          throw new Error(err);
+        });
+    },
+    // 新增菜单
+    addMenu() {
+      this.$refs.menuConnectTable.handleMenu({}, 'addModule');
+    },
+    // 导入菜单
+    importMenuFile(e) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      importMenu(formData).then(({ code } = {}) => {
+        if (code === 0) {
+          this.$message.success('导入成功');
+          this.getMenu();
+        } else {
+          this.$message.error('导入失败');
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    // 关闭导出菜单对话框
+    closeExportMenuDialog() {
+      this.filterExportMenu = '';
+      this.exportMenuVisible = false;
+      this.$refs.exportMenuTable.clearCheckboxRow();
+    },
+    // 导出菜单
+    exportMenuFile() {
+      const exportMenus = this.$refs.exportMenuTable.getCheckboxRecords();
+      if (!exportMenus.length) {
+        this.$message.warning('请选择需要导出的功能菜单');
+        return;
+      }
+      const menuIds = exportMenus.map(item => item.menuId);
+      exportMenu(menuIds.join(':')).then((res) => {
+        downloadStream(res, 'xml', `不动产线上综合服务大厅功能菜单${formatDate(new Date(), 8)}`);
+        this.closeExportMenuDialog();
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

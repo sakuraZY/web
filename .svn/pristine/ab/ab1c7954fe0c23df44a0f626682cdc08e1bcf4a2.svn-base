@@ -1,0 +1,257 @@
+<!--
+ * @Description: 经办人信息
+ * @Author: wangjiayu
+ * @Date: 2020-03-13 11:31:51
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-16 10:41:13
+ -->
+
+<template>
+  <div class="jbr-info" v-show="isVisible">
+    <div class="jbr-info-title">
+      <h3 id="t3" ref="t3">法院经办人信息</h3>
+      <div class="bnt-group">
+        <el-button type="primary" size="medium" @click="handleAddClick">新增经办人</el-button>
+      </div>
+    </div>
+    <div class="hbr-info-content">
+      <el-table ref="jbrTable" :data="tableData" highlight-current-row tooltip-effect="dark" border
+        stripe width="80%" :cell-style="{padding:'8px 3px'}"
+        :header-cell-style="{padding:'8px 3px',background:'#F2F6FC'}">
+        <el-table-column type="index" width="80" align="center"></el-table-column>
+        <el-table-column prop="qlrmc" label="姓名" align="center"></el-table-column>
+        <el-table-column prop="zjlbmc" label="证件类型" align="center"></el-table-column>
+        <el-table-column prop="zjhm" label="证件号码" align="center"></el-table-column>
+        <el-table-column label="操作" align="center">
+          <template v-slot="{row}">
+            <el-button @click="handleRow(row, $index, 'update')" type="text" size="small">编辑
+            </el-button>
+            <el-button @click="handleRow(row, $index, 'delete')" type="text" size="small">删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!-- 经办人详情弹出框 -->
+    <el-dialog :title="title" :visible.sync="detailVsisible" append-to-body
+      :close-on-click-modal="false" @close="resetDialogFields">
+      <el-form class="jbr-attr-form" ref="jbrAttrForm" :model="jbrAttrForm" :rules="jbrAttrRules"
+        size="medium" label-width="140px">
+        <el-form-item label="法院经办人姓名:" prop="qlrmc">
+          <el-input v-model.trim="jbrAttrForm.qlrmc" placeholder="请输入法院经办人姓名"></el-input>
+        </el-form-item>
+        <el-form-item label="证件类型:" prop="zjlb">
+          <el-select v-model="jbrAttrForm.zjlb" style="width:100%" ref='zjlbSelect'>
+            <el-option v-for="item in zjlbDic" :key="item.itemValue" :label="item.name"
+              :value="item.itemValue">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="证件号码:" prop="zjhm">
+          <el-input v-model.trim="jbrAttrForm.zjhm" placeholder="请输入证件号码"></el-input>
+        </el-form-item>
+        <el-form-item label="联系电话:" prop="lxdh">
+          <el-input v-model.trim="jbrAttrForm.lxdh" placeholder="请输入联系电话"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button type="primary" @click="saveJBR">确定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { queryByDicname } from '@/apis/sysmgr/dicItem';
+import { validCardId, validPhone } from '@/libs/validate';
+
+export default {
+  props: {
+    jbrxx: {
+      type: Array,
+      default: () => [],
+    },
+    isVisible: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      tableData: JSON.parse(JSON.stringify(this.jbrxx)), // 经办人数据
+      operateType: '', // 操作类型
+      operateMap: {
+        add: '新增',
+        update: '删除',
+      },
+      currJBRIndex: -1, // 前编辑的经办人索引
+      detailVsisible: false, // 是否显示经办人详情弹出框不
+      jbrAttrForm: { // 经办人属性
+        qlrmc: '',
+        zjlb: '',
+        zjlbmc: '',
+        zjhm: '',
+        lxdh: '',
+        qlrlx: '权利人代理人',
+      },
+      jbrAttrRules: { // 经办人属性验证规则
+        qlrmc: [
+          { required: true, message: '法院经办人姓名不能为空', trigger: 'blur' },
+        ],
+        zjlb: [
+          { required: true, message: '证件类别不能为空', trigger: 'blur' },
+        ],
+        zjhm: [
+          { required: true, validator: this.checkCardNo, trigger: 'blur' },
+        ],
+        lxdh: [
+          { validator: this.checkPhone, trigger: 'blur' },
+        ],
+      },
+      zjlbDic: [], // 证件类别字典
+    };
+  },
+  computed: {
+    // 新增/修改经办人信息
+    title() {
+      return `${this.operateMap[this.operateType]}经办人信息`;
+    },
+  },
+  watch: {
+    'jbrAttrForm.zjlb': {
+      handler() {
+        this.$nextTick(() => {
+          // 获取当前选中证件类别名称
+          this.jbrAttrForm.zjlbmc = this.$refs.zjlbSelect.selectedLabel;
+          if (this.jbrAttrForm.zjhm) {
+            this.$refs.jbrAttrForm.validateField('zjhm');
+          }
+        });
+      },
+    },
+  },
+  mounted() {
+    this.getZJLB();
+  },
+  methods: {
+    // 获取证件类型字典
+    getZJLB() {
+      // 如果已经查询过证件类别字典则不查询
+      if (this.zjlbDic.length) {
+        return;
+      }
+      queryByDicname('证件类型')
+        .then(({ code, resData: { dicitemTree = [] } = {} } = {}) => {
+          if (code === 0) {
+            if (dicitemTree.length) {
+              this.zjlbDic = dicitemTree.filter(item => item.name);
+            }
+          } else {
+            this.$message.error('获取证件类型字典失败');
+          }
+        }, (err) => {
+          throw new Error(err);
+        });
+    },
+    // 检验证件号
+    checkCardNo(rule, value, callback) {
+      if (this.jbrAttrForm.zjlb === '1' || this.jbrAttrForm.zjlbmc === '身份证') {
+        if (validCardId(value)) {
+          callback();
+        } else {
+          callback(new Error('请填写正确的身份证号'));
+        }
+      } else if (value === '') {
+        callback(new Error('请填写正确的证件号码'));
+      } else {
+        callback();
+      }
+    },
+    // 检验电话号码
+    checkPhone(rule, value, callback) {
+      if (value === '' || validPhone(value)) {
+        callback();
+      } else {
+        callback(new Error('请填写正确的联系方式'));
+      }
+    },
+    // 重置经办人详情面板信息
+    resetDialogFields() {
+      this.$refs.jbrAttrForm.resetFields();
+      this.$refs.jbrAttrForm.zjlbmc = '';
+    },
+    // 点击新增经办人按钮
+    handleAddClick() {
+      this.detailVsisible = true;
+      this.operateType = 'add';
+    },
+    // 新增/修改经办人
+    saveJBR() {
+      // 验证经办人信息
+      const errorMsgs = [];
+      this.$refs.jbrAttrForm.validateField(['qlrmc', 'zjlb', 'zjhm'], (errorMessage) => {
+        errorMsgs.push(errorMessage);
+      });
+      if (errorMsgs.some(item => !!item)) {
+        return;
+      }
+      if (this.operateType === 'add') {
+        this.tableData.push({ ...this.jbrAttrForm });
+      } else if (this.operateType === 'update' && this.currJBRIndex > -1) {
+        this.tableData.splice(this.currJBRIndex, 1, { ...this.jbrAttrForm });
+      }
+      this.detailVsisible = false;
+      this.resetDialogFields();
+    },
+    // 操作经办人信息
+    handleRow(row, index, type) {
+      switch (type) {
+        case 'update': { // 修改经办人信息
+          this.detailVsisible = true;
+          this.operateType = type;
+          this.currJBRIndex = index;
+          break;
+        }
+        case 'delete': { // 删除经办人信息
+          this.$confirm('确认删除该经办人信息吗？').then(() => {
+            this.tableData.splice(index, 1);
+          });
+          break;
+        }
+        default:
+          break;
+      }
+    },
+    // 获取经办人信息
+    getJBRXX() {
+      return this.tableData;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.jbr-info {
+  &-title {
+    display: flex;
+    justify-content: space-between;
+
+    .bnt-group {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &-content {
+    .el-table .cell {
+      white-space: pre-line;
+    }
+  }
+
+  .jbr-attr-form {
+    .el-form-item:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+</style>

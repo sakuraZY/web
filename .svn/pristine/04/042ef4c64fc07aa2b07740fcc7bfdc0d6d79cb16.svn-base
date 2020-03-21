@@ -1,0 +1,188 @@
+<template>
+  <geo-layout>
+    <template slot="main">
+      <geo-banner>
+        <template>
+          <div class="home-banner-container">
+            <div class="banner-top">
+              <div class="banner-top-left">
+                <div class="title">个人办事</div>
+                <span class="subtitle">个人用户在线办理业务，助您少跑腿！此处可写一句描述性话语。</span>
+              </div>
+              <div class="banner-top-right" @click="gotoImpersonal">
+                <div>
+                  <div class="title">企业办事</div>
+                  <span class="subtitle">前往企业版办事大厅</span>
+                </div>
+                <icon-svg iconClass="right" class="right-icon"></icon-svg>
+              </div>
+            </div>
+            <el-row :gutter="20">
+              <el-col
+                :span="24 / operateBussinessList.length"
+                v-for="(item, index) in operateBussinessList" :key="item+index"
+              >
+                <operate-card :icon="item.icon" :name="item.name"
+                @click="handleBussiness(item, index)" />
+              </el-col>
+            </el-row>
+          </div>
+        </template>
+      </geo-banner>
+      <geo-main className="layout-main">
+        <template>
+          <el-row :gutter="20">
+            <el-col
+              :sm="8"
+              v-for="(item, index) in operateList"
+              :key="item+index"
+              class="home-main-col"
+            >
+              <operate-card>
+                <template>
+                  <span class="home-main-operate-name">{{item.name}}</span>
+                  <div class="home-main-operate-sub">
+                    <el-button
+                      type="text"
+                      v-for="(subItem, subIndex) in item.subs"
+                      :key="subItem+subIndex"
+                      @click="handleSubOperate(subItem)"
+                    >
+                    {{ subItem.name }}
+                    </el-button>
+                  </div>
+                  <icon-svg :iconClass="item.icon" className="home-main-operate-icon"></icon-svg>
+                </template>
+              </operate-card>
+            </el-col>
+          </el-row>
+        </template>
+      </geo-main>
+    </template>
+  </geo-layout>
+</template>
+
+<script>
+import GeoLayout from '@/layouts/Personal';
+import GeoBanner from '@/layouts/Personal/bannerContent';
+import GeoMain from '@/layouts/Personal/mainContent';
+import OperateCard from '@/components/operateCard';
+
+export default {
+  components: {
+    GeoLayout,
+    GeoBanner,
+    GeoMain,
+    OperateCard,
+  },
+  data() {
+    return {
+      operateBussinessList: [
+        {
+          icon: 'yugaodengji',
+          name: '预告登记',
+          id: '10001',
+        },
+        {
+          icon: 'yishoufang',
+          name: '一手房转移',
+          id: '10002',
+        },
+        {
+          icon: 'ershoufang',
+          name: '二手房转移',
+          id: '10003',
+        },
+        {
+          icon: 'clock',
+          name: '预约申请',
+          id: '10004',
+        },
+      ],
+      operateList: [
+        {
+          icon: 'woyaocha',
+          name: '我要查',
+          id: '10001',
+          subs: [
+            {
+              id: '10001-1',
+              name: '进度查询',
+            },
+            {
+              id: '10001-2',
+              name: '产权查询',
+            },
+            {
+              id: '10001-3',
+              name: '证书查验',
+            },
+          ],
+        },
+        {
+          id: '10002',
+          icon: 'woyaowen',
+          name: '我要问',
+          subs: [
+            {
+              id: '10002-1',
+              name: '办事指南',
+            },
+            {
+              id: '10002-2',
+              name: '常见问题',
+            },
+            {
+              id: '10002-3',
+              name: '资料下载',
+            },
+          ],
+        },
+        {
+          id: '10003',
+          icon: 'woyaokan',
+          name: '我要看',
+          subs: [
+            {
+              id: '10003-1',
+              name: '遗失公告',
+            },
+            {
+              id: '10003-2',
+              name: '通知公告',
+            },
+            {
+              id: '10003-3',
+              name: '工作动态',
+            },
+          ],
+        },
+      ],
+    };
+  },
+  methods: {
+    handleBussiness(item, index) {
+      // this.$message(`你点击了${item.name}`);
+      if (index === 0) {
+        this.$router.push({ name: 'PAdvanceInstructions' });
+      }
+      if (index === 1) {
+        this.$router.push({ name: 'PFirstHouse' });
+      }
+      if (index === 2) {
+        this.$router.push({ name: 'PsecondHouse' });
+      }
+    },
+    handleSubOperate(item) {
+      this.$message(`你点击了${item.name}`);
+    },
+    gotoImpersonal() {
+      this.$router.push('/login');
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

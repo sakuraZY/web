@@ -1,0 +1,57 @@
+.jdcxjg-box {
+  font-size: 16px;
+
+  &-title {
+    height: 60px;
+    line-height: 60px;
+    border-bottom: 1px solid $--border-color-base;
+    h3{
+      margin:0 0 0 20px;
+      padding:0;
+      font-size:20px;
+      color:  $--color-black;
+    }
+  }
+
+  &-content {
+    margin: 50px 120px 30px 120px;
+
+    .jdcxjg-title {
+      margin-bottom: 30px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .progress-bar {
+      margin-bottom: 50px;
+    }
+
+    .jdcxjg-state {
+      margin-bottom: 30px;;
+
+      .state-text {
+        color: $--color-primary;
+        margin-right: 20px;
+      }
+      .state-note {
+        color: $--color-info;
+        font-size: 14px;
+      }
+    }
+
+    .jdcxjg-detail {
+      border: 1px solid $--border-color-base;
+      padding: 30px 40px;
+
+      .detail-item:not(:last-child) {
+        margin-bottom: 20px;
+      }
+
+      .jg {
+        color: $--color-info;
+        font-size: 14px;
+      }
+    }
+  }
+  
+}

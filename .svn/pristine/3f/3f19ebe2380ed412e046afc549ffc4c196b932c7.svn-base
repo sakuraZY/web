@@ -1,0 +1,19 @@
+.mainflowBox{
+ .main-fill{
+    position:relative;
+  } 
+  .firtHand-stepwrap {
+    width: 80%;
+    .el-step.is-horizontal {
+      position: relative;
+      .el-step__main {
+        position: absolute;
+        background-color: #fff;
+        left: 20px;
+        top: -6px;
+        padding: 0 20px;
+        width: 70px;
+      }
+    }
+  } 
+}

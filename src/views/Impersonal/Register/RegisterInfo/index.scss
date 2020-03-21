@@ -1,0 +1,18 @@
+.register-info{
+  &-title{
+    &-main{
+      font-size: 20px;
+      color: $--color-black;
+    }
+    &-sub{
+      color: $--color-danger;
+      margin-left: 20px;
+    }
+  }
+  &-item{
+    display: flex;
+    &-main{
+      margin-right: 10px;
+    }
+  }
+}

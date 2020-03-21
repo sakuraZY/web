@@ -1,0 +1,28 @@
+.slide-fade{
+  &-enter, &-leave-to{
+    transform: translateX(10px);
+    opacity: 0;
+  }
+  &-enter-active{
+    transition: all .3s ease;
+  }
+  &-leave-active{
+    transition: all .3s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+  }
+}
+.el-dialog__header{
+  border-bottom: $--border-base;
+}
+// .el-dialog__body{
+//   max-height: calc(70vh - 140px);
+//   overflow-y: auto;
+// }
+
+.el-dialog__footer{
+  border-top: $--border-base;
+}
+
+.btnBorder {
+  border:1px solid $--color-primary; 
+  color:$--color-primary;
+}

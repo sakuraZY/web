@@ -1,0 +1,507 @@
+<!--
+ * @Descripttion: 个人预告登记 步骤2
+ * @version: 1.0
+ * @Author: 胡威
+ * @Date: 2020-03-04 13:41:55
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-03-17 16:19:32
+ -->
+<template>
+  <div class='form-message-box'>
+    <div class="workcode">
+      <h3 id="t1">不动产数据检验</h3>
+      <p>业务编号：<span>{{messFrom.code}}</span></p>
+    </div>
+    <div class="testinfo">
+      <span class="red">*</span><label>合同编号</label>
+      <div class="htbh">
+        <el-row :gutter="20">
+            <el-col :span="12">
+                <el-input v-model="input" disabled></el-input>
+            </el-col>
+            <el-col :span="12">
+                <el-button type="primary" @click="getPersonHt">选择合同</el-button>
+            </el-col>
+          </el-row>
+      </div>
+    </div><!--test end-->
+    <div class="userinfo" v-if="isTest">
+      <div class="info-head">
+        <h3 id="t2">权利人信息</h3>
+      </div>
+      <div class="info-body">
+        <el-table
+          :data="userDataComp"
+          stripe
+          style="width: 100%;"
+          :header-cell-style="tableHeadStyle"
+          >
+          <el-table-column v-for="(item,index) in userHeadNames" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :width="item.width"
+            >
+          </el-table-column>
+          <el-table-column
+             label="操作"
+             width = "180"
+          >
+            <template v-slot="scope">
+              <el-button type="text"
+              size="small" @click="addFamily">编辑家庭成员</el-button>
+              <el-button @click="handleClick(scope.row)" type="text"
+              size="small">人脸验证</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div><!--userinfo end-->
+    <div class="infolist" v-if="isTest">
+      <div class="info-head">
+        <h3 id="t3">义务人信息</h3>
+      </div>
+      <div class="info-body">
+        <el-table
+          :data="infoDataComp"
+          stripe
+          style="width: 100%;"
+          :header-cell-style="tableHeadStyle"
+          >
+          <el-table-column v-for="(item,index) in infoHeadNames" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :width="item.width"
+            >
+          </el-table-column>
+        </el-table>
+      </div>
+    </div><!-- infolist end-->
+    <div class="infolist" v-if="isTest">
+      <div class="info-head">
+        <h3 id="t4">不动产权信息</h3>
+      </div>
+      <div class="info-body">
+        <el-table
+          :data="infoBdData"
+          stripe
+          style="width: 100%;"
+          :header-cell-style="tableHeadStyle"
+          >
+          <el-table-column v-for="(item,index) in infoBdHead" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :width="item.width"
+            >
+          </el-table-column>
+        </el-table>
+      </div>
+      <div class="infoselect" v-if="isTest">
+        <el-row>
+          <el-col :span="8">
+            <label class="type"><span>*</span>共有情况</label>
+            <el-select v-model="messFrom.type" placeholder="请选择" @change="selectChange">
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+                >
+              </el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="8">
+            <label class="type"><span>*</span>是否分别持证</label>
+            <el-select v-model="messFrom.haveType" placeholder="请选择" @change="selectChange">
+              <el-option
+                v-for="item in opthave"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+                >
+              </el-option>
+            </el-select>
+          </el-col>
+          <el-col :span="8"><div></div></el-col>
+        </el-row>
+      </div>
+    </div><!-- infolist2 end-->
+    <div class="bot_btns">
+      <el-button plain @click="handlerStorage">暂存</el-button>
+      <el-button type="primary" @click="handlerUp">下一步</el-button>
+    </div>
+    <el-dialog  title="权利人人脸验证"
+    :visible.sync="dialogVisible" width="400px"  top="10vh">
+      <div style="text-align:center;">
+        <img :src="ewmImg" width="250" height="250"/>
+        <p>请您扫一扫图中二维码进行人脸验证。</p>
+      </div>
+    </el-dialog> <!-- ren zheng -->
+    <el-dialog  title="选择合同"
+    :visible.sync="htVisible" width="80%"  top="10vh">
+      <div style="text-align:center;">
+        <div class="diatable">
+          <el-table :data="htData" stripe  style="width: 100%;"
+            :header-cell-style="tableHeadStyle"
+            >
+            <el-table-column width = "70" label="序号" prop="xh">
+              <template v-slot="scope">
+                <el-radio v-model="radio" :label="scope.row.xh"></el-radio>
+              </template>
+            </el-table-column>
+            <el-table-column v-for="(item,index) in htHead" :key="index"
+              :prop="item.prop"
+              :label="item.label"
+              :width="item.width"
+              >
+            </el-table-column>
+          </el-table>
+        </div>
+        <div class="diabtns">
+          <el-button plain @click="htCancel">取消</el-button>
+          <el-button type="primary" @click="htChose">确定</el-button>
+        </div>
+      </div>
+    </el-dialog>
+    <el-dialog  title="编辑家庭成员"
+    :visible.sync="bjVisible" width="80%"  top="10vh">
+    <ttable @familyFn="getFamilyData"></ttable>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { getPersonHTLB, testBuild } from '@/apis/nres/zxcx';
+import { getEmployeeById } from '@/apis/auth/employee';
+import { YSZYSave } from '@/apis/nres/zxsq';
+import { formatDate } from '@/libs/date';
+import { transNumToId } from '@/libs/utils';
+import getKeyCode from '@/mixins/getKeyCode';
+import transValToName from '@/mixins/transValToName';
+import { mapMutations, mapState } from 'vuex';
+import ewmImg from '@/assets/ewm.png';
+import ttable from './ttable.vue';
+
+export default {
+  mixins: [getKeyCode, transValToName],
+  components: {
+    ttable,
+  },
+  data() {
+    return {
+      tableHeadStyle: {
+        background: '#F2F6FC',
+        color: '#666',
+        fontWeight: 'normal',
+        fontSize: '14px',
+      },
+      dialogVisible: false,
+      htVisible: false,
+      bjVisible: false,
+      nodeName: '宜昌',
+      dicitemName: '共有方式',
+      parentPnode: 'yszy',
+      dicValue: 'yszy',
+      input: '',
+      rkey: 'W',
+      ewmImg,
+      radio: '',
+      testForm: {
+        htbh: '',
+        qlrmc: '',
+      },
+      family: [],
+      isTest: 0,
+      rules: {
+        htbh: [{
+          required: true, // 是否必填
+          message: '用户名不能为空', // 规则
+          trigger: 'blur', // 何事件触发
+        }],
+        qlrmc: [{
+          required: true, // 是否必填
+          message: '用户名不能为空', // 规则
+          trigger: 'blur', // 何事件触发
+        }],
+      },
+      messFrom: {
+        code: '22222',
+        type: '',
+        haveType: '',
+      },
+      options: [
+        { label: '单独所有', value: '0' },
+        { label: '共同共有', value: '1' },
+        { label: '按份共有', value: '2' },
+        { label: '其它共有', value: '3' },
+      ],
+      opthave: [
+        { value: '否', label: '否' },
+        { value: '是', label: '是' },
+      ],
+      userHeadNames: [
+        { label: '序号', prop: 'codes', width: '50px' },
+        { label: '姓名', prop: 'qlrmc', width: '70px' },
+        { label: '权利人性质', prop: 'qlrlx', width: '' },
+        { label: '证件类型', prop: 'zjlbzw', width: '' },
+        { label: '证件号码', prop: 'zjhm', width: '' },
+        { label: '通讯地址', prop: 'dz', width: '' },
+      ],
+      userData: [],
+      infoHeadNames: [ // 义务人
+        { label: '序号', prop: 'codes', width: '50px' },
+        { label: '姓名', prop: 'qlrmc', width: '70px' },
+        { label: '权利人性质', prop: 'qlrlx', width: '' },
+        { label: '证件类型', prop: 'zjlbzw', width: '' },
+        { label: '证件号码', prop: 'zjhm', width: '' },
+        { label: '通讯地址', prop: 'dz', width: '' },
+        { label: '法人代表名称', prop: 'frdbxm', width: '' },
+        { label: '法人代表证件类型', prop: 'frdbzjlxzw', width: '' },
+        { label: '法人代表证件号码', prop: 'frdbzjh', width: '' },
+        { label: '法人代表联系电话', prop: 'frdbdhhm', width: '' },
+      ],
+      infoData: [],
+      infoBdHead: [
+        { label: '序号', prop: 'xh', width: '50px' },
+        { label: '坐落', prop: 'zl', width: '200px' },
+        { label: '不动产单元', prop: 'bdcdyh', width: '' },
+        { label: '土地使用权面积', prop: 'tdsyqmj', width: '' },
+        { label: '房屋建筑面积', prop: 'fwjzmj', width: '120px' },
+        { label: '土地用途', prop: 'tdytmc', width: '120px' },
+        { label: '房屋用途', prop: 'fwytmc', width: '100px' },
+        { label: '抵押情况', prop: 'dyqk', width: '100px' },
+        { label: '查封情况', prop: 'cfqk', width: '100px' },
+      ],
+      infoBdData: [],
+      htHead: [
+        { label: '交易编号', prop: 'jybh', width: '' },
+        { label: '合同编号', prop: 'htbh', width: '' },
+        { label: '合同备案时间', prop: 'htbasj', width: '' },
+        { label: '房屋坐落', prop: 'fwzl', width: '' },
+        { label: '房屋用途', prop: 'fwyt', width: '' },
+        { label: '建筑面积', prop: 'jzmj', width: '' },
+      ],
+      htData: [],
+      messageSave: {
+        lcmc: '',
+        djxl: '',
+        djdl: '200',
+        ajzt: '0',
+        sqr: '',
+        htbh: '',
+        sqbh: '',
+        qlrxx: {
+          ywr: [],
+          qlr: [],
+        },
+        tsgl: [],
+      },
+    };
+  },
+  computed: {
+    infoDataComp() {
+      this.infoData.forEach((item, index) => {
+        item.codes = (index + 1).toString();
+        item.zjlbzw = transNumToId(item.zjlb);
+        item.frdbzjlxzw = transNumToId(item.frdbzjlx);
+      });
+      return this.infoData;
+    },
+    userDataComp() {
+      this.userData.forEach((item, index) => {
+        item.codes = (index + 1).toString();
+        item.zjlbzw = transNumToId(item.zjlb);
+      });
+      return this.userData;
+    },
+    tsglArr: {
+      get() {
+        return this.infoBdData.map(item => ({
+          tstybm: item.tstybm,
+          bdcdyh: item.bdcdyh,
+          bdclx: '房屋',
+          djzl: '权属',
+        }));
+      },
+      set(data) {
+        this.infoBdData = data;
+      },
+    },
+    ...mapState('queryData', { FlOWDATA: state => state.FlOWDATA }),
+  },
+  mounted() {
+    this.getKeyCode();
+    this.setNodeName(this.nodeName);
+    getEmployeeById(sessionStorage.userId).then((
+      {
+        code,
+        msg,
+        resData,
+      },
+    ) => {
+      if (code === 0) {
+        this.zjhm = resData.employee.empIdcardno;
+      } else {
+        this.$message.error(msg);
+      }
+    }, (err) => {
+      throw new Error(err);
+    });
+  },
+  watch: {
+    isTest(nval) {
+      this.$emit('func', nval);
+    },
+    keyCode(nval) {
+      this.messFrom.code = nval;
+    },
+  },
+  methods: {
+    getFamilyData(val) {
+      this.family = val;
+    },
+    addFamily() {
+      this.bjVisible = true;
+    },
+    selectChange(nval) {
+      this.userData = this.userData.map((item) => { item.gyfs = nval; return item; });
+    },
+    ...mapMutations('ysfzy', { setMessJson: 'SET_MESSAGEJSON' }),
+    ...mapMutations('ysfzy', { setNodeName: 'SET_NODENAME' }),
+    htCancel() {
+      this.htVisible = false;
+    },
+    htChose() {
+      if (!this.radio) {
+        this.$message.error('请选择合同');
+      } else {
+        const htData = (this.htData[this.radio - 1]);
+        this.input = htData.htbh;
+        const options = {
+          htbh: htData.htbh,
+          qlrmc: sessionStorage.userName,
+          isDy: '3', // 1:不限制状态，2：包含抵押，3：不包含抵押
+          nodeName: this.nodeName,
+        };
+        this.handlerTest(options);
+        this.htVisible = false;
+      }
+    },
+    getPersonHt() {
+      getPersonHTLB({
+        qlrmc: sessionStorage.userName,
+        zjhm: this.zjhm,
+        isDy: '3', // 1:不限制状态，2：包含抵押，3：不包含抵押
+        nodeName: this.nodeName,
+      }).then(({ code, msg, resData }) => {
+        if (code === 0) {
+          this.htData = resData.htlists;
+          this.htVisible = true;
+        } else {
+          this.$message.error(msg);
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    handlerTest(options) {
+      testBuild(options).then((testData) => {
+        if (testData.code === 0) {
+          if (testData.resData.bdcdylists && testData.resData.qlrxx) {
+            this.isTest = 1;
+            this.userData = testData.resData.qlrxx.qlr;
+            this.infoData = testData.resData.qlrxx.ywr;
+            this.infoBdData = testData.resData.bdcdylists;
+            this.messFrom.type = testData.resData.qlrxx.qlr[0].gyfs;
+            this.$message({
+              type: 'success',
+              message: '查询成功',
+            });
+          } else {
+            this.$message.error('没有查询到结果');
+          }
+        } else {
+          this.$message.error(testData.msg);
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    handleClick() {
+      this.dialogVisible = true;
+    },
+    getOptions(messageSave) {
+      this.userData[0].family = this.family;
+      const personMessage = JSON.parse(sessionStorage.ysfzyMessage);
+      return Object.assign(messageSave, {
+        djxl: this.dicData.itemName,
+        lcmc: this.messFrom.code + this.dicData.itemName,
+        sqrq: formatDate(new Date(), 1),
+        gyfs: this.messFrom.type,
+        sqbh: this.messFrom.code,
+        sqr: sessionStorage.userId,
+        htbh: this.testForm.htbh,
+        sqfbcz: this.messFrom.haveType,
+        WW_XWBL: {
+          CLSFZSYX: personMessage.sqzl, // 申请登记材料是否真实有效
+          SFZSYSBD: personMessage.sfzsyy, // 是否真实意思表达
+          GYRSFTY: personMessage.sfty, // 本次转移登记 其他按份共有人是否同意
+          SFYSQBYZ: personMessage.sfddsy, // 不动产为单独所有还是共有
+          SFCZDYQ: personMessage.sfdy, // 申请不动产是否存在抵押权
+          SFKJJJGJ: personMessage.sfkuojian, // 申请不动产是否存在扩建 加建 改建情况
+          SFSQHBBT: personMessage.sfhbbt, // 是否申请货币补贴
+          SFHYGZCF: personMessage.sfhygz, // 是否含有国资成分
+          SFCZYYDJ: personMessage.sfcdfx, // 存在异议并自担风险
+        },
+        qlrxx: {
+          qlr: this.userData,
+          ywr: this.infoData,
+        },
+        tsgl: this.tsglArr,
+      });
+    },
+    handlerUp() {
+      if (!this.isTest) {
+        this.$message.error('请先查询不动产信息');
+      } else if (!this.messFrom.type) {
+        this.$message.error('请选择共有情况');
+      } else if (!this.messFrom.haveType) {
+        this.$message.error('请选择是否分别持证');
+      } else {
+        const options = this.getOptions(this.messageSave);
+        this.setMessJson(options);
+        this.handlerStorage();
+        this.$emit('funcNext');
+      }
+    },
+    handlerStorage() {
+      if (!this.isTest) {
+        this.$message.error('请先查询不动产信息');
+      } else if (!this.messFrom.type) {
+        this.$message.error('请选择共有情况');
+      } else if (!this.messFrom.haveType) {
+        this.$message.error('请选择是否分别持证');
+      } else {
+        const options = this.getOptions(this.messageSave);
+        YSZYSave({
+          nodeName: this.nodeName,
+          data: options,
+        }).then(({ code, msg }) => {
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: '保存成功',
+            });
+          } else {
+            this.$message.error(msg);
+          }
+        }, (err) => {
+          throw new Error(err);
+        });
+      }
+    },
+  },
+};
+</script>
+
+<style src="./index.scss" lang='scss' scoped>
+</style>

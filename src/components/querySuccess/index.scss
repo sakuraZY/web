@@ -1,0 +1,36 @@
+.success-main{
+  width: 100%;
+  .success-btn{
+    position: fixed;
+    right:50px;
+    bottom:20px;
+  }
+}
+.s_main{
+  .success-icon{
+    width:62px;
+    height:62px;
+    border-radius: 50%;
+    background-color: #53C518;
+    text-align: center;
+    line-height: 31px;
+    margin: 50px auto 20px;
+    .success-color{
+      color: #fff;
+      font-weight: bold;
+      font-size:50px;
+      margin-top: 5px;
+    }
+  }
+  .success-mess{
+    text-align: center;
+    p{
+      line-height: 48px;
+      font-size: 20px;
+      .colorfont{
+        color:$--color-primary;
+        cursor: pointer;
+      }
+    }
+  }
+}

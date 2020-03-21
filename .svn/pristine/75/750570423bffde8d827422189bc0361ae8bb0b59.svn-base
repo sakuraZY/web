@@ -1,0 +1,134 @@
+<template>
+  <div id="app">
+       <el-table
+      :data="familyData"
+       highlight-current-row
+        tooltip-effect="dark"
+        border
+        stripe
+        width="80%"
+        :cell-style="{padding:'3px'}"
+        :header-cell-style="tableHeaderColor"
+        height="200px">
+        <el-table-column
+        label="序号"
+        align='center' width="58">
+        <editable-cell :show-input="row.editMode" slot-scope="{row}" v-model="row.sxh">
+          <span slot="content">{{row.sxh}}</span>
+        </editable-cell>
+      </el-table-column>
+      <el-table-column
+        label="姓名"
+         align='center' width="120">
+        <editable-cell :show-input="row.editMode" slot-scope="{row}" v-model="row.name">
+          <span slot="content">{{row.name}}</span>
+        </editable-cell>
+      </el-table-column>
+
+      <el-table-column
+        min-wwidth="150"
+        label="证件类型" align='center' width="150">
+
+         <editable-cell
+         :show-input="row.editMode"
+         slot-scope="{row}"
+         editable-component="el-select"
+         close-event="change"
+         v-model="row.zjlb">
+
+          <el-tag size="medium"
+                  type='primary'
+                  slot="content">
+                  {{row.zjlb}}
+          </el-tag>
+
+          <template slot="edit-component-slot">
+            <!-- <el-option value="Q" label="Male"></el-option>
+            <el-option value="F" label="Female"></el-option> -->
+            <el-option
+                    v-for="item in zjlxlist"
+                    :key="item.name"
+                    :label="item.name"
+                    :value="item.name" >
+                  </el-option>
+          </template>
+        </editable-cell>
+
+      </el-table-column>
+       <el-table-column
+        label="证件号码"
+        align='center' width="150">
+        <editable-cell :show-input="row.editMode" slot-scope="{row}" v-model="row.zjhm">
+          <span slot="content">{{row.zjhm}}</span>
+        </editable-cell>
+      </el-table-column>
+       <el-table-column
+        label="关系"
+        align='center'>
+        <editable-cell :show-input="row.editMode" slot-scope="{row}" v-model="row.gx">
+          <span slot="content">{{row.gx}}</span>
+        </editable-cell>
+      </el-table-column>
+       <el-table-column
+        label="操作"
+        fixed="right"
+        align="center" width="90px">
+        <template slot-scope="{row, index}">
+        <el-button @click="setEditMode(row, index)"
+          type="text" size="small">编辑</el-button>
+           <!-- <el-button type="text"
+          @click="saveRow(row, index)" size="small">完成
+        </el-button>-->
+        <el-button type="text" size="small" @click="delFamily(scope.$index)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+</template>
+
+<script>
+import editableCell from './editTableCell.vue';
+
+export default {
+  components: {
+    editableCell,
+  },
+  data() {
+    return {
+      msg: '',
+    };
+  },
+  props: ['familyData', 'zjlxlist'],
+  methods: {
+    setEditMode(row) {
+      row.editMode = true;
+      // console.log(index);
+    },
+    saveRow(row) {
+      row.editMode = false;
+      // console.log(index);
+    },
+    // 修改table header的背景色
+    tableHeaderColor({ rowIndex }) {
+      let sty = 'padding:5px 1px;background:#F2F6FC;';
+      if (rowIndex === 0 || rowIndex === 1) {
+        sty = 'padding:5px 1px;background:#F2F6FC;font-size:14px;color:rgba(102,102,102,1);font-weight:400; height:15px;';
+      }
+      return sty;
+    },
+  },
+  mounted() {
+    this.familyData = this.familyData.map(row => ({
+      ...row,
+      editMode: false,
+    }));
+  },
+};
+</script>
+
+<style>
+.edit-cell {
+  min-height: 25px;
+  cursor: pointer;
+}
+</style>

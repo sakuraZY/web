@@ -1,0 +1,26 @@
+.text_tt{
+  height: 60px;
+  line-height: 60px;
+  border-bottom: 1px solid #EAE8EB;
+  h3{
+      margin:0 0 0 20px;
+      padding:0;
+      font-size:20px;
+      color: #000;
+  }
+}
+.firtHand-stepwrap {
+  width: 80%;
+  margin: 30px auto;
+  .el-step.is-horizontal {
+    position: relative;
+    .el-step__main {
+      position: absolute;
+      background-color: #fff;
+      left: 20px;
+      top: -6px;
+      padding: 0 20px;
+      width: 70px;
+    }
+  }
+} 

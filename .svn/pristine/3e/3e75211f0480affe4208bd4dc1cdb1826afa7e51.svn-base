@@ -1,0 +1,235 @@
+<template>
+    <div class="dyxxDiv" v-show="isVisible">
+      <h3 :id="'t' + index" :ref="'t' + index">抵押信息</h3>
+         <el-form :model="dyxxForm" :rules="rules"
+          ref="dyxxForm" size="medium" :disabled="isDisabled">
+            <el-row :gutter="20">
+                <el-col :span='8'>
+                <el-form-item label="被担保主债券数额" prop='bdbzzqse'>
+                    <el-input  v-model.number="dyxxForm.bdbzzqse"
+                    placeholder="请输入被担保主债券数额"
+                    ></el-input>
+                </el-form-item>
+                </el-col>
+                <el-col :span='8'>
+                <el-form-item label="大写金额">
+                    <el-input v-model="dxje" placeholder="大写金额" ></el-input>
+                </el-form-item>
+                </el-col>
+                <el-col :span='7'>
+                 <el-form-item label="权利起始时间" prop='qlqssj'>
+                    <el-date-picker type="date"  v-model.trim="dyxxForm.qlqssj" placeholder="权利起始时间"
+                        style="width: 100%;"></el-date-picker>
+                </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row :gutter="20">
+                <el-col :span='8'>
+                <el-form-item label="权利结束时间" prop='qljssj'>
+                    <el-date-picker type="date" placeholder="权利结束时间" v-model.trim="dyxxForm.qljssj"
+                        style="width: 100%;"></el-date-picker>
+                </el-form-item>
+                </el-col>
+                <el-col :span='8'>
+                <el-form-item label="不动产价值" prop='pgje'>
+                    <el-input v-model.number="dyxxForm.pgje" placeholder="请输入不动产价值"></el-input>
+                </el-form-item>
+                </el-col>
+                <el-col :span='7'></el-col>
+            </el-row>
+        </el-form>
+    </div>
+</template>
+
+<script>
+import { formatDate } from '@/libs/date';
+
+export default {
+  data() {
+    const qssj = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入权利起始日期'));
+      } else if (this.dyxxForm.qljssj.length > 0 && value > this.dyxxForm.qljssj) {
+        callback(new Error('起始日期不能大于结束日期'));
+      } else {
+        callback();
+      }
+    };
+    const jssj = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入权利结束日期'));
+      } else if (value < this.dyxxForm.qlqssj) {
+        callback(new Error('结束日期不能小于起始日期'));
+      } else {
+        callback();
+      }
+    };
+    return {
+      dyxxForm: {
+        bdbzzqse: '',
+        qlqssj: '',
+        qljssj: '',
+        pgje: '',
+      },
+      rules: {
+        bdbzzqse: [
+          {
+            required: true, message: '请输入被担保主债券数额', trigger: 'blur',
+          },
+          { type: 'number', message: '被担保主债券数额必须为数字值' },
+        ],
+        qlqssj: [
+          { required: true, validator: qssj },
+        ],
+        qljssj: [
+          { required: true, validator: jssj },
+        ],
+        pgje: [
+          { required: true, message: '请输入不动产价值', trigger: 'blur' },
+          { type: 'number', message: '不动产价值必须为数字值' },
+        ],
+      },
+    };
+  },
+  props: {
+    isVisible: {
+      type: Boolean,
+      default: false,
+    },
+    isDisabled: {
+      type: Boolean,
+      default: false,
+    },
+    index: {
+      type: Number,
+      default: 6,
+    },
+  },
+  methods: {
+    submitForm() {
+      this.$refs.dyxxForm.validate((valid) => {
+        if (valid) {
+          this.$emit('isSubmit', ['subject', true]);
+          return true;
+        }
+        this.$emit('isSubmit', ['subject', false]);
+        return false;
+      });
+    },
+    toChies(amount) { // 形参
+      // 汉字的数字
+      const cnNums = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
+      // 基本单位
+      const cnIntRadice = ['', '拾', '佰', '仟'];
+      // 对应整数部分扩展单位
+      const cnIntUnits = ['', '万', '亿', '兆'];
+      // 对应小数部分单位
+      const cnDecUnits = ['角', '分'];
+      // 整数金额时后面跟的字符
+      const cnInteger = '整';
+      // 整型完以后的单位
+      const cnIntLast = '元';
+      // 最大处理的数字
+      const maxNum = 9999999999999999.99;
+      // 金额整数部分
+      let integerNum;
+      // 金额小数部分
+      let decimalNum;
+      // 输出的中文金额字符串
+      let chineseStr = '';
+      // 分离金额后用的数组，预定义
+      let parts;
+      if (amount === '') {
+        return '';
+      }
+      const tmpamount = parseFloat(amount);
+      if (tmpamount >= maxNum) {
+        // 超出最大处理数字
+        return '';
+      }
+      if (amount === 0) {
+        chineseStr = cnNums[0] + cnIntLast + cnInteger;
+        return chineseStr;
+      }
+      // 转换为字符串
+      const stramount = amount.toString();
+      if (stramount.indexOf('.') === -1) {
+        integerNum = stramount;
+
+        decimalNum = '';
+      } else {
+        parts = amount.split('.');
+        // eslint-disable-next-line prefer-destructuring
+        integerNum = parts[0];
+        decimalNum = parts[1].substr(0, 4);
+      }
+      // 获取整型部分转换
+      if (parseInt(integerNum, 10) > 0) {
+        let zeroCount = 0;
+        const IntLen = integerNum.length;
+        // eslint-disable-next-line no-plusplus
+        for (let i = 0; i < IntLen; i++) {
+          const n = integerNum.substr(i, 1);
+          const p = IntLen - i - 1;
+          const q = p / 4;
+          const m = p % 4;
+          if (n === '0') {
+            // eslint-disable-next-line no-plusplus
+            zeroCount++;
+          } else {
+            if (zeroCount > 0) {
+              chineseStr += cnNums[0];
+            }
+            // 归零
+            zeroCount = 0;
+            // alert(cnNums[parseInt(n)])
+            // eslint-disable-next-line radix
+            chineseStr += cnNums[parseInt(n)] + cnIntRadice[m];
+          }
+          if (m === 0 && zeroCount < 4) {
+            chineseStr += cnIntUnits[q];
+          }
+        }
+        chineseStr += cnIntLast;
+      }
+      // 小数部分
+      if (decimalNum !== '') {
+        const decLen = decimalNum.length;
+        // eslint-disable-next-line no-plusplus
+        for (let i = 0; i < decLen; i++) {
+          const n = decimalNum.substr(i, 1);
+          if (n !== '0') {
+            chineseStr += cnNums[Number(n)] + cnDecUnits[i];
+          }
+        }
+      }
+      if (chineseStr === '') {
+        chineseStr += cnNums[0] + cnIntLast + cnInteger;
+      } else if (decimalNum === '') {
+        chineseStr += cnInteger;
+      }
+      return chineseStr;
+    },
+    getDyxx() {
+      return {
+        bdbzzqse: this.dyxxForm.bdbzzqse,
+        pgje: this.dyxxForm.pgje,
+        qljssj: formatDate(this.dyxxForm.qljssj),
+        qlqssj: formatDate(this.dyxxForm.qlqssj),
+      };
+    },
+  },
+  created() {
+    // this.getinfo();
+  },
+  computed: {
+    dxje() {
+      return this.toChies(this.dyxxForm.bdbzzqse);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

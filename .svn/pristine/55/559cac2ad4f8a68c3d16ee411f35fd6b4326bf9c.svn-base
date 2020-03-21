@@ -1,0 +1,274 @@
+<!--
+ * @Descripttion: 获取我的暂存件
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-02-19 16:16:13
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-19 11:28:07
+-->
+<template>
+  <div class="form-tempflows">
+    <el-form :model="tempFlowform" ref="tempFlowform" label-width="100px" class="demo-ruleForm">
+      <el-row :gutter="20">
+        <el-col :span='8'>
+          <el-form-item label="受理编号：" prop='sqbh'>
+            <el-input v-model.trim="tempFlowform.sqbh" placeholder="请输入受理编号"
+              @keyup.enter.native="handleQuery()" @change="clearPageInfo()"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-form-item label="业务名称：" prop='djxl'>
+            <el-input v-model.trim="tempFlowform.djxl" placeholder="请输入业务名称"
+              @keyup.enter.native="handleQuery()" @change="clearPageInfo()"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span='8'>
+          <el-button type="primary" @click="handleQuery()">查询
+          </el-button>
+          <!-- icon="el-icon-search" icon="el-icon-refresh-right"   -->
+          <el-button class="btnBorder" @click="handleReset()">重置</el-button>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-table :data="tableData" highlight-current-row tooltip-effect="dark" border stripe
+          v-loading="showLoading" element-loading-text="拼命加载中" :cell-style="{padding:'3px'}"
+          :header-cell-style="{padding:'8px 3px',background:'#F2F6FC'}" width="80%">
+          <el-table-column type="index" label="序号" width="80" :index="indexMethod" align="center">
+          </el-table-column>
+          <el-table-column v-for="(item,index) in columnNames" :key="index+item.name"
+            :prop="item.prop" :label="item.name" align="center" resizable show-overflow-tooltip
+            :sortable="item.sortable">
+          </el-table-column>
+          <el-table-column v-if="ajzt ===1" prop="bljd" label="办理进度" align="center" resizable
+            show-overflow-tooltip>
+          </el-table-column>
+          <el-table-column label="操作" width="120" fixed="right" align="center">
+            <template v-slot="scope">
+              <el-button type="text" size="medium" @click="jumpToSubmitFlow(scope.row)"
+                v-if='ajzt ===0'>
+                去提交</el-button>
+              <div v-if='ajzt ===1'>
+                <el-button type="text" size="medium" @click="jumpToPayBill(scope.row)" v-if='false'>
+                  去缴费</el-button>
+                <el-button type="text" size="medium" @click="jumpToFlowDetail(scope.row)" v-else>
+                  查看详情</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="24">
+          <el-pagination :hide-on-single-page="pageinfo.hidesinglePagination" background
+            layout="prev, pager, next" :page-size="pageinfo.pageSize" :pager-count="11"
+            :total="totalCount" @current-change="handleCurrentChangePage">
+          </el-pagination>
+        </el-col>
+      </el-row>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import {
+  mapState, mapMutations, mapActions, mapGetters,
+} from 'vuex';
+
+import flowConfig from '@/config/listFlow';
+import { queryAJLB } from '@/apis/nres/grzx';
+import Tabs from '@/mixins/tabs';
+
+export default {
+  props: {
+    ajzt: {
+      type: Number,
+      required: true,
+    },
+  },
+  mixins: [Tabs],
+  data() {
+    return {
+      tempFlowform: {
+        djxl: '',
+        sqbh: '',
+      },
+      pageinfo: {
+        currentPage: 1,
+        pageSize: 10,
+        hidesinglePagination: true,
+      },
+      columnNames: [
+        { name: '业务编号', prop: 'sqbh', sortable: false },
+        { name: '业务名称', prop: 'djxl', sortable: false },
+        { name: '申请日期', prop: 'sqrq', sortable: false },
+      ],
+      columnNamesExtra: [
+        { name: '办理进度', prop: 'bljd' },
+      ],
+      tableData: [],
+      totalCount: 0,
+      showLoading: false,
+      flowList: [],
+    };
+  },
+  computed: {
+    ...mapGetters('queryData', { GET_FLOWDETAIL: 'GET_FLOWDETAIL' }),
+    ...mapState('user', { userId: state => state.userId }),
+    ...mapState('Impersonal', { openTab: state => state.ind }),
+  },
+  methods: {
+    ...mapMutations('queryData', {
+      SET_MYTEMPFLOWCOUNT: 'SET_MYTEMPFLOWCOUNT',
+    }),
+    ...mapMutations('queryData', {
+      SET_MYEXTRAFLOWCOUNT: 'SET_MYEXTRAFLOWCOUNT',
+    }),
+    ...mapMutations('queryData', {
+      SET_MYFINISHEDFLOWCOUNT: 'SET_MYFINISHEDFLOWCOUNT',
+    }),
+    ...mapMutations('queryData', {
+      SET_MYFINISHEDFLOWCOUNT: 'SET_MYFINISHEDFLOWCOUNT',
+    }),
+    ...mapMutations('queryData', {
+      SET_MYFINISHEDFLOWCOUNT: 'SET_MYFINISHEDFLOWCOUNT',
+    }),
+    ...mapMutations('queryData', {
+      SET_QUERYSQBH: 'SET_QUERYSQBH',
+    }),
+    ...mapActions('queryData', ['getAJXQ']),
+    ...mapMutations('Impersonal', { ADD_TAB: 'pushHistoryArray' }),
+    handleQuery() {
+      const obj = this;
+      obj.showLoading = true;
+      const pageNo = this.pageinfo.currentPage;
+      return queryAJLB({
+        pageNo,
+        data: {
+          sqrid: this.userId,
+          ajzt: this.ajzt,
+          ...this.tempFlowform,
+        },
+      }).then(({
+        code,
+        msg,
+        resData = {},
+      } = {}) => {
+        obj.showLoading = false;
+        if (code !== 0) {
+          throw new Error(msg || '获取信息失败');
+        } else {
+          const { total, tasks: rows } = resData;
+          obj.tableData = rows;
+          obj.totalCount = total;
+          if (obj.ajzt === 0) {
+            obj.SET_MYTEMPFLOWCOUNT(total);
+          } else if (obj.ajzt === 1) {
+            obj.SET_MYEXTRAFLOWCOUNT(total);
+          } else if (obj.ajzt === 4) {
+            obj.SET_MYFINISHEDFLOWCOUNT(total);
+          }
+        }
+      }).catch((err) => {
+        obj.showLoading = false;
+        let sErrortip = '';
+        if (err.message.includes('timeout')) {
+          sErrortip = '网络请求超时';
+        }
+        obj.$message({
+          type: 'error',
+          message: sErrortip + (err.message || '获取户信息失败'),
+        });
+      });
+    },
+    // 获取业务流路由
+    getFlowPath(ywlxbm = '', type = 'update') {
+      if (type === 'update') {
+        return this.flowList.filter(p => p.ywlxbm === ywlxbm);
+      }
+      return '';
+    },
+    clearPageInfo() {
+      this.pageinfo.currentPage = 1;
+    },
+    indexMethod(index) {
+      const { currentPage, pageSize } = this.pageinfo;
+      return (currentPage - 1) * pageSize + (index + 1);
+    },
+    handleReset(formName = 'tempFlowform') {
+      if (this.$refs[formName] !== undefined) {
+        this.$refs[formName].resetFields();
+      }
+    },
+    // 选中当前行
+    setCurrent(row) {
+      this.$refs.singleTable.setCurrentRow(row);
+    },
+    async jumpToFlow(row, viewType = 'update') {
+      try {
+        const {
+          lcmc: flowname, ywlxbm, sqbh,
+        } = row;
+        this.SET_QUERYSQBH(sqbh);
+        const [{ name, path, step }] = this.getFlowPath(ywlxbm, viewType);
+        await this.getAJXQ({ sqbh, viewType, step });
+        this.addTabs({
+          title: `${flowname}-${sqbh}`,
+          href: `${path}/${sqbh}`,
+          name,
+        });
+      } catch (e) {
+        this.$message.error(e);
+      }
+    },
+    async jumpToSubmitFlow(row) {
+      await this.jumpToFlow(row);
+    },
+    async jumpToFlowDetail(row) {
+      await this.jumpToFlow(row, 'view');
+    },
+    // 去缴费
+    jumpToPayBill() {
+      // console.log(row);
+    },
+    handleCurrentChange(val) {
+      this.currentRow = val;
+    },
+    handleCurrentChangePage(val) {
+      this.pageinfo.currentPage = val;
+      this.handleQuery();
+    },
+    getFlowList() {
+      this.flowList = flowConfig.submitSetting;
+    },
+  },
+  mounted() {
+    this.handleQuery();
+  },
+  created() {
+    this.getFlowList();
+  },
+  watch: {
+    $route: {
+      handler(val, oldVal) {
+        if (val !== oldVal) {
+          this.handleQuery();
+          return true;
+        }
+        return false;
+      },
+    },
+    openTab(val, oldVal) {
+      if (val === 0 && val !== oldVal) {
+        this.handleQuery();
+      }
+    },
+  },
+};
+
+</script>
+<style lang='scss' scoped>
+@import "../queryBuildings/index.scss";
+.form-tempflows {
+  @extend .form-building;
+}
+</style>

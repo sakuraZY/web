@@ -1,0 +1,50 @@
+<!--
+ * @Descripttion:  首次登记业务流
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-02-06 12:04:40
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-03-17 11:22:34
+ -->
+<template>
+  <div class="success-main">
+    <success :infoJson = "infoJson" @func="handlerCheck"></success>
+    <div class="success-btn">
+      <el-button type="primary" @click="handlerCheck" plain>查看申请记录</el-button>
+      <el-button type="primary"  v-if="false">我要评价</el-button>
+    </div>
+  </div>
+</template>
+
+<script>
+import success from '@/components/querySuccess/success.vue';
+// import { mapMutations } from 'vuex';
+
+
+export default {
+  props: ['infoJson'],
+  components: {
+    success,
+  },
+  data() {
+    return {};
+  },
+  methods: {
+    // ...mapMutations('Impersonal', { setInd: 'setInd' }),
+    // ...mapMutations('firstHand', { RESET_ARRFLOWSTEP: 'RESET_ARRFLOWSTEP' }),
+    handlerCheck() {
+      this.$router.push('/');
+      // if (this.infoJson.messJson[0] === 'firstHand') {
+      //   this.RESET_ARRFLOWSTEP();
+      // }
+      // if (this.ind !== 0) {
+      //   this.setInd(0);
+      // }
+    },
+  },
+};
+</script>
+
+<style lang="scss">
+@import "./index.scss";
+</style>

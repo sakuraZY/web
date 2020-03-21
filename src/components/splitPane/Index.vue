@@ -1,0 +1,60 @@
+<template>
+  <split-pane
+    :min-percent='minPercent'
+    :default-percent='defaultPercent'
+    :split="split"
+    :className="className"
+    v-on="$listeners"
+    class="splitter-container"
+  >
+    <template slot="paneL">
+      <slot name="paneL"></slot>
+    </template>
+    <template slot="paneR">
+      <slot name="paneR"></slot>
+    </template>
+  </split-pane>
+</template>
+
+<script>
+import SplitPane from 'vue-splitpane';
+
+export default {
+  props: {
+    split: {
+      validator(value) {
+        return ['vertical', 'horizontal'].indexOf(value) >= 0;
+      },
+      default: 'vertical',
+    },
+    minPercent: {
+      type: Number,
+      default: 5,
+    },
+    defaultPercent: {
+      type: Number,
+      default: () => {
+        const screenWidth = document.body.getBoundingClientRect().width;
+        if (screenWidth < 768) {
+          return 40;
+        } if (screenWidth < 998) {
+          return 35;
+        } if (screenWidth < 1200) {
+          return 25;
+        }
+        return 23;
+      },
+    },
+    className: {
+      type: String,
+    },
+  },
+  components: {
+    SplitPane,
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

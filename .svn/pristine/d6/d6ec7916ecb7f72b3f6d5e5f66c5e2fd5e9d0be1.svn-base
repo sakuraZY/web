@@ -1,0 +1,320 @@
+<template>
+  <div class="extend-info">
+    <div class='extend-info-btn-group'>
+      <el-button size="medium" type="primary" @click="handleShowParamterForm()">
+        <icon-svg iconClass="add" />
+        添加
+      </el-button>
+      <el-button size="medium" type="danger" @click="handleDeleteParamter">
+        <icon-svg iconClass="confirm" />
+        删除
+      </el-button>
+    </div>
+    <el-table
+      :data="extendInfo"
+      border
+      :max-height="maxHeight"
+      size="medium"
+      stripe
+      style="width: 100%"
+      @selection-change="handleSelectionChange"
+    >
+      <template slot="empty">
+        <empty-data />
+      </template>
+      <el-table-column
+        fixed
+        type="selection"
+        width="45"
+        align="center"
+      >
+      </el-table-column>
+      <el-table-column
+        type="index"
+        width="60"
+        align="center"
+      >
+        <template slot="header">
+          <span>序号</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="paramName"
+        label="名称"
+        align="center"
+        width="200"
+        :show-overflow-tooltip="true"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="paramType"
+        label="类型"
+        align="center"
+        width="120"
+        :show-overflow-tooltip="true"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="paramValue"
+        label="值"
+        align="center"
+        :show-overflow-tooltip="true"
+      >
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        label="操作"
+        align="center"
+        width="100"
+      >
+        <template v-slot="scope">
+          <el-button
+            @click="handleShowParamterForm(scope.row)"
+            type="warning" size="mini"
+          >修改</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog
+      :title="dialogTitle"
+      :visible.sync="paramterVisible"
+      :before-close="closeParamterDialog"
+      append-to-body
+    >
+      <el-form
+        :model="paramterForm"
+        :rules="paramterRules"
+        ref="paramterForm"
+        label-width="80px"
+        class="paramter-form"
+      >
+        <el-form-item label="序号" prop="paramSortnum">
+          <el-input v-model.trim="paramterForm.paramSortnum" size="medium" type="number"></el-input>
+        </el-form-item>
+        <el-form-item label="名称" prop="paramName">
+          <el-input v-model.trim="paramterForm.paramName" size="medium"></el-input>
+        </el-form-item>
+        <el-form-item label="类型" prop="paramType">
+          <geo-edit-select
+            v-model="paramterForm.paramType"
+            style="width: 100%"
+          >
+            <el-option label="证件号" value="证件号"></el-option>
+            <el-option label="域账号" value="域账号"></el-option>
+            <el-option label="第三方账号" value="第三方账号"></el-option>
+          </geo-edit-select>
+        </el-form-item>
+        <el-form-item label="值" prop="paramValue">
+          <el-input v-model.trim="paramterForm.paramValue" size="medium"></el-input>
+        </el-form-item>
+        <el-form-item label="参数附加" prop="paramExtent">
+          <el-input v-model.trim="paramterForm.paramExtent" size="medium"></el-input>
+        </el-form-item>
+        <el-form-item label="描述" prop="paramNote">
+          <el-input type="textarea" v-model.trim="paramterForm.paramNote" size="medium"></el-input>
+        </el-form-item>
+      </el-form>
+      <template v-slot:footer>
+        <el-button type="primary" @click="submitParamter" size="medium">
+          <icon-svg iconClass="confirm" />
+          确定
+        </el-button>
+        <el-button plain @click="paramterVisible = false" size="medium">
+          <icon-svg iconClass="confirm" />
+          取消
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import {
+  getUserParameter, deleteUserParameter, updateUserParameter, addUserParameter,
+} from '@/apis/auth/user';
+import EmptyData from '@/components/emptyData';
+import GeoEditSelect from '@/components/editSelect';
+import { validPositiveInt } from '@/libs/validate';
+
+export default {
+  props: {
+    maxHeight: {
+      type: Number,
+      default: 300,
+    },
+    userId: {
+      type: String,
+      required: true,
+    },
+  },
+  components: {
+    EmptyData,
+    GeoEditSelect,
+  },
+  data() {
+    const validateSortnum = (rule, value, callback) => {
+      if (!value || !validPositiveInt(value)) {
+        callback(new Error('序号必须为正整数'));
+      } else {
+        callback();
+      }
+    };
+    return {
+      extendInfo: [],
+      multipleSelection: [],
+      isAddParamter: true,
+      paramterVisible: false,
+      paramterForm: {
+        paramSortnum: null,
+        paramName: '',
+        paramType: '',
+        paramValue: '',
+        paramExtent: '',
+        paramNote: '',
+        paramTypeTest: '',
+      },
+      paramterRules: {
+        paramSortnum: [
+          { required: true, message: '序号不能为空' },
+          { validator: validateSortnum, trigger: 'blur' },
+        ],
+        paramName: [
+          { required: true, message: '名称不能为空' },
+        ],
+        paramType: [
+          { required: true, message: '类型不能为空' },
+        ],
+        paramValue: [
+          { required: true, message: '值不能为空' },
+        ],
+      },
+    };
+  },
+  computed: {
+    dialogTitle() {
+      return `${this.isAddParamter ? '新增' : '修改'}用户附加信息`;
+    },
+  },
+  created() {
+    this.getUserExtendInfo();
+  },
+  methods: {
+    // change(a) {
+    //   console.log(a);
+    // },
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    getUserExtendInfo() {
+      getUserParameter(this.userId).then(({
+        code,
+        msg,
+        resData: {
+          paramList = [],
+        } = {},
+      } = {}) => {
+        if (code === 0) {
+          this.extendInfo = paramList;
+        } else {
+          throw new Error(msg || '获取用户附加信息失败');
+        }
+      }).catch((err) => {
+        this.$message.error(err.message || '获取用户附加信息失败');
+      });
+    },
+    handleDeleteParamter() {
+      const selectData = this.multipleSelection;
+      if (!selectData.length) {
+        return this.$message({
+          type: 'warning',
+          message: '请至少选择一条数据',
+        });
+      }
+      try {
+        return this.$confirm('确定删除吗?', '提示', {
+          type: 'warning',
+        }).then(async () => {
+          const paramterIds = selectData.map(item => item.paramId);
+          const { code, msg } = await deleteUserParameter(paramterIds);
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: '删除成功',
+            });
+            selectData.map((item) => {
+              const index = this.extendInfo.indexOf(item);
+              if (index > -1) {
+                this.extendInfo.splice(index, 1);
+              }
+              return true;
+            });
+          } else {
+            this.$message.error(msg || '删除失败');
+          }
+        }).catch(() => {});
+      } catch (err) {
+        return this.$message({
+          type: 'warning',
+          message: '请至少选择一条数据',
+        });
+      }
+    },
+    handleShowParamterForm({
+      paramSortnum = null,
+      paramName = '',
+      paramType = '',
+      paramValue = '',
+      paramExtent = '',
+      paramNote = '',
+      paramTypeTest = '',
+      paramId = undefined,
+    } = {}) {
+      this.paramterForm = {
+        paramSortnum,
+        paramName,
+        paramType,
+        paramValue,
+        paramExtent,
+        paramNote,
+        paramTypeTest,
+        paramId,
+      };
+      this.isAddParamter = !paramId;
+      this.paramterVisible = true;
+    },
+    submitParamter() {
+      this.$refs.paramterForm.validate((validate) => {
+        if (!validate) {
+          return false;
+        }
+        return (this.isAddParamter ? addUserParameter : updateUserParameter)({
+          ...this.paramterForm,
+          paramParentid: this.userId,
+          paramParenttype: '职员',
+        })
+          .then(({
+            code,
+            msg,
+          } = {}) => {
+            if (code === 0) {
+              this.paramterVisible = false;
+              this.getUserExtendInfo();
+            }
+            this.$message({
+              type: code === 0 ? 'success' : 'error',
+              message: msg,
+            });
+          });
+      });
+    },
+    closeParamterDialog(done) {
+      this.$refs.paramterForm.resetFields();
+      done();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

@@ -1,0 +1,58 @@
+
+.mainflowBox {
+  display: flex;
+  .flex-main {
+    flex: 1;
+  }
+  .process-stepwrap {
+    width: 70%;
+    margin: 30px auto;
+    padding-right: 40px;
+    .el-step.is-horizontal {
+      position: relative;
+      .el-step__main {
+        position: absolute;
+        background-color: #fff;
+        left: 20px;
+        top: -6px;
+        padding: 0 20px;
+        width: 80px;
+      }
+    }
+  }
+  @media screen and (max-width: 400px) {
+    .process-stepwrap {
+      width: 90%;
+    }
+  }
+  .main-fill {
+    height: 300px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .each-content{
+      text-align: center; 
+      .el-row{
+        min-width: 400px;
+      }
+      .footerBtn{
+        text-align: right ;
+        .el-button{ 
+          width: calc(100% - 150px);
+        }
+      }
+    }
+  }
+}
+
+.resetOK{
+  font-size: 18px;
+  .icon-success{
+    font-size: 70px;
+    color: rgba(82, 196, 26, 1);
+  }
+  .p-t-20{
+    padding-top: 20px;
+  }
+}

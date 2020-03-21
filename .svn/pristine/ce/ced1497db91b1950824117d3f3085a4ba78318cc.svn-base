@@ -1,0 +1,55 @@
+.geo-footer{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 34px 0;
+  &-left{
+    .link-group{
+      display: flex;
+      align-items: center;
+    }
+    .text-btn{
+      color: $--color-black;
+      cursor: pointer;
+    }
+    .line{
+      display: inline-block;
+      width: 2px;
+      height: 15px;
+      background: $--color-text-secondary;
+      margin: 0 20px;
+    }
+    .company-info{
+      margin: 3px 0 12px 0;
+      color: $--color-text-placeholder;
+    }
+    .copyright{
+      color: $--color-text-placeholder;
+    }
+  }
+  &-right{
+    display: flex;
+    align-items: center;
+    .img:not(:last-child){
+      margin-right: 30px;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+    }
+    .wechatsubscription{
+      background-image: url('../../../assets/WeChatSubscription.png');
+      width: 80px;
+      height: 80px;
+    }
+    .find-fault{
+      background-image: url('../../../assets/findFault.png');
+      width: 99px;
+      height: 44px;
+    }
+    .gov{
+      background-image: url('../../../assets/gov.png');
+      width: 56px;
+      height: 68px;
+    }
+  }
+}

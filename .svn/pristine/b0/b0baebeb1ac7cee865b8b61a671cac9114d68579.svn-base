@@ -1,0 +1,271 @@
+
+
+$--h-witdh-aside: 200px !important;
+$--h-padding-inner: 20px;
+$--h-padding-inner-chk: 10px;
+$--h-margin-chk: 10px;
+$--h-height-line: 40px !important;
+$--h-height-checkbox: 25px !important;
+$--h-width-checkbox: 115px !important;
+$--h-border-line: $--border-width-base $--border-style-base
+  $--border-color-grey-Design;
+$--h-color-bg: $--border-color-extra-light;
+
+@mixin h-b {
+  line-height: $--h-height-line;
+  height: $--h-height-line;
+  border: $--h-border-line;
+  font-weight: bold;
+}
+@mixin active {
+  color: $--color-primary-light-9;
+  background-color: $--color-primary;
+}
+.form-houses {
+  padding: 0 $--h-padding-inner;
+
+  .f-aside {
+    border: $--h-border-line;
+    .el-header {
+      border-bottom: $--h-border-line;
+      border-top: $--h-border-line;
+    }
+    .f-ljz {
+      .logic-Building {
+        min-height: 200px;
+        a {
+          &:nth-last-child(1):first-child {
+            width: calc(100% / 1);
+          }
+          &:first-child:nth-last-child(n + 2),
+          &:first-child:nth-last-child(n + 2):nth-last-child(-n + 8) ~ a {
+            width: calc(100% / 2);
+          }
+          &:first-child:nth-last-child(n + 9),
+          &:first-child:nth-last-child(n + 9):nth-last-child(-n + 100) ~ a {
+            width: calc(100% / 3);
+          }
+          &.active {
+            @include active;
+            i,
+            span,
+            :hover {
+              color: white;
+            }
+          }
+
+          .el-link [class*="el-icon-"] + span {
+            margin-left: 0px;
+          }
+        }
+      }
+    }
+    .f-zdxx {
+      .f-zdxx-main {
+        // padding: 0 20px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        .row {
+          line-height: 28px;
+          padding-bottom: 5px;
+          div {
+            line-height: 1;
+          }
+        }
+      }
+    }
+  }
+
+  .f-header {
+    padding: 0;
+    line-height: $--h-height-line;
+    height: $--h-height-line;
+    width: 100%;
+    position: relative;
+    .f-title {
+      font-size: 20px;
+      position: absolute;
+    }
+    .f-menu {
+      position: absolute;
+      width: 100%;
+      text-align: right;
+      .el-button {
+        padding-top: 10px;
+        padding-bottom: 10px;
+      }
+    }
+  }
+
+  .f-main {
+    padding: 0;
+    .el-header {
+      position: relative;
+      background-color: $--h-color-bg;
+    }
+
+    .f-houses {
+      .f-houses-title {
+        @include h-b;
+        text-align: center;
+        position: relative;
+        .f-houses-menu {
+          position: absolute;
+          left: 0;
+          height: $--h-height-line;
+          font-size: 20px;
+          .house-expand-icon {
+            cursor: pointer; 
+          }
+        }
+      }
+
+      .f-houses-main {
+        padding: 0;
+        border: $--h-border-line;
+        line-height: $--h-height-line;
+        .f-houses-floor {
+          width: 120px !important;
+          text-align: center;
+          grid-template-columns: repeat(2, 1fr);
+          &.wrapper {
+            display: grid;
+            // grid-gap: 1px;
+            grid-auto-rows: minmax(40px, auto);
+            border-right: $--h-border-line;
+            .floor-col {
+              .floor-header {
+                background-color: $--h-color-bg;
+                border-bottom: $--h-border-line;
+                border-top: $--h-border-line;
+              }
+              .floor-body {
+                div {
+                  border-bottom: $--h-border-line;
+                  border-top: $--h-border-line;
+                }
+              }
+            }
+          }
+        }
+        .f-house-all {
+          padding: 0;
+          width: 100% !important;
+          line-height: $--h-height-line;
+          text-align: center;
+          .house-tr-header,
+          .house-tr-unit,
+          .house-dy-unit {
+            display: flex;
+          }
+          .house-td-unit{
+            height: $--h-height-line;
+            text-overflow: ellipsis;
+            overflow:hidden;  
+            white-space:nowrap;
+            padding-left: 16px;
+          }
+          .house-dy-unit {
+            border: $--h-border-line;
+          }
+          .house-td-unit {
+            cursor: pointer;
+            border-left: $--h-border-line;
+            &.active {
+              @include active;
+            }
+          }
+          .house-td-unit {
+            position: relative;
+            .el-checkbox {
+              position: absolute;
+              line-height: 20px;
+              top: 0;
+              left: 0;
+              .el-checkbox__label {
+                display: none;
+              }
+            }
+          }
+          .house-td-header {
+            border: $--h-border-line;
+            background-color: $--h-color-bg;
+          }
+        }
+      }
+    }
+
+    .f-aside {
+      width: $--h-witdh-aside;
+      .el-header {
+        @include h-b;
+      }
+      line-height: $--h-height-line;
+    }
+  }
+
+  .f-footer {
+    line-height: $--h-height-checkbox; // 30px;
+    padding: 0;
+    position: relative;
+    border: $--h-border-line;
+    .f-menu {
+      position: absolute;
+      padding: $--h-padding-inner-chk;
+      .el-checkbox__input.is-checked + .el-checkbox__label {
+        color: $--color-black;
+      }
+      .el-checkbox {
+        width: $--h-width-checkbox;
+        margin-bottom: $--h-margin-chk;
+      }
+    }
+  }
+
+  .zy-state-balls {
+    position: absolute;
+    right: 0;
+    i {
+      float: right;
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+    }
+  }
+  @extend .zy-scroll-bar;
+
+  // common
+  .p-left-common {
+    padding-left: 15px;
+  }
+  .p-right-common {
+    padding-right: 15px;
+  }
+}
+
+.zy-strip-color {
+  background-color: $--background-color-base;
+}
+
+.zy-scroll-bar {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    cursor: pointer;
+  }
+  ::-webkit-scrollbar-thumb,
+  ::-webkit-scrollbar-track {
+    border-radius: 100px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #e5e5e5;
+    box-shadow: 1px 1px 6px 0 rgba(196, 196, 196, 0.5) inset;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #a3a3a3;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #898989;
+  }
+}

@@ -1,0 +1,27 @@
+
+.form-builddingTable {
+  position: absolute;
+  width: 100%;
+  overflow-y: auto;
+  /deep/.el-collapse-item__header{
+    font-size:16px;
+    font-weight:bold;
+    padding-left: 20px;
+    i{
+      display: none;
+    }   
+  }
+  /deep/.el-collapse-item.is-disabled{
+     .el-collapse-item__header{
+      color:$--color-text-primary;
+     }
+  }
+  /deep/.el-collapse-item__content {
+    font-size: 14px;
+  }
+  
+  /deep/.footbtn{
+    text-align: right;
+    margin: 15px;
+  }
+}

@@ -1,0 +1,437 @@
+<!--
+ * @Descripttion: 预告登记
+ * @version: 1.0
+ * @Author: 胡威
+ * @Date: 2020-02-14 13:41:55
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-03-20 17:14:59
+ -->
+<template>
+  <div class='form-message-box'>
+    <div class="workcode">
+      <h3 id="t1">不动产数据检验</h3>
+      <p>业务编号：<span>{{messFrom.code}}</span></p>
+    </div>
+    <div class="testinfo">
+      <el-form
+            :model="testForm"
+            :rules="rules"
+            ref="testForm"
+            label-width="120px"
+            label-position="top"
+            class="demo-ruleForm"
+            size="medium"
+          >
+          <el-row :gutter="50">
+            <el-col :span="8">
+              <el-form-item label="合同编号" prop="htbh">
+                <el-input v-model="testForm.htbh" placeholder="请输入合同编号"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="权利人姓名" prop="qlrmc">
+                <el-input v-model="testForm.qlrmc" placeholder="请输入权利人姓名"></el-input>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8" v-if="!isRest">
+              <el-button type="primary" @click="handlerTest">数据检验</el-button>
+              <el-button plain @click="handlerTestRset" class="butBorder">重置</el-button>
+            </el-col>
+          </el-row>
+      </el-form>
+    </div><!--test end-->
+    <div class="userinfo" v-if="isTest">
+      <div class="info-head">
+        <h3 id="t2">权利人信息</h3>
+      </div>
+      <div class="info-body">
+        <el-table
+          :data="userDataComp"
+          stripe
+          style="width: 100%;"
+          :header-cell-style="tableHeadStyle"
+          >
+          <el-table-column v-for="(item,index) in userHeadNames" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :width="item.width"
+            >
+          </el-table-column>
+          <el-table-column
+             label="操作"
+             width = "70"
+          >
+            <template v-slot="scope">
+              <el-button @click="handleClick(scope.row)" type="text"
+              size="small">人脸验证</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div><!--userinfo end-->
+    <div class="infolist" v-if="isTest">
+      <div class="info-head">
+        <h3 id="t3">义务人信息</h3>
+      </div>
+      <div class="info-body">
+        <el-table
+          :data="infoDataComp"
+          stripe
+          style="width: 100%;"
+          :header-cell-style="tableHeadStyle"
+          >
+          <el-table-column v-for="(item,index) in infoHeadNames" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :width="item.width"
+            >
+          </el-table-column>
+        </el-table>
+      </div>
+    </div><!-- infolist end-->
+    <div class="infolist" v-if="isTest">
+      <div class="info-head">
+        <h3 id="t4">不动产权信息</h3>
+      </div>
+      <div class="info-body">
+        <el-table
+          :data="infoBdData"
+          stripe
+          style="width: 100%;"
+          :header-cell-style="tableHeadStyle"
+          >
+          <el-table-column v-for="(item,index) in infoBdHead" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :width="item.width"
+            >
+          </el-table-column>
+        </el-table>
+      </div>
+      <div class="infoselect" v-if="isTest">
+        <label class="type"><span>*</span>共有情况</label>
+        <el-select v-model="messFrom.type" placeholder="请选择" @change="selectChange">
+          <el-option
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+            >
+          </el-option>
+        </el-select>
+      </div>
+    </div><!-- infolist2 end-->
+    <el-dialog  title="权利人人脸验证"
+    :visible.sync="dialogVisible" width="400px"  top="10vh">
+      <div style="text-align:center;">
+        <img :src="ewmImg" width="250" height="250"/>
+        <p>请您扫一扫图中二维码进行人脸验证。</p>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { testBuild } from '@/apis/nres/zxcx';
+import { advanceSave } from '@/apis/nres/zxsq';
+import { formatDate } from '@/libs/date';
+import { transNumToId } from '@/libs/utils';
+import getKeyCode from '@/mixins/getKeyCode';
+import transValToName from '@/mixins/transValToName';
+import { mapMutations, mapState } from 'vuex';
+import ewmImg from '@/assets/ewm.png';
+
+export default {
+  mixins: [getKeyCode, transValToName],
+  data() {
+    return {
+      tableHeadStyle: {
+        background: '#F2F6FC',
+        color: '#666',
+        fontWeight: 'normal',
+        fontSize: '14px',
+      },
+      dialogVisible: false,
+      ewmImg,
+      nodeName: '宜昌',
+      typeName: '流程实例',
+      parentPnode: 'ygdj',
+      dicValue: 'ygdj',
+      dicitemName: '共有方式',
+      rkey: 'W',
+      testForm: {
+        htbh: '',
+        qlrmc: '',
+      },
+      isTest: 0,
+      isRest: 0,
+      rules: {
+        htbh: [{
+          required: true, // 是否必填
+          message: '用户名不能为空', // 规则
+          trigger: 'blur', // 何事件触发
+        }],
+        qlrmc: [{
+          required: true, // 是否必填
+          message: '用户名不能为空', // 规则
+          trigger: 'blur', // 何事件触发
+        }],
+      },
+      messFrom: {
+        code: '',
+        type: '',
+      },
+      options: [
+        { label: '单独所有', value: '0' },
+        { label: '共同共有', value: '1' },
+        { label: '按份共有', value: '2' },
+        { label: '其它共有', value: '3' },
+      ],
+      userHeadNames: [
+        { label: '序号', prop: 'codes', width: '50px' },
+        { label: '姓名', prop: 'qlrmc', width: '70px' },
+        { label: '权利人性质', prop: 'qlrlx', width: '' },
+        { label: '证件类型', prop: 'zjlbzw', width: '' },
+        { label: '证件号码', prop: 'zjhm', width: '' },
+        { label: '通讯地址', prop: 'dz', width: '' },
+        // { label: '法人代表名称', prop: 'frdbrxm', width: '' },
+        // { label: '法人代表证件类型', prop: 'frdbzjlx', width: '' },
+        // { label: '法人代表证件号码', prop: 'frdbzjh', width: '' },
+        // { label: '法人代表联系电话', prop: 'frdbdhhm', width: '' },
+      ],
+      userData: [{
+        gyfe: null,
+        dh: null,
+        qlrmc: '', // 姓名
+        dz: '', // 通讯地址
+        qlrlx: '', // 权利人性质
+        yb: null,
+        zjhm: '', // 证件号码
+        zjlb: '', // 证件类型
+        gyfs: '',
+      }],
+      infoHeadNames: [ // 义务人
+        { label: '序号', prop: 'codes', width: '50px' },
+        { label: '姓名', prop: 'qlrmc', width: '70px' },
+        { label: '权利人性质', prop: 'qlrlx', width: '' },
+        { label: '证件类型', prop: 'zjlbzw', width: '' },
+        { label: '证件号码', prop: 'zjhm', width: '' },
+        { label: '通讯地址', prop: 'dz', width: '' },
+        { label: '法人代表名称', prop: 'frdbxm', width: '' },
+        { label: '法人代表证件类型', prop: 'frdbzjlxzw', width: '' },
+        { label: '法人代表证件号码', prop: 'frdbzjh', width: '' },
+        { label: '法人代表联系电话', prop: 'frdbdhhm', width: '' },
+      ],
+      infoData: [],
+      infoBdHead: [
+        { label: '序号', prop: 'xh', width: '50px' },
+        { label: '坐落', prop: 'zl', width: '70px' },
+        { label: '不动产单元', prop: 'bdcdyh', width: '' },
+        { label: '土地使用权面积', prop: 'tdsyqmj', width: '' },
+        { label: '房屋建筑面积', prop: 'fwjzmj', width: '' },
+        { label: '土地用途', prop: 'tdytmc', width: '' },
+        { label: '房屋用途', prop: 'fwytmc', width: '' },
+        { label: '抵押情况', prop: 'dyqk', width: '60px' },
+        { label: '查封情况', prop: 'cfqk', width: '60px' },
+      ],
+      infoBdData: [],
+      messageSave: {
+        lcmc: '预告登记',
+        djxl: '预告登记',
+        djdl: '700',
+        ajzt: '0',
+        sqr: '',
+        htbh: '合同001',
+        sqbh: 'W-202002280065',
+        qlrxx: {
+          ywr: [],
+          qlr: [],
+        },
+        tsgl: [],
+      },
+    };
+  },
+  computed: {
+    infoDataComp() {
+      this.infoData.forEach((item, index) => {
+        item.codes = (index + 1).toString();
+        item.zjlbzw = transNumToId(item.zjlb);
+        item.frdbzjlxzw = transNumToId(item.frdbzjlx);
+      });
+      return this.infoData;
+    },
+    userDataComp() {
+      this.userData.forEach((item, index) => {
+        item.codes = (index + 1).toString();
+        item.zjlbzw = transNumToId(item.zjlb);
+      });
+      return this.userData;
+    },
+    tsglArr: {
+      get() {
+        return this.infoBdData.map(item => ({
+          tstybm: item.tstybm,
+          bdcdyh: item.bdcdyh,
+          bdclx: '房屋',
+          djzl: '权属',
+        }));
+      },
+      set(data) {
+        this.infoBdData = data;
+      },
+    },
+    ...mapState('queryData', { FlOWDATA: state => state.FlOWDATA }),
+    codes() {
+      return this.messFrom.code;
+    },
+  },
+  mounted() {
+    this.$nextTick(() => {
+      if (this.$route.params.sqbh) {
+        this.messFrom.code = this.$route.params.sqbh;
+        this.isTest = 1;
+        this.isRest = 1;
+        const { flowdata } = this.FlOWDATA.find(item => item.sqbh === this.messFrom.code);
+        if (flowdata) {
+          this.testForm.htbh = flowdata.htbh;
+          this.testForm.qlrmc = flowdata.qlrmc;
+          this.userData = flowdata.qlrxx.qlr; // 权利人
+          this.infoData = flowdata.qlrxx.ywr; // 义务人
+          this.messFrom.type = flowdata.gyfs;// 共有方式
+          this.tsglArr = flowdata.tsgl;
+          // 拉取房屋信息
+          testBuild({
+            htbh: this.testForm.htbh,
+            nodeName: this.nodeName,
+            isDY: '3',
+            qlrmc: this.testForm.qlrmc,
+          }).then(({ code, msg, resData }) => {
+            if (code === 0) {
+              this.infoBdData = resData.bdcdylists;
+            } else {
+              this.$message.error(msg);
+            }
+          }).catch((err) => {
+            throw new Error(err);
+          });
+        }
+      } else if (!this.messFrom.code) {
+        this.getKeyCode();
+      }
+    });
+    this.setNodeName(this.nodeName);
+  },
+  watch: {
+    isTest(nval) {
+      this.$emit('func', nval);
+    },
+    keyCode(nval) {
+      this.messFrom.code = nval;
+    },
+  },
+  methods: {
+    selectChange(nval) {
+      this.userData = this.userData.map((item) => { item.gyfs = nval; return item; });
+    },
+    ...mapMutations('advance', { setMessJson: 'SET_MESSAGEJSON' }),
+    ...mapMutations('advance', { setNodeName: 'SET_NODENAME' }),
+    ...mapMutations('Impersonal', { RESET_TABKEY: 'RESET_TABKEY' }),
+    handlerTest(b = true) {
+      this.$refs.testForm.validate((valid) => {
+        if (valid) {
+          testBuild({
+            htbh: this.testForm.htbh, // '合同001',
+            nodeName: this.nodeName,
+            isDY: '3', // 1:不限制状态，2：包含抵押，3：不包含抵押
+            qlrmc: this.testForm.qlrmc, // '黄治某',
+          }).then((testData) => {
+            if (testData.code === 0) {
+              if (testData.resData.bdcdylists && testData.resData.qlrxx) {
+                this.isTest = 1;
+                this.userData = testData.resData.qlrxx.qlr;
+                this.infoData = testData.resData.qlrxx.ywr;
+                this.infoBdData = testData.resData.bdcdylists;
+                this.messFrom.type = testData.resData.qlrxx.qlr[0].gyfs;
+                if (b) {
+                  this.$message({
+                    type: 'success',
+                    message: '查询成功',
+                  });
+                }
+              } else {
+                this.$message.error('没有查询到结果');
+              }
+            } else {
+              this.$message.error(testData.msg);
+            }
+          }, (err) => {
+            throw new Error(err);
+          });
+        }
+      });
+    },
+    handlerTestRset() {
+      Object.keys(this.testForm).forEach((item) => { this.testForm[item] = ''; });
+    },
+    handleClick() {
+      this.dialogVisible = true;
+    },
+    getOptions(messageSave) {
+      this.userData.forEach((item) => {
+        item.gyfsmc = this.messFrom.type;
+      });
+      return Object.assign(messageSave, {
+        djxl: this.dicData.itemName,
+        lcmc: this.messFrom.code + this.dicData.itemName,
+        sqrq: formatDate(new Date(), 1),
+        gyfs: this.messFrom.type,
+        sqbh: this.messFrom.code,
+        sqr: sessionStorage.userId,
+        htbh: this.testForm.htbh,
+        qlrmc: this.testForm.qlrmc,
+        ywlxbm: this.parentPnode,
+        qlrxx: {
+          qlr: this.userData,
+          ywr: this.infoData,
+        },
+        tsgl: this.tsglArr,
+      });
+    },
+    handlerUp() {
+      if (!this.isTest) {
+        this.$message.error('请先查询不动产信息');
+      } else {
+        const options = this.getOptions(this.messageSave);
+        this.setMessJson(options);
+        this.handlerStorage();
+        this.$emit('funcNext', 1);
+      }
+    },
+    handlerStorage() {
+      if (!this.isTest) {
+        this.$message.error('请先查询不动产信息');
+      } else {
+        const options = this.getOptions(this.messageSave);
+        advanceSave({
+          nodeName: this.nodeName,
+          data: options,
+        }).then(({ code, msg }) => {
+          if (code === 0) {
+            this.$message({
+              type: 'success',
+              message: '保存成功',
+            });
+          } else {
+            this.$message.error(msg);
+          }
+        }, (err) => {
+          throw new Error(err);
+        });
+      }
+    },
+  },
+};
+</script>
+
+<style src="./index.scss" lang='scss' scoped>
+</style>

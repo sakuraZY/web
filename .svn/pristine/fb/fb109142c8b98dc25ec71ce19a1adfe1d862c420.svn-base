@@ -1,0 +1,31 @@
+/*
+ * @Description: 附件实例 Api 接口服务
+ * @Author: wangjiayu
+ * @Date: 2020-03-09 09:28:16
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-09 12:07:13
+ */
+
+
+import axios from '@/libs/axios';
+
+/**
+ * 初始化附件实例目录
+ * @param {*} data 附件实例参数
+ */
+export const getFile = data => axios({
+  url: '/doc/attachment/init',
+  method: 'post',
+  params: data,
+});
+
+/**
+ * 初始化附件实例目录
+ * @param {*} data 附件实例参数
+ */
+export const init = (params, binids) => axios({
+  url: '/doc/attachment/init',
+  method: 'post',
+  params,
+  data: binids,
+});

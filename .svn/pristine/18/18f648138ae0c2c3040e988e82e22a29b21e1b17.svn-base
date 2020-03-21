@@ -1,0 +1,35 @@
+.form-message-box{
+  margin: 30px;
+  h3{
+    font-size: 22px;
+  }
+  .workcode{
+    p{
+      font-size: 18px;
+    }
+    .type{
+      display: block;
+      margin-bottom:10px;
+    }
+  }
+  .info-head{
+    position: relative;
+    .add{
+      position: absolute;
+      right: 0;
+      bottom: 0;
+    }
+  }
+  .info-body{
+    border: 1px solid $--border-color-grey-leftMenu;
+    border-bottom: none;
+  }
+}
+.dialog-footer{
+  display: inline-block;
+  width: 100%;
+  text-align: right;
+}
+.select_w{
+  width:100%;
+}

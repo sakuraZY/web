@@ -1,0 +1,78 @@
+<!--
+ * @Descripttion:  Api接口服务
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-02-10 14:18:54
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-14 10:39:06
+ -->
+<template>
+  <div class="form-builddingTable">
+    <el-collapse v-model="acitvePanelNames">
+      <el-collapse-item title="选择楼盘" name="buildings" disabled>
+        <buildings @func="handleChanged"></buildings>
+      </el-collapse-item>
+      <el-collapse-item title=" 楼盘表信息" name="houses" disabled
+        v-show="showhouse&&ztstybm.length !== 0">
+        <houses v-show="ztstybm.length !== 0">
+          <template #footbanner>
+            <div class="footMenu">
+              <slot name="footMenu"></slot>
+            </div>
+          </template>
+        </houses>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
+</template>
+
+<script>
+import { mapState, mapMutations } from 'vuex';
+import buildings from '@/components/queryBuildings';
+import houses from '@/components/queryHouses';
+
+export default {
+  components: {
+    buildings,
+    houses,
+  },
+  data() {
+    return {
+      acitvePanelNames: ['buildings'],
+      remainActive: ['buildings'],
+    };
+  },
+  computed: {
+    ...mapState('firstHand', { ztstybm: state => state.ZTSTYBM }),
+    ...mapState('firstHand', { newflow: state => state.NEWFLOW }),
+    ...mapState('firstHand', { showhouse: state => state.SHOWHOUSE }),
+  },
+  methods: {
+    ...mapMutations('firstHand', {
+      SET_ZTSTYBM: 'SET_ZTSTYBM',
+    }),
+    handleChanged() {
+      if (!this.acitvePanelNames.includes('houses')) {
+        this.acitvePanelNames.push('houses');
+      }
+    },
+  },
+  watch: {
+    ztstybm(val, oldVal) {
+      if (val !== oldVal) {
+        this.handleChanged();
+      }
+    },
+  },
+  created() {
+    this.acitvePanelNames = this.remainActive;
+  },
+  destroyed() {
+    this.acitvePanelNames.pop('houses');
+  },
+};
+</script>
+
+<style lang='scss' type="text/scss" scoped>
+@import "./index.scss";
+</style>

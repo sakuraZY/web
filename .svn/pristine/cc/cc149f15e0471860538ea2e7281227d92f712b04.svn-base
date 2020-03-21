@@ -1,0 +1,21 @@
+.org-info{
+  padding: 0 15px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  height: 100%;
+  &-floor{
+    margin-bottom: 15px;
+    &-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      line-height: 50px;
+    }
+    &-body{
+      .btn-group{
+        display: flex;
+        justify-content: flex-end;
+      }
+    }
+  }
+}

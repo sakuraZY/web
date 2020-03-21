@@ -1,0 +1,68 @@
+.log-info-container {
+  padding: 15px;
+  height: calc(100% - 30px);
+  background-color: $--color-white;
+
+  .demo-ruleForm {
+    height: 100%;
+  }
+
+  .el-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+
+    &:not(:last-child) {
+      margin-bottom: 15px;
+    }
+  }
+
+  .el-date-editor.el-input, .el-select {
+    width: 100%;
+  }
+
+  .btn-col {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .user-item {
+    display: flex;
+  }
+
+  .result {
+    height: calc(100% - 178px);
+    display: flex;
+    flex-direction: column;
+
+    .result-table {
+      height: calc(100% - 42px);
+    }
+    
+    .el-pagination {
+      margin-top: 5px;
+      margin-bottom: 5px;
+      text-align: right;
+    }
+  }
+
+
+  .icon-col {
+    display: flex;
+    justify-content: center;
+
+    .warn-icon {
+      &[wlevel="1"] {
+        color: $--color-success;
+      }
+      &[wlevel="2"] {
+        color: $--color-primary;
+      }
+      &[wlevel="3"] {
+        color: $--color-warning;
+      }
+      &[wlevel="4"] {
+        color: $--color-danger;
+      }
+    }
+  }
+}

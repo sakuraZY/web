@@ -1,0 +1,10 @@
+.flex-content{
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  
+  .step-wrap{
+    width: 80%;
+    margin: 30px auto;
+  }
+}

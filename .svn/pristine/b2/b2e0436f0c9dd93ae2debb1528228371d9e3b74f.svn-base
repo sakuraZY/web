@@ -1,0 +1,43 @@
+.card-panel{
+  cursor: pointer;
+  &-body{
+    &-top{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      &-left{
+        flex-grow: 1;
+        .title{
+          font-size: 16px;
+        }
+        .count{
+          font-size: 30px;
+          .count-type{
+            font-size: 14px;
+            margin-left: 8px;
+          }
+        }
+      }
+      &-right{
+        .panel-item-icon{
+          font-size: 32px;
+          color: $--color-primary;
+        }
+      }
+    }
+    &-bottom{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      /deep/ {
+        .record-count{
+          color: $--color-danger;
+          padding: 0 8px;
+        }
+        .record-type{
+          color: $--color-success;
+        }
+      }
+    }
+  }
+}

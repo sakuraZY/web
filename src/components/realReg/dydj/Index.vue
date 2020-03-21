@@ -1,0 +1,176 @@
+<template>
+  <div class='dydj-box'>
+    <checkData ref="checkBDC" :baseInfo='baseInfo'
+    @setDisalbed='setDisalbed'></checkData>
+    <infoTable ref="tableInfo" :isVisable='show'
+    :info='info' :isEdit='isEdit'></infoTable>
+    <dyxx ref="dyxx" :isVisible='show'  @isSubmit = "getSubmit"></dyxx>
+  </div>
+</template>
+
+<script>
+import checkData from '@/components/realReg/checkData';
+import infoTable from '@/components/realReg/infoTable';
+import dyxx from '@/components/realReg/dyxx';
+import { mapMutations, mapState, mapGetters } from 'vuex';
+import { saveDYDJ } from '@/apis/nres/ygdy';
+import { formatDate } from '@/libs/date';
+
+export default {
+  data() {
+    return {
+      show: false,
+      info: '',
+      baseInfo: {
+        zsm: '不动产证书',
+        labelmc: '不动产证书',
+        ywlx: 'cqzh',
+        labelqlr: '权利人名称',
+        nodeName: '宜昌',
+      },
+      typeName: '流程实例',
+      parentPnode: 'dydj',
+      isRule: false, // 判断抵押信息组件是否通过验证
+      isEdit: false,
+      messageSave: {
+        lcmc: '抵押登记',
+        djxl: '抵押登记',
+        djdl: '910',
+        ajzt: '0',
+        sqr: '',
+        xgzh: '',
+        sqbh: 'W',
+        ywlxbm: 'dydj',
+        qlrxx: {
+          dyr: [],
+          dyqr: [],
+          zwr: [],
+        },
+        tsgl: [],
+        dyxx: [],
+      },
+    };
+  },
+  components: {
+    checkData,
+    infoTable,
+    dyxx,
+  },
+  methods: {
+    ...mapMutations('dydj', {
+      setMessJson: 'SET_MESSAGEJSON',
+      setNodeName: 'SET_NODENAME',
+    }),
+    ...mapMutations('queryData', { setSqbh: 'SET_QUERYSQBH' }),
+    ...mapGetters('queryData', { getFlowData: 'GET_FLOWDETAIL' }),
+    setDisalbed(bdisabled) {
+      this.$parent.isDisabled = bdisabled;
+      this.$emit('btnDisabled', bdisabled);
+    },
+    // 获取子组件状态
+    getSubmit(type) {
+      this.isRule = Boolean(type[1]);
+    },
+    submitT() {
+      this.$refs.dyxx.submitForm();
+
+      // this.getSubmit();
+    },
+    getOptions(messageSave) {
+      return Object.assign(messageSave, {
+        sqrq: formatDate(new Date(), 1),
+        gyfs: 0,
+        sqbh: this.$refs.checkBDC.checkform.sqbh,
+        sqr: sessionStorage.userId,
+        xgzh: this.$refs.checkBDC.checkform.ygzmh,
+        qlrmc: this.$refs.checkBDC.checkform.qlrmc,
+        qlrxx: {
+          dyqr: this.$refs.tableInfo.dyqrDataFormat,
+          dyr: this.$refs.tableInfo.dyrDataFormat,
+          zwr: this.$refs.tableInfo.zwrDataFormat,
+        },
+        dyxx: { ...this.$refs.dyxx.getDyxx() },
+        tsgl: this.$refs.tableInfo.getTSXX(),
+        fwzl: this.$refs.checkBDC.fwzl,
+      });
+    },
+    setOptions(messageSave) {
+      this.isEdit = true;
+      this.$refs.checkBDC.checkform.sqbh = messageSave.sqbh;
+      this.$refs.checkBDC.checkform.ygzmh = messageSave.xgzh;
+      this.$refs.checkBDC.checkform.qlrmc = messageSave.qlrmc;// messageSave.qlrxx.dyr[0].name;
+      this.$refs.checkBDC.handleCheck();
+      this.$refs.tableInfo.dyqrData = messageSave.qlrxx.dyqr;
+      this.$refs.tableInfo.dyrData = messageSave.qlrxx.dyr;
+      this.$refs.tableInfo.zwrData = messageSave.qlrxx.zwr;
+      this.$refs.dyxx.dyxxForm = { ...messageSave.dyxx };
+    },
+
+    handlerStorage() {
+      // 第一步时验证dyxx子表单提交
+      this.submitT();
+      if (!this.isRule) {
+        this.$message({
+          type: 'warning',
+          message: '信息输入不完整',
+        });
+        return;
+      }
+      const options = this.getOptions(this.messageSave);
+      this.setMessJson(options);
+      saveDYDJ({
+        data: options,
+        nodeName: this.baseInfo.nodeName,
+      }).then((response) => {
+        if (response.code === 0) {
+          this.$message({
+            type: 'success',
+            message: '保存成功',
+          });
+        } else {
+          this.$message.error('保存失败！请稍后重试或联系管理员');
+          throw new Error(response.msg);
+        }
+      }).catch((err) => {
+        this.$message.error('保存失败！请稍后重试或联系管理员');
+        throw new Error(err.message);
+      });
+    },
+
+    handlerUp() {
+      this.submitT();
+      if (!this.isRule) {
+        this.$message({
+          type: 'warning',
+          message: '信息输入不完整',
+        });
+        return;
+      }
+      const options = this.getOptions(this.messageSave);
+      this.setMessJson(options);
+      this.handlerStorage();
+      this.$emit('funcNext', 1);
+    },
+  },
+  created() {
+    // this.$refs.checkBDC.parentPnode = 'DYDJ';
+  },
+  mounted() {
+    this.$refs.checkBDC.parentPnode = this.parentPnode;
+    this.$nextTick(() => {
+      const varSqbh = this.$route.params.sqbh;
+      if (varSqbh === null || varSqbh === undefined) {
+        // console.log('1');
+      } else {
+        const flowdata = this.flowdatas.filter(p => p.sqbh === varSqbh);
+        this.messageSave = { ...flowdata[0].flowdata };
+        this.setOptions(this.messageSave);
+      }
+    });
+  },
+  computed: {
+    ...mapState('queryData', { flowdatas: state => state.FlOWDATA }),
+  },
+};
+
+</script>

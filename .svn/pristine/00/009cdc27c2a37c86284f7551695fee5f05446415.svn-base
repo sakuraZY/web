@@ -1,0 +1,56 @@
+<template>
+  <section class="app-main" :class="{needPadding: needPadding}">
+    <transition name="slide-fade">
+      <keep-alive :exclude="noCacheViews">
+        <router-view :key="key" />
+      </keep-alive>
+    </transition>
+  </section>
+</template>
+
+<script>
+
+export default {
+  name: 'AppMain',
+  computed: {
+    key() {
+      return this.$route.path;
+    },
+    noCacheViews() {
+      return this.$store.state.tagsView.noCacheViews;
+    },
+    needPadding() {
+      return true;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.app-main {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: $--background-color-base;
+  box-sizing: border-box;
+  &.needPadding{
+    padding: 20px;
+  }
+}
+
+.hasTagsView {
+  .app-main {
+    height: calc(100% - 56px);
+  }
+}
+</style>
+
+<style lang="scss">
+.el-popup-parent--hidden {
+  .fixed-header {
+    padding-right: 15px;
+  }
+}
+</style>

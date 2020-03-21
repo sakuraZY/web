@@ -1,0 +1,78 @@
+<!--
+ * @Descripttion: 个人预告登记 步骤3
+ * @version: 1.0
+ * @Author: 胡威
+ * @Date: 2020-03-10 13:41:55
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-03-13 22:04:20
+ -->
+<template>
+  <div class="person_main">
+    <header class="person_tt">
+      <h3>上传附件</h3>
+    </header>
+    <div class="person_upload">
+      <upload :infoJson = "infoJson"></upload>
+    </div>
+    <div class="bot_btn">
+       <el-button type="primary" plain @click="goPrev">上一步</el-button>
+       <!-- <el-button type="primary" plain @click="">暂存</el-button> -->
+       <el-button type="primary" @click="handlerUp">提交</el-button>
+    </div>
+  </div>
+</template>
+
+<script>
+import upload from '@/components/queryUpload/upload.vue';
+import { handleSubmit } from '@/apis/nres/zxtj';
+
+export default {
+  components: {
+    upload,
+  },
+  props: ['infoJson'],
+  data() {
+    return {
+      MESSAGEJSON: null,
+    };
+  },
+  mounted() {
+    this.MESSAGEJSON = this.$store.state[this.infoJson.messJson[0]][this.infoJson.messJson[1]];
+    this.nodeName = this.$store.state[this.infoJson.nodeName[0]][this.infoJson.nodeName[1]];
+  },
+  methods: {
+    handlerUp() {
+      let options = {
+        data: this.MESSAGEJSON,
+        nodeName: this.nodeName,
+      };
+      if (this.infoJson.submitUrl) {
+        options = Object.assign(options, {
+          url: this.infoJson.submitUrl,
+        });
+      }
+      handleSubmit(options).then(({ code, msg }) => {
+        if (code === 0) {
+          this.$message({
+            message: msg,
+            type: 'success',
+          });
+          // 提交后把缓存的叫号清空
+          sessionStorage[this.infoJson.parentPnode] = '';
+          this.$emit('func');
+        } else {
+          this.$message.error(msg);
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    goPrev() {
+      this.$emit('funcPrev');
+    },
+  },
+};
+</script>
+
+<style src="./index.scss" lang='scss' scoped>
+</style>

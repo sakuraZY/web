@@ -1,0 +1,23 @@
+.menu-detail-container {
+  margin-bottom: -30px;
+
+  .menu-icon-container {
+    border: $--border-base;
+    border-radius: 3px;
+    padding-left: 15px;
+  }
+  
+  .icon-list{
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .btn-group {
+    display: flex;
+    justify-content: flex-end;
+    border-top: $--border-base;
+    margin-left: -20px;
+    margin-right: -20px;
+    padding: 10px 20px 20px 20px;
+  }
+}

@@ -1,0 +1,40 @@
+.geo-cascader{
+  padding: 24px;
+  &-header, &-body{
+    border-bottom: $--border-base;
+  }
+  &-header{
+    .placehoder{
+      color: $--color-text-placeholder;
+    }
+  }
+  &-menu{
+    display: flex;
+    align-items: center;
+    margin-bottom: 23px;
+    .item-name{
+      color: $--color-primary;
+      font-weight: bold;
+      font-size: 18px;
+      &.pointer{
+        cursor: pointer;
+      }
+    }
+    .item-divider{
+      padding: 0 10px;
+    }
+  }
+  &-body{
+    display: flex;
+    flex-wrap: wrap;
+    padding: 30px 0;
+    .node-name{
+      padding: 10px 17px;
+      cursor: pointer;
+      &.is-active{
+        color: $--color-primary;
+        background-color: $--color-primary-light-9;
+      }
+    }
+  }
+}

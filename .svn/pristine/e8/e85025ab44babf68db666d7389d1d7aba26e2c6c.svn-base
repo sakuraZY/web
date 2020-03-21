@@ -1,0 +1,16 @@
+.template-upload-container {
+  .upload-btn {
+    position: relative;
+
+    input {
+      position: absolute;
+      left:0;
+      bottom:0;
+      width: 56px;
+      height: 28px;
+      opacity: 0;
+      font-size:0;
+      cursor: pointer;
+    }
+  }
+}

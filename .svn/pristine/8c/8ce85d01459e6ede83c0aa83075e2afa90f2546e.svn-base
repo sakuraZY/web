@@ -1,0 +1,254 @@
+<template>
+<div class="up-wrap">
+    <!-- list -->
+    <div class="up-list" v-for="(item, index) in upImgs" :key="index">
+        <div class="up-list-tit">
+        <h3 class="up-list-title">
+            {{item.title}}
+        </h3>
+        </div>
+        <div class="up-list-upmain">
+        <div class="up-imglist">
+            <ul>
+                <li v-for="(ite, ind) in item.imgs" :key="ind">
+                <img :src="ite.src" @click="handleView(ite.bindId, index)"/>
+                <div class="mark" @click="handleView(ite.bindId, index)">
+                    <i class="el-icon-view"/>
+                </div>
+                </li>
+            </ul>
+        </div>
+        </div>
+    </div>
+    <!-- list -->
+    <el-dialog
+        :visible.sync="dialogVisible"
+        width="70%" :top="dialogTop"
+        title="预览"
+        >
+        <div class="dialog-list">
+        <ul>
+            <li v-for="(item,index) in nameList" :key="index"
+            @click="handleList(item)">
+            {{item.name}}
+            </li>
+        </ul>
+        </div>
+        <div class="dialog-m">
+        <img :src="viewImg" width="100%" height="100%" v-if="isImage"/>
+        <iframe :src="pdfurl"  width="100%" :height="this.iframeH"
+        frameborder="0" scrolling="yes" v-else></iframe>
+        </div>
+    </el-dialog>
+</div>
+    <!-- wrap end -->
+</template>
+<script>
+import {
+  imgView, fjqueryTree,
+} from '@/apis/doc/attachment';
+import { getApiPojoJstring } from '@/libs/utils';
+import pdfImg from '@/assets/pdf.png';
+import config from '@/config';
+import { mapState, mapMutations } from 'vuex';
+
+const { urlType } = config;
+export default {
+  props: ['attachmentMess'],
+  data() {
+    return {
+      isFirstEnter: true,
+      typeName: '流程实例',
+      viewImg: '',
+      dialogVisible: false,
+      compressWidth: 144,
+      compressHigth: 100,
+      ftpUrl: urlType.ios,
+      pathBase64: 'data:image/jpeg;base64,',
+      pdfImg,
+      isImage: true,
+      pdfurl: '',
+      dialogTop: '0',
+      upImgs: [],
+      nameList: [],
+      fileParams: [],
+      sqbh: this.attachmentMess.sqbh,
+    };
+  },
+  mounted() {
+    this.IS_FIRST(this.sqbh);
+    this.FJQuerryTree();
+  },
+  beforeDestroy() {
+    this.SET_UPLOADOBJ({
+      sqbh: this.sqbh,
+      upImgs: this.upImgs,
+    });
+  },
+  computed: {
+    iframeH() {
+      const H = window.innerHeight || document.body.clientHeight;
+      return `${H - 50}px`;
+    },
+    ...mapState('queryUpload', { UPLOADOBJ: state => state.UPLOADOBJ }),
+    ...mapState('queryUpload', { FILEPARAMS: state => state.FILEPARAMS }),
+  },
+  methods: {
+    ...mapMutations('queryUpload', { SET_UPLOADOBJ: 'SET_UPLOADOBJ' }),
+    ...mapMutations('queryUpload', { IS_FIRST: 'IS_FIRST' }),
+    ...mapMutations('queryUpload', { SET_FILEPARAMS: 'SET_FILEPARAMS' }),
+    FJQuerryTree() {
+      fjqueryTree({
+        parentPnode: this.attachmentMess.parentPnode,
+        pNode: this.sqbh, // this.MESSAGEJSON.sqbh,
+        pType: this.typeName,
+      }).then(({ code, msg, resData }) => {
+        if (code === 0) {
+          const farr = resData.data.filter(item => item.pId !== null);
+          const narr = farr.filter(item => item.ckind !== '文件');
+          const warr = farr.filter(item => item.ckind !== '文件夹');
+          const obj = this.UPLOADOBJ[this.sqbh];
+          if (!obj) {
+            this.upImgs = narr.map(item => ({ title: item.docCname, id: item.id, imgs: [] }));
+            if (warr.length > 0) {
+              this.restImgs(narr, warr);
+            }
+          } else {
+            const b = Object.keys(obj).some(item => item === 'upImgs');
+            if (b) {
+              this.upImgs = obj.upImgs;
+              this.fileParams = this.FILEPARAMS[this.sqbh].fileParams;
+            } else {
+              this.upImgs = narr.map(item => ({ title: item.docCname, id: item.id, imgs: [] }));
+            }
+          }
+        } else {
+          this.$message.error(msg);
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    restImgs(narr, warr) { // 回填附件处理
+      const that = this;
+      warr.forEach((item) => {
+        narr.forEach((ite, ind) => {
+          if (item.pId === ite.id) {
+            const obj = { bindId: item.binid, cId: item.id };
+            if (item.extname === 'PDF') {
+              obj.src = this.pdfImg;
+              this.upImgs[ind].imgs.push(obj);
+              that.getFJMess(item.binid, ind);
+            } else {
+              that.getMinShow(item.binid, obj, ind, false);
+            }
+          }
+        });
+      });
+    },
+    getFJMess(bindId, index) {
+      imgView({
+        pNode: this.sqbh, // this.MESSAGEJSON.sqbh,
+        pType: this.typeName,
+      }, [bindId]).then(({ resData }) => {
+        const obj = {};
+        const f = resData.binfile[0];
+        obj.fileType = (f.docReserve); // fileType
+        obj.fileName = `${f.docFilename}${f.docExtname}`;
+        obj.dir = this.upImgs[index].title;
+        if (obj.fileType === 'ftp') {
+          obj.url = f.docComefrom;
+        } else {
+          obj.url = f.docFilecontent;
+        }
+        this.fileParams.push(obj);
+      });
+    },
+    getMinShow(bindId, obj, index, showInfo = true) {
+      // 获取缩略图
+      imgView({
+        pNode: this.sqbh, // this.MESSAGEJSON.sqbh,
+        pType: this.typeName,
+        compressWidth: this.compressWidth,
+        compressHigth: this.compressHigth,
+      }, [bindId]).then((datas) => {
+        const resDatas = datas.resData.binfile[0];
+        if (datas.code === 0) {
+          const objs = {};
+          objs.fileType = (resDatas.docReserve); // fileType
+          objs.fileName = `${resDatas.docFilename}${resDatas.docExtname}`;
+          objs.dir = this.upImgs[index].title;
+          if (objs.fileType === 'ftp') {
+            objs.url = resDatas.docComefrom;
+          } else {
+            objs.url = resDatas.docFilecontent;
+          }
+          this.fileParams.push(objs);
+          if (resDatas.docFtpath) {
+            const imgurl = `${this.ftpUrl}${resDatas.docFtpath}`;
+            obj.src = `${imgurl}?${getApiPojoJstring()}`;
+          } else {
+            obj.src = `${this.pathBase64}${resDatas.docFilecontent}`;
+          }
+          this.upImgs[index].imgs.push(obj);
+          if (showInfo) {
+            this.$message({
+              message: '上传成功',
+              type: 'success',
+            });
+          }
+        } else {
+          this.$message.error(datas.msg);
+        }
+      });
+    },
+    handleView(bindId, index) {
+      this.viewImg = '';
+      this.pdfurl = '';
+      const bindIdArr = this.upImgs[index].imgs.map(item => item.bindId);
+      imgView({
+        pNode: this.sqbh, // this.MESSAGEJSON.sqbh,
+        pType: this.typeName,
+      }, bindIdArr).then(({ code, msg, resData }) => {
+        this.nameList = resData.binfile.map(item => ({
+          name: `${item.docFilename}${item.docExtname}`,
+          docExtname: `${item.docExtname}`,
+          docFtpath: `${item.docFtpath}`,
+          docFilecontent: `${item.docFilecontent}`,
+        }));
+        const sfile = resData.binfile.filter(item => item.docBinid === bindId);
+        const resDatas = sfile[0];
+        if (code === 0) {
+          this.dialogVisible = true;
+          this.transFilePath(resDatas);
+        } else {
+          this.$message.error(msg);
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+    transFilePath(resDatas) {
+      if (resDatas.docExtname !== '.PDF') {
+        this.isImage = true;
+        if (resDatas.docFtpath) {
+          const imgurl = `${this.ftpUrl}${resDatas.docFtpath}`;
+          this.viewImg = `${imgurl}?${getApiPojoJstring()}`;
+        } else {
+          this.viewImg = `${this.pathBase64}${resDatas.docFilecontent}`;
+        }
+      } else {
+        this.isImage = false;
+        const pdfsrc = `${this.ftpUrl}${resDatas.docFtpath}`;
+        this.pdfurl = `${pdfsrc}?${getApiPojoJstring()}`;
+      }
+    },
+    handleList(item) {
+      this.transFilePath(item);
+    },
+  },
+};
+</script>
+
+<style src="./index.scss" lang='scss' scoped>
+</style>

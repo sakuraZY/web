@@ -1,0 +1,63 @@
+.register-tit{
+  width: 100%;
+  margin: 0 auto;
+  height: 90px;
+  line-height: 90px;
+  background:linear-gradient(0deg,rgba(54,121,228,1) 0%,rgba(26,134,255,1) 100%);
+  .register-tit-wrap{
+    max-width:1210px;
+    margin:0 auto;
+    h3{
+      color: $--color-white;
+      font-size: 27px;
+      margin: 0 0 0 72px;
+    }
+  }
+}
+.register-main{
+  max-width: 1210px;
+  width: 100%;
+  margin: 20px auto;
+  box-sizing: border-box;
+  background: $--color-white;
+  border: 1px solid #EAE8EB;
+  .register-main-tit{
+    width: 90%;
+    height: 43px;
+    position: relative;
+    margin: 20px auto 0;
+    border-bottom: 1px solid $--border-color-base;
+    h3{
+      display: inline;
+      padding-bottom: 12px;
+      font-size: 19px;
+      border-bottom:3px solid $--color-primary;
+      margin: 0;
+      position: absolute;
+      bottom: -2px; 
+      left: 0;
+    }
+  }
+  .register-tishi{
+    width: 80%;
+    margin: 15px auto;
+    background:rgba(26,134,255,0.1);
+    border: 1px solid #1A86FF;
+    p{
+      font-size: 14px;
+      color: #666;
+      margin-left:2em;
+      span{
+        color: #FD5F5F;
+      }
+    }
+  }
+  .register-inp{
+    width: 60%;
+    margin: 30px auto;
+  }
+}
+.router-link-active {
+  color: $--color-primary;
+  text-decoration: none;
+}

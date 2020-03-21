@@ -1,0 +1,46 @@
+/*
+ * @Author: huwei
+ *
+ * @Date: 2020-03-11 16:15:44
+ * @
+# Description: 暂存接口
+ */
+/* eslint-disable */
+import axios from '@/libs/axios';
+
+export const advanceSave = ({ data, nodeName }) => axios({
+  url: '/bdc/fwdt/zxsq/saveYGDJ',
+  method: 'post',
+  baseUrlType: 'nres',
+  params: {
+    nodeName
+  },
+  data,
+});
+
+export const YSZYSave = ({ data, nodeName }) => axios({
+  url: '/bdc/fwdt/zxsq/saveYSZY',
+  method: 'post',
+  baseUrlType: 'nres',
+  params: {
+    nodeName
+  },
+  data,
+});
+
+/**
+ * @name: 查封（轮候查封）暂存
+ * @Date: 2020-03-14 21:36:14
+ * @param {String} nodeName 节点名称 *
+ * @param {Object} data 申请信息 *
+ * @return: 
+ */
+export const saveCFLHCF = ({ data, nodeName = '宜昌' }) => axios({
+  url: '/bdc/fwdt/zxsq/saveCFLHCF',
+  method: 'post',
+  baseUrlType: 'nres',
+  params: {
+    nodeName
+  },
+  data,
+});

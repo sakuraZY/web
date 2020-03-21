@@ -1,0 +1,54 @@
+<template>
+  <el-card class="card-panel" shadow="hover">
+    <div class="card-panel-body">
+      <div class="card-panel-body-top">
+        <div class="card-panel-body-top-left">
+          <div class="title">{{data.title}}</div>
+          <div class="count" v-if="data.countType === 'money'">{{data.count | filterMoney}}</div>
+          <div class="count" v-else>{{data.count }}<span class="count-type">件</span></div>
+        </div>
+        <div class="card-panel-body-top-right">
+          <icon-svg :iconClass="data.icon" class="panel-item-icon"></icon-svg>
+        </div>
+      </div>
+      <div class="card-panel-body-bottom">
+        <div class="card-panel-body-bottom-left" v-html="data.record"></div>
+        <div class="card-panel-body-bottom-right">
+          <el-link type="primary" :underline="false">
+            {{data.actionName}}
+            <icon-svg iconClass="arrowRight"></icon-svg>
+          </el-link>
+        </div>
+      </div>
+    </div>
+  </el-card>
+</template>
+
+<script>
+export default {
+  props: {
+    data: {
+      type: Object,
+      default: () => ({}),
+    },
+  },
+  filters: {
+    filterMoney(val, isPadEnd = false) {
+      if (isPadEnd) {
+        return `${val} ¥`;
+      }
+      return `¥ ${val}`;
+    },
+    filterPiece(val, isPadEnd = true) {
+      if (isPadEnd) {
+        return `${val} 件`;
+      }
+      return `件 ${val}`;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

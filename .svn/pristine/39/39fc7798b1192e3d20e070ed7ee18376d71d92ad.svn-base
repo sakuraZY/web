@@ -1,0 +1,105 @@
+<template>
+  <split-pane class="split-pane" @onSaved="onSaved">
+    <template slot="paneL">
+      <slot name="paneL">
+        <geo-card
+          :custom="true"
+          :listData="listData"
+          :fullHeight="true"
+          class="custom-card"
+          :customHeaderStyle="headerStyle"
+        >
+          <template slot="header">
+            <slot name="pane-left-header">
+              <div class="custom-card-header">
+                <span class="custom-card-header-left">
+                  <slot name="pane-left-header-left">
+                    {{ paneLeftTitle }}
+                  </slot>
+                </span>
+                <div class="custom-card-header-right">
+                  <slot name="pane-left-header-right">
+                    <el-button
+                      size="medium"
+                      class="custom-card-header-right-button"
+                      plain
+                      v-for="(item, index) in btnList"
+                      :key="item+index"
+                      @click="handleClick(item)"
+                      v-show="!item.hide"
+                    >
+                      <icon-svg
+                        :iconClass="item.icon"
+                        className="geo-card-header-icon-left"
+                        v-if="item.icon"
+                      >
+                      </icon-svg>
+                      {{ item.name }}
+                    </el-button>
+                  </slot>
+                </div>
+              </div>
+            </slot>
+          </template>
+          <template>
+            <slot name="pane-left-body"></slot>
+          </template>
+        </geo-card>
+      </slot>
+    </template>
+    <template slot="paneR">
+      <div class="split-pane-right-container">
+        <transition name="slide-fade">
+          <slot name="paneR">
+              <router-view />
+          </slot>
+        </transition>
+      </div>
+    </template>
+  </split-pane>
+</template>
+
+<script>
+import SplitPane from '@/components/splitPane';
+import GeoCard from '@/components/geoCard';
+
+export default {
+  components: {
+    SplitPane,
+    GeoCard,
+  },
+  props: {
+    btnList: {
+      type: Array,
+      default: () => ([]),
+    },
+    listData: {
+      type: Array,
+      default: () => ([]),
+    },
+    paneLeftTitle: {
+      type: String,
+      default: '',
+    },
+  },
+  data() {
+    return {
+      headerStyle: {
+        padding: '10px',
+      },
+    };
+  },
+  methods: {
+    handleClick(item) {
+      this.$emit('handlePaneLeftBtn', item);
+    },
+    onSaved() {
+      // console.log(222);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

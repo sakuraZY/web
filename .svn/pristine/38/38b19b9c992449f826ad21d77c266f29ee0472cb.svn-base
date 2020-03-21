@@ -1,0 +1,20 @@
+.role-manage-container{
+  height: 100%;
+}
+.role-tree-contaner{
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  .role-tree{
+    /deep/ {
+      .state{
+        &-open{
+          color: $--color-primary;
+        }
+        &-close{
+          color: $--color-text-secondary;
+        }
+      }
+    }
+  }
+}

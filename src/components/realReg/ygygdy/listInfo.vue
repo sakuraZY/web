@@ -1,0 +1,482 @@
+<template>
+  <div class="infodiv"  v-show="isVisable">
+     <h3 id="t2" ref="t2">义务人信息</h3>
+    <div id="ywrDiv" ref="ywrDiv" class="tableDiv">
+      <personTable  :personData='ywrDataFormat' :headNames='headNames'
+      :showBtn='showBtn' ></personTable>
+    </div>
+    <h3 id="t3" ref="t3">抵押人信息</h3>
+    <div id="dyrDiv" ref="dyrDiv" class="tableDiv">
+       <personTable  :personData='dyrDataFormat' :headNames='headNamesDyr'
+      :showBtn='showBtn' ></personTable>
+    </div>
+    <h3 id="t4" ref="t4">抵押权人信息</h3>
+    <div id="dyqrDiv" ref="dyqrDiv" class="tableDiv">
+       <div>
+        <el-button class="add btnBorder"
+        size="medium" @click="addDyqr">新增</el-button>
+      </div>
+     <personTable  :personData='dyqrDataFormat' :headNames='headNames'
+     @editfn='editDyqr' :orgLen='orgLen'></personTable>
+    </div>
+    <h3 id="t5" ref="t5">不动产权信息</h3>
+    <div id="bdcxxDiv" ref="bdcxxDiv" class="tableDiv">
+      <el-table
+        :data="bdcData"
+        highlight-current-row
+        tooltip-effect="dark"
+        border
+        stripe
+        width="80%"
+        :cell-style="{padding:'3px'}"
+        :header-cell-style="tableHeaderColor"
+        height="200px"
+        :index="indexMethod"
+      >
+        <el-table-column v-for="(item,index) in bdcHeadNames" :key="index"
+            :prop="item.prop"
+            :label="item.label"
+            :minWidth="item.minWidth"
+            :width="item.width"
+            :align="item.align"
+            :type="item.type"
+            show-overflow-tooltip
+            >
+          </el-table-column>
+      </el-table>
+    </div>
+    <el-form  :rules="rules" ref="gyform" size="medium">
+      <div class="check-data-content">
+        <el-form-item label="共有情况" class="check-data-content-item">
+          <el-select v-model="gyfs"  size="medium" placeholder="请选择" >
+            <el-option
+              v-for="item in gyfslist"
+              :key="item.name"
+              :label="item.name"
+              :value="item.itemValue" >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </div>
+    </el-form>
+    <h3 id="t6" ref="t6">第三方债务人信息</h3>
+    <div id="zwrDiv" class="tableDiv">
+      <div>
+        <el-button  class="add btnBorder"
+        size="medium" @click="addZwr">新增债务人</el-button>
+      </div>
+      <personTable  :personData='zwrDataFormat' :headNames='headNames'
+      @editfn='editZWR'></personTable>
+    </div>
+    <personForm  ref="perTable" @getInfoFn="getPerInfo"
+    v-if="dialogFormVisible" :visible.sync="dialogFormVisible"
+    :zjlxlist='zjlxlist' :qlrxzlist='qlrxzlist' :title='title' :inputDisabled='inputDisabled' >
+    </personForm>
+  </div>
+</template>
+
+<script>
+import { queryByDicname } from '@/apis/realReg/dicItem';
+import { getEmployeeById } from '@/apis/auth/employee';
+import { mapState } from 'vuex';
+import personForm from '@/components/realReg/gyzj/personForm.vue';
+import personTable from '@/components/realReg/gyzj/personTable.vue';
+
+export default {
+  data() {
+    return {
+      headNames: [
+        {
+          label: '序号', prop: 'codes', width: '58px', align: 'center', type: 'index', show: true,
+        },
+        {
+          label: '姓名', prop: 'name', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '权利人性质', prop: 'qlrxzmc', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '证件类型', prop: 'zjlbmc', minWidth: '90px', align: 'center', show: true,
+        },
+        {
+          label: '证件号码', prop: 'zjhm', minWidth: '90px', align: 'center', show: true,
+        },
+        // {
+        //   label: '通讯地址', prop: 'dz', minWidth: '100px', align: 'center', show: false,
+        // },
+        {
+          label: '联系电话', prop: 'dh', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '法人代表',
+          align: 'center',
+          show: false,
+          children: [
+            {
+              label: '名称', prop: 'frdbrxm', minWidth: '85px', align: 'center', show: false,
+            },
+            {
+              label: '证件类型', prop: 'frdbzjlxmc', minWidth: '85px', align: 'center', show: false,
+            },
+            {
+              label: '证件号码', prop: 'frdbzjh', minWidth: '85px', align: 'center', show: false,
+            },
+            {
+              label: '联系电话', prop: 'frdbdhhm', align: 'center', show: false,
+            },
+          ],
+        },
+      ],
+      headNamesDyr: [
+        {
+          label: '序号', prop: 'codes', width: '58px', align: 'center', type: 'index', show: true,
+        },
+        {
+          label: '姓名', prop: 'name', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '权利人性质', prop: 'qlrxzmc', minWidth: '100px', align: 'center', show: true,
+        },
+        {
+          label: '证件类型', prop: 'zjlbmc', minWidth: '90px', align: 'center', show: true,
+        },
+        {
+          label: '证件号码', prop: 'zjhm', minWidth: '90px', align: 'center', show: true,
+        },
+        // {
+        //   label: '通讯地址', prop: 'dz', minWidth: '100px', align: 'center', show: false,
+        // },
+        {
+          label: '联系电话', prop: 'dh', minWidth: '100px', align: 'center', show: true,
+        },
+      ],
+      bdcHeadNames: [
+        {
+          label: '序号', prop: 'codes', width: '58px', align: 'center', type: 'index',
+        },
+        {
+          label: '坐落', prop: 'zl', minWidth: '160px', align: 'center',
+        },
+        {
+          label: '不动产单元', prop: 'bdcdyh', minWidth: '150px', align: 'center',
+        },
+        {
+          label: '土地使用权面积', prop: 'tdsyqmj', minWidth: '125px', align: 'center',
+        },
+        {
+          label: '房屋建筑面积', prop: 'fwjzmj', minWidth: '110px', align: 'center',
+        },
+        {
+          label: '土地用途', prop: 'tdytmc', minWidth: '90px', align: 'center',
+        },
+        {
+          label: '房屋用途', prop: 'fwytmc', minWidth: '90px', align: 'center',
+        },
+        {
+          label: '抵押情况', prop: 'dyqk', minWidth: '90px', align: 'center',
+        },
+        {
+          label: '查封情况', prop: 'cfqk', minWidth: '90px', align: 'center',
+        },
+      ],
+      ywrData: [],
+      dyrData: [],
+      dyqrData: [],
+      bdcData: [],
+      dialogFormVisible: false,
+      zwrData: [],
+      zjlxlist: [],
+      qlrxzlist: [],
+      gyfslist: [],
+      isShow: false,
+      showBtn: false,
+      orgLen: 0, // 抵押权人原始数量 判断是否需要显示删除按钮
+      operateType: 'add',
+      zwrIndex: 0,
+      dyqrIndex: 0,
+      title: '添加第三方债务人信息',
+      gyfs: '0',
+      rules: {
+        gyfs: [
+          { required: true, message: '共有方式不能为空' },
+        ],
+      },
+      isRule: false, // 判断抵押信息组件是否通过验证
+      inputDisabled: false,
+    };
+  },
+  props: ['isVisable', 'info', 'isEdit'],
+  components: {
+    personForm,
+    personTable,
+  },
+  created() {
+    this.getDicItems('共有方式');
+    this.getDicItems('证件类型');
+    this.getDicItems('权利人性质');
+  },
+  methods: {
+    getTableInfo() {
+      if (this.info !== '' && this.info.length > 0) {
+        const info = JSON.parse(this.info);
+        const qlrinfo = info.qlrxx.qlr;
+        if (qlrinfo.length > 0) {
+          this.dyrData = qlrinfo.map((item) => {
+            item.name = item.qlrmc;
+            item.zjlbmc = this.tranZJLBM(item.zjlb);
+            return item;
+          });
+          this.ywrData = info.qlrxx.ywr.map((item) => {
+            item.name = item.qlrmc;
+            item.zjlbmc = this.tranZJLBM(item.zjlb);
+            if (item.frdbzjlx !== null || item.frdbzjlx !== '' || item.frdbzjlx.length > 0) {
+              item.frdbzjlxmc = this.tranZJLBM(item.frdbzjlx);
+            }
+            return item;
+          });
+          this.orgLen = qlrinfo.length;
+          this.bdcData = info.bdcdylists;
+          if (this.dyqrData === [] || this.dyqrData.length === 0) {
+            this.getUserInfo();
+          }
+        } else {
+          this.dyrData = [];
+          this.ywrData = [];
+          this.orgLen = 0;
+          this.bdcData = [];
+        }
+      }
+    },
+    indexMethod(index) {
+      return index + 1;
+    },
+    addZwr() {
+      this.inputDisabled = false;
+      this.title = '添加第三方债务人信息';
+      this.dialogFormVisible = true;
+      this.operateType = 'add';
+    },
+    addDyqr() {
+      this.inputDisabled = false;
+      this.title = '添加抵押权人信息';
+      this.dialogFormVisible = true;
+      this.operateType = 'addDyqr';
+    },
+
+    editZWR(item, index) {
+      this.title = '修改第三方债务人信息';
+      this.zwrIndex = index;
+      this.operateType = 'edit';
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs.perTable.info = { ...item };
+      });
+    },
+    editDyqr(item, index) {
+      this.inputDisabled = index <= this.orgLen;
+      this.title = '修改抵押权人信息';
+      this.dyqrIndex = index;
+      this.operateType = 'editDyqr';
+      this.dialogFormVisible = true;
+      this.$nextTick(() => {
+        this.$refs.perTable.info = { ...item };
+      });
+    },
+    delZWR(idx) {
+      this.$confirm('确认删除选中数据吗？').then(() => {
+        this.zwrData.splice(idx, 1);
+      });
+    },
+    delDyqr(idx) {
+      this.$confirm('确认删除选中数据吗？').then(() => {
+        this.dyqrData.splice(idx, 1);
+      });
+    },
+    getPerInfo(val) {
+      if (this.operateType === 'add') {
+        this.zwrData = [...this.zwrData, { ...val }];
+      } else if (this.operateType === 'addDyqr') {
+        this.dyqrData = [...this.dyqrData, { ...val }];
+      } else if (this.operateType === 'edit') {
+        this.$set(this.zwrData, this.zwrIndex, { ...val });
+      } else {
+        this.$set(this.dyqrData, this.dyqrIndex, { ...val });
+      }
+    },
+    resetFields(formRef) {
+      this.$refs[formRef].resetFields();
+    },
+    getDicItems(dicname) {
+      const datas = {
+        dicName: dicname,
+      };
+      new Promise((resolve) => {
+        queryByDicname(datas).then((res) => {
+          resolve(res);
+        });
+      }).then((res) => {
+        if (res.code === 0) {
+          if (dicname === '证件类型') {
+            this.zjlxlist = res.resData.dicitemTree.filter(item => item.name);
+          } else if (dicname === '权利人性质') {
+            this.qlrxzlist = res.resData.dicitemTree.filter(item => item.name);
+          } else {
+            this.gyfslist = res.resData.dicitemTree.filter(item => item.name);
+          }
+        }
+      });
+    },
+    getUserInfo() {
+      getEmployeeById(this.userId).then((data) => {
+        let arr = [];
+        if (!Array.isArray(data.resData)) {
+          arr.push(data.resData);
+        } else {
+          arr = data.resData;
+        }
+        arr.forEach((item) => {
+          let obj = {};
+          obj.name = item.user.userName;
+          obj.userId = item.user.userId;
+          obj.zjlb = item.employee.empCardtype;
+          obj.zjhm = item.employee.empIdcardno;
+          const zjobj = this.zjlxlist.find(tmp => tmp.itemValue === obj.zjlb);
+          obj.zjlbmc = zjobj.name;
+          obj = Object.assign({
+            qlrxz: '',
+            zjlb: '',
+            zjhm: '',
+            dz: '',
+            frdbrxm: '',
+            frdbzjlx: '',
+            frdbzjh: '',
+            frdbdhhm: '',
+          }, obj);
+          this.dyqrData.push(obj);
+        });
+      }, (err) => {
+        // throw new Error(err);
+        this.$message.error(`获取抵押权人信息失败！${err.message}`);
+      });
+    },
+    tranZJLBM(id, list) {
+      let val = id;
+      if (list === null || list === undefined || list.length === 0) {
+        return id;
+      }
+      const obj = list.find(item => item.itemValue === id);
+      if (obj === null || obj === undefined) {
+        val = id;
+      } else {
+        val = obj.name;
+      }
+      return val;
+    },
+    tranZJLBId(name, list) {
+      let val = name;
+      if (list === null || list === undefined || list.length === 0) {
+        return name;
+      }
+      const obj = list.find(item => item.name === name);
+      if (obj === null || obj === undefined) {
+        val = name;
+      } else {
+        val = obj.itemValue;
+      }
+      return val;
+    },
+    // 修改table header的背景色
+    tableHeaderColor({ rowIndex }) {
+      let sty = 'padding:5px 1px;background:#F2F6FC;';
+      if (rowIndex === 0 || rowIndex === 1) {
+        sty = 'padding:5px 1px;background:#F2F6FC;font-size:14px;color:rgba(102,102,102,1);font-weight:400; height:15px;';
+      }
+      return sty;
+    },
+    getTSXX() {
+      return this.bdcData.map(item => ({
+        tstybm: item.tstybm,
+        bdcdyh: item.bdcdyh,
+        bdclx: '房屋',
+        djzl: '预告抵押',
+      }));
+    },
+    formatData(orgData) {
+      if (orgData === undefined || orgData === null || orgData.length === 0) {
+        return [];
+      }
+      return orgData.map((item) => {
+        if (this.isEdit) {
+          item.qlrxz = item.sqrxz;
+        } else {
+          item.sqrxz = item.qlrxz;
+        }
+        item.zjlbmc = this.tranZJLBM(item.zjlb, this.zjlxlist);
+        item.qlrxzmc = this.tranZJLBM(item.qlrxz, this.qlrxzlist);
+        if (item.frdbzjlx === null || item.frdbzjlx === undefined || item.frdbzjlx === '') {
+          // item.qlrxz = '1';
+        } else {
+          item.frdbzjlxmc = this.tranZJLBM(item.frdbzjlx, this.zjlxlist);
+        }
+        return item;
+      });
+    },
+  },
+  mounted() {
+    // this.getTableInfo();
+  },
+  computed: {
+    ...mapState('user', { userId: state => state.userId }),
+    ...mapState('ygygdy', { datainfo: state => state.INFO }),
+    ...mapState('ygygdy', { bdc: state => state.BDC }),
+    dyrDataFormat() {
+      return this.formatData(this.dyrData);
+    },
+    ywrDataFormat() {
+      return this.formatData(this.ywrData);
+    },
+    dyqrDataFormat() {
+      return this.formatData(this.dyqrData);
+    },
+    zwrDataFormat() {
+      return this.formatData(this.zwrData);
+    },
+  },
+  watch: {
+    // dyrData: {
+    //   handler(val) {
+    //     if (val.length > 0 && this.dyqrData.length === 0) {
+    //       this.getUserInfo();
+    //     }
+    //   },
+    // },
+    isVisable(val) {
+      if (val) {
+        this.getTableInfo();
+        // this.getUserInfo();
+      }
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+.infodiv {
+  padding: 0 15px 0 20px;
+  .check-data-content{
+    display: flex;
+    &-item{
+      width: 33%;
+      box-sizing: border-box;
+    }
+  }
+  /* 设置表头的高度 */
+
+  .el-table__header td,.el-table__header th{
+
+  padding:300px 300px;
+
+  }
+}
+</style>

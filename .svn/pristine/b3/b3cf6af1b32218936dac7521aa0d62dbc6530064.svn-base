@@ -1,0 +1,7 @@
+.bot_btn{
+  text-align: center;
+}
+.person_main {
+  width:60%;
+  margin:0 auto 30px;
+}

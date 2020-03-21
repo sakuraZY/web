@@ -1,0 +1,28 @@
+.auth-type{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  &-title{
+    font-size: 22px;
+  }
+  &-main{
+    display: flex;
+    &-item{
+      border: $--border-base;
+      padding: 40px;
+      margin: 20px;
+      text-align: center;
+      &.active{
+        border-color: $--color-primary;
+        color: $--color-primary;
+      }
+      &-icon{
+        font-size: 100px;
+      }
+      &-title{
+        font-size: 22px;
+        line-height: 85px;
+      }
+    }
+  }
+}

@@ -1,0 +1,144 @@
+<!--
+ * @Descripttion:  查封登记（含轮候查封）
+ * @version: 1.0
+ * @Author: zengying
+ * @Date: 2020-03-10 15:36:15
+ * @LastEditors: zengying
+ * @LastEditTime: 2020-03-21 17:32:05
+ -->
+ <template>
+  <mainBox ref="mbox">
+    <!-- 主要内容  -->
+    <template #main-content>
+      <div class="flex-content mainflowBox">
+        <div class="flex-main">
+          <div class="stepwrap">
+            <el-steps :active="stepNum">
+              <el-step v-for="(item,index) in stepList" :key="index" :title="item"></el-step>
+            </el-steps>
+          </div>
+          <div class="main-fill">
+            <div v-if="stepNum === 2">
+              <query-upload ref="children2" @func="handleNext" :infoJson="infoJson">
+              </query-upload>
+            </div>
+            <el-row v-if="arrflowstep.includes(1)" v-show="stepNum === 1">
+              <el-col :span="21">
+                <cfdj ref="children" @SetDisabled="SetDisabled" @funcNext="handleNext"></cfdj>
+              </el-col>
+              <el-col :span="3">
+                <scorllTabs :list="menulist" :indexs="indexs" v-show="stepNum===1"></scorllTabs>
+              </el-col>
+            </el-row>
+            <query-success v-if="arrflowstep.includes(3)" v-show="stepNum === 3" ref="children"
+              :infoJson="infoJson"></query-success>
+          </div>
+        </div>
+      </div>
+    </template>
+    <!-- 底部暂存和提交栏 -->
+    <template slot="foot-banner">
+      <div class="footflex" v-if="stepNum<3" v-show="!isDisabled">
+        <div class="foot-btn">
+          <ul class="btnList">
+            <li v-if="arrflowstep.includes(2)" v-show="stepNum === 2">
+              <el-button type="primary" @click.stop="handlerPrev" plain>上一步</el-button>
+            </li>
+            <li v-if="arrflowstep.includes(1)" v-show="stepNum === 1">
+              <el-button type="primary" :disabled="isDisabled"
+                @click.stop="handlerStorage('children')">暂存</el-button>
+            </li>
+            <li v-if="arrflowstep.includes(2)" v-show="stepNum === 2">
+              <el-button type="primary" @click.stop="handlerUp('children2')">提交</el-button>
+            </li>
+            <li v-if="arrflowstep.includes(1)" v-show="stepNum === 1">
+              <el-button type="primary" :disabled="isDisabled" @click.stop="handlerUp('children')">
+                下一步</el-button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </template>
+  </mainBox>
+
+</template>
+<script>
+import { mapState, mapMutations } from 'vuex';
+import { submitUrlCFLHCF } from '@/apis/nres/zxtj';
+import mainBox from '@/layouts/Impersonal/mainBox';
+import QueryUpload from '@/components/queryUpload';
+import QuerySuccess from '@/components/querySuccess';
+import scorllTabs from '@/components/scrollTabs';
+import cfdj from '@/components/realReg/cfdj';
+
+export default {
+  name: 'CFDJ',
+  components: {
+    mainBox,
+    cfdj,
+    QueryUpload,
+    QuerySuccess,
+    scorllTabs,
+  },
+  data() {
+    return {
+      indexs: 0,
+      stepNum: 1,
+      isDisabled: true,
+      stepList: ['填写信息', '上传附件', '完成'],
+      menulist: ['不动产数据检验'],
+      infoJson: {
+        messJson: ['cfdj', 'MESSAGEJSON'],
+        nodeName: ['cfdj', 'NODENAME'],
+        submitUrl: submitUrlCFLHCF,
+        parentPnode: 'cfdj',
+      },
+    };
+  },
+  computed: {
+    ...mapState('cfdj', { nodename: state => state.NODENAME }),
+    ...mapState('cfdj', { flowstep: state => state.FLOWSTEP }),
+    ...mapState('cfdj', { arrflowstep: state => state.ARRFLOWSTEP }),
+    ...mapState('Impersonal', { historyArray: state => state.historyArray }),
+  },
+  methods: {
+    ...mapMutations('cfdj', {
+      GO_NEXT: 'GO_NEXT',
+      SET_ARRFLOWSTEP: 'SET_ARRFLOWSTEP',
+      ADD_ARRFLOWSTEP: 'ADD_ARRFLOWSTEP',
+      RESET_ARRFLOWSTEP: 'RESET_ARRFLOWSTEP',
+      SET_SCROLLTOBOTTOM: 'SET_SCROLLTOBOTTOM',
+      REST_STATE: 'REST_STATE',
+    }),
+    handlerUp(cname) { // 触发子组件里的上传事件
+      this.$refs[cname].handlerUp();
+    },
+    handlerStorage(cname) { // 触发子组件里的暂存事件
+      this.$refs[cname].handlerStorage();
+    },
+    handleNext() {
+      this.stepNum += 1;
+      this.ADD_ARRFLOWSTEP(this.stepNum);
+      this.GO_NEXT(this.stepNum);
+    },
+    handlerPrev() {
+      this.stepNum -= 1;
+      // this.SET_ARRFLOWSTEP([this.stepNum]);
+    },
+    SetDisabled(bDisabled) {
+      this.isDisabled = bDisabled;
+      if (bDisabled) {
+        this.menulist = ['不动产数据检验'];
+      } else {
+        this.menulist = ['不动产数据检验', '查封清单', '法院经办人信息', '查封信息'];
+      }
+    },
+  },
+  destroyed() {
+    this.RESET_ARRFLOWSTEP([1]);
+  },
+};
+</script>
+<style lang="scss" type="text/scss" scoped>
+@import "../../FirstHand/index.scss";
+</style>

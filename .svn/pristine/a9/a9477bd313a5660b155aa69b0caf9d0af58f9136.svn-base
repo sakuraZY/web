@@ -1,0 +1,180 @@
+<!--
+ * @Description: 解封登记
+ * @Author: wangjiayu
+ * @Date: 2020-03-13 11:25:40
+ * @LastEditors: wangjiayu
+ * @LastEditTime: 2020-03-18 11:50:17
+ -->
+
+<template>
+  <div class="jf-box">
+    <!-- 查封文号和权证验证信息 -->
+    <check-data
+      class="jf-item"
+      ref="checkBDC"
+      @setDisalbed="setDisalbed"
+    ></check-data>
+    <!-- 解封清单 -->
+    <jf-list
+      ref="jfList"
+      class="jf-item"
+      title="解封清单"
+      :isVisible="showJFXX"
+      :tableInfo="xgzhList"
+    ></jf-list>
+    <!-- 解封信息 -->
+    <jfxx
+      ref="jfxx"
+      class="jf-item"
+      :isVisible="showJFXX"
+    ></jfxx>
+    <!-- 经办人信息 -->
+    <jbrxx
+      ref="jbrxx"
+      class="jf-item"
+      :isVisible="showJFXX"
+      :jbrxx="jbrxx"
+    ></jbrxx>
+  </div>
+</template>fxx
+
+<script>
+import '@/plugins/vueEvent';
+import { submitUrlJFDJ, handleSave } from '@/apis/nres/zxtj';
+import { mapState, mapMutations } from 'vuex';
+import CheckData from './modules/CheckData.vue';
+import JfList from './modules/JfList.vue';
+import Jfxx from './modules/Jfxx.vue';
+import JBRXX from '../cfdj/JBRXX.vue';
+
+
+export default {
+  components: {
+    CheckData,
+    JfList,
+    Jfxx,
+    Jbrxx: JBRXX,
+  },
+  data() {
+    return {
+      typeName: '流程实例', // 附件类型
+      parentPnode: 'jfdj', // 附件节点类型
+      showJFXX: false, // 是否显示解封相关信息
+      xgzhList: [], // 查封相关证信息
+      businessData: { // 要保存的业务信息
+        lcmc: '解封登记',
+        djxl: '解封类型',
+        djdl: '400',
+        ajzt: '0',
+        sqbh: 'W',
+        qlrxx: {
+          jbr: [],
+        },
+        xgzxx: [],
+        jfxx: {},
+      },
+      jbrxx: [], // 经办人信息
+    };
+  },
+  computed: {
+    ...mapState('queryData', { flowDatas: state => state.FlOWDATA }),
+    ...mapState('jfdj', { nodeName: state => state.NODENAME }),
+  },
+  mounted() {
+    this.$nextTick(() => {
+      if (this.$route.query.sqbh === null || this.$route.query.sqbh === undefined) {
+        return;
+      }
+      // 读取业务数据
+      const flowData = this.flowDatas.filter(p => p.sqbh === this.$route.query.sqbh);
+      this.businessData = { ...flowData[0].flowdata };
+      this.setBusinessData();
+    });
+  },
+  methods: {
+    // 获取状态处理方法
+    ...mapMutations('jfdj', {
+      SET_MESSAGEJSON: 'SET_MESSAGEJSON',
+      SET_NODENAME: 'SET_NODENAME',
+    }),
+    // 设置页面是否可以编辑
+    setDisalbed(isDisabled) {
+      this.$parent.isDisabled = isDisabled;
+      this.$emit('setDisabled', isDisabled);
+    },
+    // 从页面获取业务数据
+    getBusinessData() {
+      const { sqbh } = this.$refs.checkBDC.checkForm;
+      return Object.assign(this.businessData, {
+        sqbh,
+        sqr: sessionStorage.userId,
+        gyfs: 0,
+        qlrxx: {
+          jbr: this.$refs.jbrxx.getJBRXX(),
+        },
+        ywlxbm: this.parentPnode,
+        jfxx: { ...this.$refs.jfxx.getJFXX() },
+        xgzxx: this.$refs.jfList.getJFList(),
+      });
+    },
+    // 设置业务数据
+    setBusinessData() {
+      const {
+        sqbh, qlrxx: { jrb = [] } = {}, xgzxx = [], jfxx = {},
+      } = this.businessData;
+      this.$refs.checkBDC.checkForm.sqbh = sqbh;
+      this.$refs.checkBDC.changeCFCQZ(xgzxx);
+      this.xgzhList = xgzxx;
+      this.$refs.jfxx.jfxxForm = { ...jfxx };
+      this.jbrxx = jrb;
+      if (xgzxx.length) {
+        this.showJFXX = true;
+        this.$emit('setDisabled', false);
+      }
+    },
+    // 下一步/提交
+    handlerUp() {
+      // 设置业务数据
+      if (!this.$refs.jfxx.checkJFXX()) {
+        return;
+      }
+      const businessData = this.getBusinessData();
+      if (!businessData) {
+        return;
+      }
+      this.SET_MESSAGEJSON(businessData);
+      // 保存业务数据
+      this.handlerStorage(businessData);
+      // 跳转下一步
+      this.$emit('funcNext', 1);
+    },
+    // 保存业务数据
+    handlerStorage(businessData) {
+      let newData = businessData;
+      // 设置业务数据
+      if (!newData) {
+        newData = this.getBusinessData();
+        this.SET_MESSAGEJSON(businessData);
+      }
+      // 保存申请数据
+      handleSave({
+        data: newData,
+        nodeName: this.nodeName,
+        url: submitUrlJFDJ,
+      }).then(({ code } = {}) => {
+        if (code === 0) {
+          this.$message.success('保存成功');
+        } else {
+          this.$message.error('保存失败！请稍后重试或联系管理员');
+        }
+      }, (err) => {
+        throw new Error(err);
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss'
+</style>

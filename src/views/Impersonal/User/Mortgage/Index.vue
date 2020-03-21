@@ -1,0 +1,375 @@
+<!--
+ * @Descripttion: v1.00
+ * @version: v1.00
+ * @Author: huwei
+ * @Date: 2020-01-15 14:40:02
+ * @LastEditors  : Please set LastEditors
+ * @LastEditTime : 2020-02-06 22:31:25
+ -->
+<template>
+    <mainBox ref="mbox">
+        <!-- 主要内容 -->
+        <template slot="main-content">
+          <div class="flex-content">
+            <div class="flex-main">
+              <div class="stepwrap">
+                <step :stepNum="stepNum"></step>
+              </div>
+              <h3 id="t1" ref="t1">不动产数据检验</h3>
+              <div style="width:100%; height:800px;">
+                <el-form :model="ruleForm" :rules="rules"  size="small"
+                  ref="ruleForm"
+                  label-width="100px"
+                  class="demo-ruleForm"
+                >
+                <el-row :gutter="20"><el-col :span='16'><el-form-item label="办件编号：" prop="sqbh">
+                    <el-input v-model="sqbh" :disabled="true" ></el-input>
+                  </el-form-item></el-col></el-row>
+                <el-row :gutter="20">
+                <el-col :span='8'>
+                  <el-form-item label="不动产证：" prop="bdczh" :rules="[
+                     { required: true, message: '不动产证不能为空'}
+                  ]">
+                    <el-input  v-model="bdczh" placeholder="不动产证(证书/证明)" clearable></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span='8'>
+                  <el-form-item label="权利人姓名：" prop="qlrmc" :rules="[
+                     { required: true, message: '权利人姓名不能为空'}
+                  ]">
+                    <el-input  v-model="qlrmc" placeholder="权利人姓名" clearable></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span='8'>
+                  <el-button type="primary" size="small">数据检验</el-button>
+                </el-col>
+                </el-row>
+                </el-form>
+              </div>
+              <h3 id="t2" ref="t2">抵押人信息</h3>
+              <div style="width:100%; height:800px;">
+                  <el-table
+                    border
+                    style="width: 100%">
+                    <el-table-column
+                      prop="xh"
+                      label="序号">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrmc"
+                      label="姓名">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrxz"
+                      label="权利人性质">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjlx"
+                      label="证件类型">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjhm"
+                      label="证件号码">
+                    </el-table-column>
+                    <el-table-column
+                      prop="txdz"
+                      label="通讯地址">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbmc"
+                      label="法人代表名称">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjlx"
+                      label="法人代表证件类型">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjhm"
+                      label="法人代表证件号码">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdblxdh"
+                      label="法人代表联系电话">
+                    </el-table-column>
+                    <el-table-column label="操作" fixed="right">
+                      <template v-slot="scope">
+                        <router-link @click="handleClick(scope.row)">人脸验证</router-link>
+                      </template>
+                    </el-table-column>
+                  </el-table>
+              </div>
+              <h3 id="t3" ref="t3">抵押权人信息</h3>
+              <div style="width:100%; height:800px;">
+                <el-table
+                    border
+                    style="width: 100%">
+                    <el-table-column
+                      prop="xh"
+                      label="序号">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrmc"
+                      label="姓名">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrxz"
+                      label="权利人性质">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjlx"
+                      label="证件类型">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjhm"
+                      label="证件号码">
+                    </el-table-column>
+                    <el-table-column
+                      prop="txdz"
+                      label="通讯地址">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbmc"
+                      label="法人代表名称">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjlx"
+                      label="法人代表证件类型">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjhm"
+                      label="法人代表证件号码">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdblxdh"
+                      label="法人代表联系电话">
+                    </el-table-column>
+                  </el-table>
+              </div>
+              <h3 id="t4" ref="t4">不动产权信息</h3>
+              <div style="width:100%; height:800px;">
+                 <el-table
+                    border
+                    style="width: 100%">
+                    <el-table-column
+                      prop="xh"
+                      label="序号">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrmc"
+                      label="坐落">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrxz"
+                      label="不动产单元">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjlx"
+                      label="土地使用权面积">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjhm"
+                      label="房屋建筑面积">
+                    </el-table-column>
+                    <el-table-column
+                      prop="txdz"
+                      label="土地用途">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbmc"
+                      label="房屋用途">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjlx"
+                      label="抵押情况">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjhm"
+                      label="查封情况">
+                    </el-table-column>
+                  </el-table>
+              </div>
+              <h3 id="t5" ref="t5">第三方债务人信息</h3>
+               <div style="width:100%; height:800px;">
+                 <el-table
+                    border
+                    style="width: 100%">
+                    <el-table-column
+                      prop="xh"
+                      label="序号">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrmc"
+                      label="姓名">
+                    </el-table-column>
+                    <el-table-column
+                      prop="qlrxz"
+                      label="权利人性质">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjlx"
+                      label="证件类型">
+                    </el-table-column>
+                    <el-table-column
+                      prop="zjhm"
+                      label="证件号码">
+                    </el-table-column>
+                    <el-table-column
+                      prop="txdz"
+                      label="通讯地址">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbmc"
+                      label="法人代表名称">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjlx"
+                      label="法人代表证件类型">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdbzjhm"
+                      label="法人代表证件号码">
+                    </el-table-column>
+                    <el-table-column
+                      prop="frdblxdh"
+                      label="法人代表联系电话">
+                    </el-table-column>
+                    <el-table-column label="操作" fixed="right">
+                       <template v-slot="scope">
+               <el-button @click="handleClick(scope.row)" type="text" size="small">编辑</el-button>
+               <el-button type="text" size="small">编辑</el-button>
+                </template>
+                    </el-table-column>
+                  </el-table></div>
+            <h3 id="t6" ref="t6">抵押信息</h3>
+             <div style="width:100%; height:800px;">
+                 <el-form :model="dyxxForm" :rules="rules"  size="small"
+                  ref="dyxxForm"
+                  label-width="100px"
+                  class="dyxxForm"
+                >
+                <el-row :gutter="20">
+                  <el-col :span='8'><el-form-item label="被担保主债券数额" prop="sqbh" :rules="[
+                     { required: true, message: '被担保主债券数额不能为空'},
+                     { type: 'number', message: '被担保主债券数额必须为数字值'}
+                  ]">
+                    <el-input v-model="sqbh" ></el-input>
+                  </el-form-item></el-col>
+                <el-col :span='8'>
+                  <el-form-item label="大写金额" prop="bdczh">
+                    <el-input  v-model="bdczh" placeholder="大写金额" clearable></el-input>
+                  </el-form-item>
+                </el-col>
+                <el-col :span='8'>
+                  <el-form-item label="权利起始时间" prop="qlrmc">
+                    <el-date-picker type="date" placeholder="权利结束时间"
+                     v-model="qljssj" style="width: 100%;"></el-date-picker>
+                  </el-form-item>
+                </el-col>
+                </el-row>
+                <el-row :gutter="20">
+                <el-col :span='8'>
+                  <el-form-item label="权利结束时间" prop="qlrmc">
+                    <el-date-picker type="date" placeholder="权利结束时间"
+                     v-model="qljssj" style="width: 100%;"></el-date-picker>
+                  </el-form-item>
+                </el-col>
+               <el-col :span='8'>
+                  <el-form-item label="不动产价值" prop="qlrmc" :rules="[
+                     { required: true, message: '不动产价值不能为空'},
+                     { type: 'number', message: '不动产价值必须为数字值'}
+                  ]">
+                    <el-input  v-model="tt" placeholder="不动产价值" clearable></el-input>
+                  </el-form-item>
+                </el-col>
+                </el-row>
+                </el-form>
+              </div>
+            </div>
+            <div class="flex-side">
+              <scrollTabs :list="list" :indexs='i'></scrollTabs>
+              <!-- <div class="items">
+                <ul>
+                  <li v-for="(item, index) in list" :key="index"
+                  :class="{'active': i === index}" @click="siderHandle(index)">
+                    <a :href="'#t'+(index+1)">{{item}}</a>
+                  </li>
+                </ul>
+              </div> -->
+            </div>
+          </div>
+        </template>
+        <!-- 底部暂存和提交栏 -->
+        <template slot="foot-banner">
+          <div class="footflex">
+           <div class="foot-btn">
+             <ul class="btnList">
+               <li><el-button type="primary">暂存</el-button></li>
+               <li><el-button type="primary">提交</el-button></li>
+              </ul>
+            </div>
+          </div>
+        </template>
+    </mainBox>
+</template>
+
+<script>
+import mainBox from '@/layouts/Impersonal/mainBox';
+import step from '@/components/step';
+import scrollTabs from '@/components/scrollTabs';
+
+export default {
+  name: 'UserMortgage',
+  data() {
+    return {
+      stepNum: 1,
+      list: ['不动产数据检验', '抵押人信息', '抵押权人信息', '不动产权信息', '第三方债务人信息', '抵押信息'],
+      i: 0,
+      H: 0,
+      dom: null,
+      dis: [],
+    };
+  },
+  components: {
+    mainBox,
+    step,
+    scrollTabs,
+  },
+  mounted() {
+    this.dom = this.$refs.mbox.$refs.maincontent;
+    this.dom.addEventListener('scroll', this.getScroll);
+    this.H = this.dom.clientHeight;
+    const lists = this.list;
+    lists.forEach((v, i) => {
+      const dom = this.$refs[`t${i + 1}`];
+      const dtop = dom.offsetTop;
+      this.dis.push(dtop);
+    });
+  },
+  destroyed() {
+    this.dom.removeEventListener('scroll', this.getScroll);
+  },
+  methods: {
+    siderHandle(index) {
+      this.i = index;
+    },
+    getScroll() {
+      const S = this.dom.scrollTop;
+      if (S < 10) {
+        this.i = 0;
+      } else {
+        const all = this.H + S;
+        const l = this.dis.find(v => v > all);
+        const inds = this.dis.findIndex(v => v === l);
+        if (inds - 1 < 0) {
+          this.i = this.list.length - 1;
+        } else {
+          this.i = inds - 1;
+        }
+      }
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+@import './index.scss'
+</style>

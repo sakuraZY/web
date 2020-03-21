@@ -1,0 +1,125 @@
+<!--
+ * @Descripttion: v1.00
+ * @version: v1.00
+ * @Author: huwei
+ * @Date: 2020-01-19 11:05:53
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-03-14 14:14:57
+ -->
+<template>
+  <div class="items">
+    <ul>
+        <li v-for="(item, index) in list" :key="index"
+        :class="{'active': inds === index}" @click="handleClick(index)">
+        <a>{{item}}</a> <!-- :href="'#t'+(index+1)" -->
+        </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      inds: 0,
+    };
+  },
+  props: ['list', 'indexs'],
+  computed: {
+    ind: {
+      get() {
+        return this.indexs;
+      },
+      set(val) {
+        this.inds = val;
+      },
+    },
+  },
+  methods: {
+    handleClick(index) {
+      this.inds = index;
+      const returnEle = document.querySelector(`#t${index + 1}`);
+      if (returnEle) {
+        returnEle.scrollIntoView(true);
+      }
+    },
+  },
+};
+</script>
+<style lang="scss" scoped >
+ .items{
+    margin-top: 70px;
+    padding: 20px 0;
+    position: fixed;
+    border-left: 1px solid $--border-color-grey-items;
+    top: 145px;
+    &::after,&::before{
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      left: -5px;
+      width: 8px;
+      height: 8px;
+      border-radius: 4px;
+      border: 1px solid $--border-color-grey-items;
+      background-color: $--color-white;
+    }
+    &::after{
+      top: auto;
+      bottom: 0;
+    }
+    ul{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      li{
+        height: 30px;
+        line-height: 30px;
+        font-size: 14px;
+        padding-left: 20px;
+        position: relative;
+        cursor:pointer;
+        &::after{
+          content: '';
+          display: block;
+          width: 6px;
+          height: 6px;
+          border-radius: 3px;
+          background-color: $--border-color-grey-items;
+          position: absolute;
+          left: -3px;
+          top: 50%;
+          transform: translate(0, -50%);
+        }
+        a{
+          text-decoration: none;
+          color: $--color-text-primary;
+        }
+      }
+      .active{
+        &::after{
+          border-radius: 0;
+          background-color: $--color-primary;
+          height: 10px;
+          width: 8px;
+          left: -8px;
+        }
+        &::before{
+          content: '';
+          display: block;
+          display:inline-block;
+          width:0;
+          height:0;
+          border-top: 5px solid transparent;
+          border-left: 8px solid $--color-primary;
+          border-bottom: 5px solid transparent;
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translate(0, -50%);
+        }
+      }
+    }
+  }
+</style>

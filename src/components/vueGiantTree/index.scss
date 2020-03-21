@@ -1,0 +1,98 @@
+/* beauty ztree! */
+.ztree {
+  /deep/ {
+    .line:before{
+      border-right-color: $--border-color-base;
+    }
+    .roots_docu:before,
+    .roots_docu:after,
+    .center_docu:before,
+    .bottom_docu:before,
+    .center_docu:after,
+    .bottom_docu:after {
+      border-color: $--border-color-base;
+    }
+    li {
+      a {
+        color: $--color-text-primary;
+      }
+    }
+    .curSelectedNode{
+      background-color: $--color-primary-light-9;
+      color: $--color-primary;
+      &_Edit{
+        background-color: $--color-primary;
+        color: $--color-black;
+        border-color: $--border-color-base;
+      }
+    }
+    .tmpTargetNode_inner{
+      background-color: $--color-primary;
+      color: $--color-white;
+    }
+    .button{
+      &.edit{
+        color: $--color-primary;
+      }
+      &.remove{
+        color: $--color-danger;
+      }
+      &.chk{
+        border-color: $--color-text-close;
+        background: $--color-white;
+        &:after{
+          border-color: $--color-white;
+        }
+      }
+      &.checkbox_false_full_focus{
+        border-color: $--color-text-close;
+      }
+      &.checkbox_true_full,
+      &.checkbox_true_full_focus,
+      &.checkbox_true_part,
+      &.checkbox_true_part_focus,
+      &.checkbox_true_disable {
+        border-color: $--color-primary;
+        background-color: $--color-primary;
+      }
+      &.checkbox_false_disable{
+        background-color: $--background-color-mainbackground;
+      }
+      &.noline_close:before,
+      &.noline_open:before,
+      &.root_open:before,
+      &.root_close:before,
+      &.roots_open:before,
+      &.roots_close:before,
+      &.bottom_open:before,
+      &.bottom_close:before,
+      &.center_open:before,
+      &.center_close:before {
+        border-color: transparent transparent transparent $--color-text-primary;
+      }
+    }
+    .button.radio_true_full,
+    .chk.radio_true_full_focus,
+    .chk.radio_true_part,
+    .chk.radio_true_part_focus {
+      border-color: $--color-primary;
+      &:after{
+        background: $--color-primary;
+      }
+    }
+    .tmpTargetzTree{
+      background: $--color-primary;
+    }
+    .tmpzTreeMove_arrow{
+      color: $--color-primary-light-1;
+    }
+    .ztree.zTreeDragUL{
+      border-color: mix($--color-black, $--color-primary,50%);
+      background-color: $--border-color-base;
+    }
+  }
+}
+
+.zTreeMask {
+  background-color: $--color-text-close;
+}

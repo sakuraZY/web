@@ -1,0 +1,91 @@
+<template>
+  <div class="role-manage-container">
+    <auth-layout>
+      <template slot="paneL">
+        <div class="role-tree-contaner">
+          <empty-data v-if="!nodes.length"></empty-data>
+          <vue-giant-tree
+            v-else
+            :setting="setting"
+            :nodes="nodes"
+            class="role-tree"
+            @onClick="onHandleNode"
+            @onCreated="handleCreated"
+          ></vue-giant-tree>
+        </div>
+      </template>
+      <template slot="paneR">
+        <auth-connect
+          :roleId="currentNodeId"
+          :isRole="isRole"
+        ></auth-connect>
+      </template>
+    </auth-layout>
+  </div>
+</template>
+
+<script>
+import AuthLayout from '@/layouts/Impersonal/auth';
+import { getRole } from '@/apis/auth/role';
+import VueGiantTree from '@/components/vueGiantTree';
+import EmptyData from '@/components/emptyData';
+import AuthConnect from './AuthConnect';
+
+export default {
+  components: {
+    AuthLayout,
+    AuthConnect,
+    VueGiantTree,
+    EmptyData,
+  },
+  data() {
+    return {
+      data: [],
+      roleTree: null,
+      currentNodeId: '',
+      currentNode: {},
+      isRole: false,
+      setting: {
+        data: {
+          simpleData: {
+            enable: true,
+            pIdKey: 'pId',
+          },
+        },
+      },
+      nodes: [],
+    };
+  },
+  created() {
+    this.getRoles();
+  },
+  methods: {
+    handleCreated(roleTree) {
+      // onCreated 中操作展开第一个节点
+      roleTree.expandNode(roleTree.getNodes()[0], true);
+      this.roleTree = roleTree;
+    },
+    onHandleNode(evt, treeId, node) {
+      const { type, id } = node;
+      this.currentNode = node;
+      this.currentNodeId = id;
+      this.isRole = type === '角色';
+    },
+    getRoles() {
+      getRole('启用').then(({ code, resData: { roleTree = [] } = {} }) => {
+        if (code === 0) {
+          this.nodes = roleTree.map((item) => {
+            item.icon = item.type === '角色' ? 'user2' : 'groups';
+            item.iconSkin = item.state === '禁用' ? 'state-close' : 'state-open';
+            return item;
+          });
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

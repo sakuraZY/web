@@ -1,0 +1,70 @@
+<template>
+  <div>
+    <template v-if="!item.children">
+      <app-link :to="item.href" @click.native="addTabs(item)">
+        <el-menu-item
+          :index="item.href || item.id"
+        >
+          <item
+            :icon="item.icon"
+            :title="item.title"
+          />
+        </el-menu-item>
+      </app-link>
+    </template>
+
+    <el-submenu
+      v-else
+      ref="subMenu"
+      :index="item.href || item.id"
+      popper-append-to-body
+    >
+      <template slot="title">
+        <item :icon="item.icon" :title="item.title" />
+      </template>
+      <sidebar-item
+        v-for="child in item.children"
+        :key="child.id"
+        :item="child"
+        class="nest-menu"
+      />
+    </el-submenu>
+  </div>
+</template>
+
+<script>
+import Tabs from '@/mixins/tabs';
+import Item from './item';
+import AppLink from './link';
+import FixiOSBug from './mixin/fixiOSBug';
+
+export default {
+  name: 'SidebarItem',
+  components: { Item, AppLink },
+  mixins: [FixiOSBug, Tabs],
+  props: {
+    item: {
+      type: Object,
+      required: true,
+    },
+    isNest: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  // computed: {
+  //   ...mapState('app', [
+  //     'activeCenter',
+  //   ]),
+  // },
+  // methods: {
+  //   ...mapActions('tabsView', ['addView']),
+  //   addTabs(tab) {
+  //     const { href } = tab;
+  //     if (href) {
+  //       this.addView({ tab, centerId: this.activeCenter.centerId });
+  //     }
+  //   },
+  // },
+};
+</script>

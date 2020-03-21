@@ -1,0 +1,470 @@
+.vxe-table--borders {
+  .vxe-table-border-top,
+  .vxe-table-border-right,
+  .vxe-table-border-bottom,
+  .vxe-table-border-left {
+    background-color: $--color-primary;
+  }
+}
+
+.vxe-body--row {
+  .vxe-body--column {
+    &.col--checked {
+      background-color: $--color-primary-light-9;
+    }
+    &.col--selected {
+      background-color: $--color-white;
+    }
+  }
+}
+
+/*默认的渲染*/
+.vxe-table,
+.vxe-table--filter-wrapper {
+  .vxe-default-input,
+  .vxe-default-textarea,
+  .vxe-default-select {
+    color: $--color-text-primary;
+    border: 1px solid $--border-color-base;
+    &:focus {
+      border-color: $--color-primary;
+    }
+    &[disabled] {
+      background-color: $--background-color-base;
+    }
+  }
+  .vxe-default-input {
+    &::placeholder {
+      color: $--color-text-placeholder;
+    }
+  }
+}
+
+/*复选框-范围选择*/
+.vxe-table--checkbox-range {
+  background-color: $--color-primary-light-9;
+  border: 1px solid $--color-primary;
+}
+
+/*table*/
+.vxe-table {
+  color: $--color-text-primary;
+  background-color: $--color-white;
+  &:before {
+    border-top-color: $--border-color-base;
+  }
+  &:after {
+    border-bottom-color: $--border-color-base;
+  }
+  .vxe-body--row {
+    background-color: $--color-white;
+    &.row--stripe {
+      background-color: $--background-color-mainbackground;
+      .vxe-tree--btn-wrapper {
+        background-color: $--background-color-mainbackground;
+      }
+    }
+    &.row--radio {
+      background-color: $--color-primary-light-9;
+      .vxe-tree--btn-wrapper {
+        background-color: $--color-primary-light-9;
+      }
+    }
+    &.row--cheched {
+      background-color: $--color-primary-light-9;
+      .vxe-tree--btn-wrapper {
+        background-color: $--color-primary-light-9;
+      }
+    }
+    &.row--current {
+      background-color: $--color-primary-light-9;
+      .vxe-tree--btn-wrapper {
+        background-color: $--color-primary-light-9;
+      }
+    }
+    &.row--hover {
+      background-color: $--background-color-base;
+      .vxe-tree--btn-wrapper {
+        background-color: $--background-color-base;
+      }
+      &.row--stripe {
+        background-color: $--background-color-base;
+        .vxe-tree--btn-wrapper {
+          background-color: $--background-color-base;
+        }
+      }
+      &.row--radio {
+        background-color: $--background-color-base;
+        .vxe-tree--btn-wrapper {
+          background-color: $--background-color-base;
+        }
+      }
+      &.row--cheched {
+        background-color: $--background-color-base;
+        .vxe-tree--btn-wrapper {
+          background-color: $--background-color-base;
+        }
+      }
+      &.row--current {
+        background-color: $--background-color-base;
+        .vxe-tree--btn-wrapper {
+          background-color: $--background-color-base;
+        }
+      }
+    }
+  }
+  &.column--highlight {
+    .vxe-header--column {
+      &:not(.col--seq) {
+        &:hover {
+          background-color: $--background-color-base;
+        }
+      }
+    }
+  }
+  .vxe-header--column,
+  .vxe-body--column,
+  .vxe-footer--column {
+    &.col--current {
+      background-color: $--color-primary-light-9;
+      .vxe-tree--btn-wrapper {
+        background-color: $--color-primary-light-9;
+      }
+    }
+  }
+  .vxe-table--footer-wrapper {
+    border-top-color: $--border-color-base;
+  }
+  &:not(.t--border) {
+    .vxe-header--column,
+    .vxe-body--column,
+    .vxe-footer--column {
+      background-image: linear-gradient(-180deg, $--border-color-base, $--border-color-base);
+    }
+    .vxe-header--column {
+      &.col--title-checked {
+        background-image: linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+      }
+    }
+    .vxe-body--column {
+      &.col--seq-checked {
+        background-image: linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+      }
+    }
+    .vxe-body--column {
+      &.col--checked {
+        background-image: linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+      }
+    }
+  }
+  &.t--border {
+    &:not(.b--style-none) {
+      .vxe-header--column,
+      .vxe-body--column,
+      .vxe-footer--column {
+        background-image: linear-gradient(-90deg, $--border-color-base, $--border-color-base), linear-gradient(-180deg, $--border-color-base, $--border-color-base);
+      }
+      .vxe-header--column {
+        &.col--title-checked {
+          background-image: linear-gradient(-90deg, $--color-primary-light-9, $--color-primary-light-9), linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+        }
+      }
+      .vxe-body--column {
+        &.col--seq-checked {
+          background-image: linear-gradient(-90deg, $--color-primary-light-9, $--color-primary-light-9), linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+        }
+      }
+      .vxe-body--column {
+        &.col--checked {
+          background-image: linear-gradient(-90deg, $--color-primary-light-9, $--color-primary-light-9), linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+        }
+      }
+    }
+    .vxe-table--fixed-left-wrapper {
+      border-right-color: $--border-color-base;
+      .vxe-body--column{
+        border-right-color: $--border-color-base;
+      }
+    }
+    &.b--style-none {
+      .vxe-header--column,
+      .vxe-body--column,
+      .vxe-footer--column {
+        background-image: linear-gradient(-180deg, $--border-color-base, $--border-color-base);
+      }
+      .vxe-header--column {
+        &.col--title-checked {
+          background-image: linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+        }
+      }
+      .vxe-body--column {
+        &.col--seq-checked {
+          background-image: linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+        }
+      }
+      .vxe-body--column {
+        &.col--checked {
+          background-image: linear-gradient(-180deg, $--color-primary-light-9, $--color-primary-light-9);
+        }
+      }
+    }
+  }
+  &.t--checked {
+    .vxe-body--column {
+      &.col--seq {
+        background-color: $--color-white;
+        &.col--seq-checked {
+          background-color: $--color-primary-light-9;
+        }
+      }
+    }
+  }
+
+  // 单选框和复选框
+  .vxe-cell--radio {
+    .vxe-radio--icon {
+      &:before {
+        border-color: $--border-color-base;
+        background-color: $--color-white;
+      }
+    }
+    &:not(.is--disabled) {
+      &:hover {
+        .vxe-radio--icon {
+          &:before {
+            border-color: $--color-primary;
+          }
+        }
+      }
+    }
+    &.is--disabled {
+      cursor: not-allowed;
+      color: $--border-color-base;
+      .vxe-radio--icon {
+        &:before {
+          border-color: $--border-color-base;
+          background-color: $--background-color-base;
+        }
+      }
+    }
+    &.is--checked {
+      color: $--color-primary;
+      .vxe-radio--icon {
+        &:before {
+          border-color: $--color-primary;
+          background-color: $--color-primary;
+        }
+        &:after {
+          background-color: $--color-white;
+        }
+      }
+    }
+  }
+  .vxe-cell--checkbox {
+    .vxe-checkbox--icon {
+      &:before {
+        background-color: $--color-white;
+        border-color: $--border-color-base;
+      }
+    }
+    &:not(.is--disabled) {
+      &:hover {
+        .vxe-checkbox--icon {
+          &:before {
+            border-color: $--color-primary;
+          }
+        }
+      }
+    }
+    &.is--disabled {
+      color: $--border-color-base;
+      .vxe-checkbox--icon {
+        &:before {
+          border-color: $--border-color-base;
+          background-color: $--background-color-base;
+        }
+      }
+    }
+    &.is--checked,
+      &.is--indeterminate {
+        color: $--color-primary;
+        .vxe-checkbox--icon {
+          &:before {
+            border-color: $--color-primary;
+            background-color: $--color-primary;
+          }
+        }
+      }
+    &.is--checked {
+      .vxe-checkbox--icon {
+        &:after {
+          border-color: $--color-white;
+        }
+      }
+    }
+    &.is--indeterminate {
+      .vxe-checkbox--icon {
+        &:after {
+          background-color: $--color-white;
+        }
+      }
+    }
+    &.is--disabled {
+      .vxe-checkbox--icon {
+        &:after {
+          border-color: $--border-color-base;
+        }
+      }
+    }
+  }
+
+  .vxe-table--fixed-left-wrapper,
+  .vxe-table--fixed-right-wrapper {
+    background-color: $--color-white;
+  }
+
+  /*列宽线*/
+  .vxe-table--resizable-bar {
+    &:before {
+      background-color: $--border-color-base;
+    }
+  }
+
+  /*边框线*/
+  .vxe-table--border-line {
+    &:before {
+      border-left-color: $--border-color-base;
+    }
+    &:after {
+      border-right-color: $--border-color-base;
+    }
+  }
+
+  /*树形节点*/
+  .vxe-tree--line {
+    border-color: $--border-color-base;
+  }
+  .vxe-tree--btn-wrapper {
+    background-color: $--color-white;
+  }
+  .vxe-tree--node-btn {
+    color: lighten($--color-text-primary, 20%);
+    &:hover {
+      color: $--color-text-primary;
+    }
+  }
+
+  /*展开行*/
+  .vxe-table--expanded {
+    .vxe-table--expand-btn {
+      color: lighten($--color-text-primary, 20%);
+      &:hover {
+        color: $--color-text-primary;
+      }
+    }
+  }
+  .vxe-body--expanded-column {
+    border-bottom: $--border-base;
+  }
+
+  .vxe-body--column {
+    &.col--selected {
+      &:not(.col--checked) {
+        box-shadow: inset 0px 0px 0px 2px $--color-primary;
+      }
+    }
+  }
+
+  /*校验不通过*/
+  .vxe-body--column {
+    &.col--actived,
+    &.col--selected,
+    &.col--valid-error {
+      .vxe-cell--valid {
+        .vxe-cell--valid-msg {
+          color: $--color-white;
+          background-color: $--color-danger;
+        }
+      }
+      .vxe-default-input,
+      .vxe-default-textarea,
+      .vxe-default-select {
+        border-color: $--color-danger;
+      }
+      .vxe-input {
+        > .vxe-input--inner {
+          border-color: $--color-danger;
+        }
+      }
+
+    }
+  }
+
+  /*可编辑*/
+  &.vxe-editable {
+    &.c--highlight {
+      .vxe-body--column {
+        &.col--actived {
+          box-shadow: inset 0px 0px 0px 2px $--color-primary;
+          &.col--valid-error {
+            box-shadow: inset 0px 0px 0px 2px $--color-danger;
+          }
+        }
+      }
+    }
+    .vxe-body--column {
+      &.col--dirty {
+        &:before {
+          border-color: transparent $--color-danger transparent transparent;
+        }
+      }
+    }
+  }
+}
+/**************header********************/
+/**Variable**/
+
+.vxe-table {
+  .vxe-table--header-wrapper {
+    .vxe-table--repair {
+      border-bottom-color: $--border-color-base;
+    }
+    thead {
+      color: $--color-text-secondary;
+    }
+  }
+  &:not(.b--style-none) {
+    .vxe-table--header-wrapper {
+      background-color: $--color-white;
+    }
+  }
+  /*排序*/
+  .vxe-cell--sort {
+    .vxe-sort--asc-btn,
+    .vxe-sort--desc-btn {
+      color: $--border-color-base;
+      &:hover {
+        color: $--color-text-primary;
+      }
+      &.sort--active {
+        color: $--color-primary;
+      }
+    }
+  }
+}
+
+.vxe-header--column {
+  &.col--title-checked {
+    background-color: $--color-primary-light-9;
+  }
+  .vxe-required-icon {
+    color: $--color-danger;
+  }
+  .vxe-resizable {
+    &.is--line {
+      &:before {
+        background-color: $--border-color-base;
+      }
+    }
+  }
+}

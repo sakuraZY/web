@@ -1,0 +1,29 @@
+.attachment-table-panel {
+  height: calc(100% - 30px);
+  padding: 15px;
+
+  .attachment-table-title {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+
+    span {
+      font-size: 18px;
+      line-height: 44px;
+    }
+  }
+
+  .attachment-table-body {
+    height: calc(100% - 54px);
+  }
+
+}
+
+.attchment-folder-form {
+  .el-select {
+    width: 100%;
+  }
+  .el-form-item:last-child {
+    margin-bottom: 0;
+  }
+}

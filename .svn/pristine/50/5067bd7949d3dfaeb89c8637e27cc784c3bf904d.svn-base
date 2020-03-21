@@ -1,0 +1,258 @@
+/*
+ * @Descripttion: v1.00
+ * @version: v1.00
+ * @Author: huwei
+ * @Date: 2020-01-08 10:43:13
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2020-03-14 11:34:07
+ */
+import Layout from '@/layouts/Impersonal/default';
+
+const routes = [
+  {
+    path: '/',
+    component: Layout,
+    children: [
+      {
+        path: '/',
+        name: 'Home',
+        component: () => import('@/views/Impersonal/Dashbord'),
+        meta: {
+          title: '首页',
+          requireAuth: true,
+        },
+      },
+      {
+        path: '/mf',
+        name: 'MyFlow',
+        component: () => import('@/views/Impersonal/MyFlow'),
+        // component: () => import('@/views/testOverflow'),
+        meta: { requireAuth: true, title: '我的办件' },
+      },
+      {
+        path: '/om',
+        component: () => import('@/views/Impersonal/OrgManage'),
+        children: [
+          {
+            path: '/',
+            name: 'UserManage',
+            component: () => import('@/components/userManage'),
+            meta: { requireAuth: true, title: '组织管理' },
+          },
+          {
+            path: '/om/:orgPid/:orgId',
+            name: 'OrgInfo',
+            component: () => import('@/components/orgInfo'),
+            props: true,
+            meta: { requireAuth: true, titele: '组织信息管理' },
+          },
+          {
+            path: 'u/:userId',
+            name: 'UserFromOrg',
+            props: true,
+            component: () => import('@/components/userInfo'),
+            meta: { requireAuth: true, titele: '用户管理' },
+          },
+        ],
+      },
+      {
+        path: '/rm',
+        name: 'RoleManage',
+        component: () => import('@/views/Impersonal/RoleManage'),
+        meta: { requireAuth: true, titele: '用户角色管理' },
+      },
+      {
+        path: '/am',
+        name: 'AuthManage',
+        component: () => import('@/views/Impersonal/AuthManage'),
+        meta: { requireAuth: true, titele: '功能权限管理' },
+      },
+      {
+        path: '/dm',
+        name: 'DictionaryManage',
+        component: () => import('@/views/Impersonal/DictionaryManage'),
+        meta: { requireAuth: true, titele: '字典管理' },
+      },
+      {
+        path: '/mm',
+        name: 'MenuManage',
+        component: () => import('@/views/Impersonal/MenuManage'),
+        meta: { requireAuth: true, titele: '功能菜单管理' },
+      },
+      {
+        path: '/lm',
+        name: 'LogManage',
+        component: () => import('@/views/Impersonal/LogManage'),
+        meta: { requireAuth: true, titele: '用户操作日志' },
+      },
+      {
+        path: '/alm',
+        name: 'AttachmentListManage',
+        component: () => import('@/views/Impersonal/AttachmentListManage'),
+        meta: { requireAuth: true, titele: '附件清单管理' },
+      },
+      {
+        path: 'mortgage/:sqbh?',
+        name: 'UserMortgage',
+        component: () => import('@/views/Impersonal/User/Mortgage'),
+        // meta: { requireAuth: true },
+      },
+      {
+        path: 'ygdy/:sqbh?',
+        name: 'realRegygdy',
+        component: () => import('@/views/Impersonal/User/Realreg/YGDY'),
+        meta: { requireAuth: true },
+      },
+      {
+        path: 'ygygdy/:sqbh?',
+        name: 'realRegygygdy',
+        component: () => import('@/views/Impersonal/User/Realreg/YGYGDY'),
+        meta: { requireAuth: true },
+      },
+      {
+        path: 'dydj/:sqbh?',
+        name: 'realRegdydj',
+        component: () => import('@/views/Impersonal/User/Realreg/DYDJ'),
+        meta: { requireAuth: true },
+      },
+      {
+        path: 'yszydy/:sqbh?',
+        name: 'realRegyszydy',
+        component: () => import('@/views/Impersonal/User/Realreg/YSZYDY'),
+        meta: { requireAuth: true, title: '一手转移(含抵押)登记' },
+      },
+      {
+        path: 'eszydy/:sqbh?',
+        name: 'realRegeszydy',
+        component: () => import('@/views/Impersonal/User/Realreg/ESZYDY'),
+        meta: { requireAuth: true, title: '二手转移(含抵押)登记' },
+      },
+      {
+        path: 'dyzx/:sqbh?',
+        name: 'realRegdyzx',
+        component: () => import('@/views/Impersonal/User/Realreg/DYZX'),
+        meta: { requireAuth: true },
+      },
+      {
+        path: 'beforehand/:sqbh?',
+        name: 'UserBeforehand',
+        component: () => import('@/views/Impersonal/User/Beforehand'),
+        meta: { requireAuth: true },
+      }, {
+        path: 'scdj/:sqbh?',
+        name: 'scdj',
+        component: () => import('@/views/Impersonal/User/Firsthand'),
+        meta: { requireAuth: true, title: '首次登记' },
+      }, {
+        path: 'ygdj/:sqbh?',
+        name: 'ygdj',
+        component: () => import('@/views/Impersonal/User/Advance'),
+        meta: { requireAuth: true, title: '预告登记' },
+      }, {
+        path: '/mf',
+        name: 'MyFlow',
+        component: () => import('@/views/Impersonal/MyFlow'),
+        meta: { requireAuth: true, title: '我的办件' },
+      },
+      {
+        path: '/qbq',
+        name: 'queryBDCXXBYQLR',
+        component: () => import('@/components/queryBDCXXBYQLR'),
+        meta: { requireAuth: true, title: '查询产权信息' },
+      },
+      {
+        path: '/querybuildings',
+        component: () => import('@/components/queryBuildings'),
+        meta: { requireAuth: true, title: '幢查询' },
+      },
+    ],
+  },
+  {
+    path: '/i',
+    component: Layout,
+    children: [
+      {
+        path: '/',
+        name: 'IconList',
+        meta: { title: '图标列表' },
+        component: () => import('@/views/Impersonal/IconList'),
+      },
+    ],
+  },
+  {
+    path: '/p',
+    name: 'PersonHome',
+    component: () => import('@/views/Personal/Home'),
+    meta: { requireAuth: false },
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Personal/Login'),
+    meta: { requireAuth: false, title: '首页' },
+  },
+  {
+    path: '/p/register',
+    name: 'Register',
+    component: () => import('@/views/Personal/Register'),
+    meta: { requireAuth: false, title: '注册' },
+  },
+  {
+    path: '/p/fp',
+    name: 'ForgetPassword',
+    component: () => import('@/views/Personal/ForgetPassword'),
+    meta: { requireAuth: false, titele: '找回密码' },
+  },
+  {
+    path: '/p/advance',
+    name: 'PersonHandle',
+    component: () => import('@/views/Personal/Handle'),
+    // meta: { requireAuth: true },
+    children: [
+      {
+        path: '/',
+        name: 'PAdvanceInstructions',
+        component: () => import('@/views/Personal/Handle/Advance/Instructions'),
+        meta: { requireAuth: true, title: '用户须知' },
+      },
+      {
+        path: 'procedure',
+        name: 'PAdvanceProcedure',
+        component: () => import('@/views/Personal/Handle/Advance/Procedure'),
+        meta: { requireAuth: true, title: '个人预告登记' },
+      },
+      {
+        path: '/ysfzy',
+        name: 'PFirstHouse',
+        component: () => import('@/views/Personal/Handle/Ysfzy/Instructions'),
+        meta: { requireAuth: true, title: '用户须知' },
+      },
+      {
+        path: '/ysfzy/procedure',
+        name: 'PFirstHouseProcedure',
+        component: () => import('@/views/Personal/Handle/Ysfzy/Procedure'),
+        meta: { requireAuth: true, title: '个人预告登记' },
+      },
+    ],
+  },
+  {
+    path: '/redirect',
+    component: Layout,
+    children: [
+      {
+        path: '/redirect/:path(.*)',
+        name: 'Redirect',
+        component: () => import('@/components/redirect'),
+        meta: { noCache: true },
+      },
+    ],
+  },
+  {
+    path: '*',
+    name: 'NotFound',
+    component: () => import('@/components/errorPage'),
+    props: () => ({ errorCode: 404 }),
+    meta: { requireAuth: false },
+  },
+];
+export default routes;

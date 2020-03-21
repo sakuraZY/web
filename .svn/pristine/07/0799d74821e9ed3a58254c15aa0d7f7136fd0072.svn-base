@@ -1,0 +1,277 @@
+<template>
+  <div class="auth-connect">
+    <div class="auth-connect-operatebar">
+      <div class="filter">
+        <el-input
+          size="medium"
+          v-model.lazy="search"
+          clearable
+          placeholder="输入权限名称/全拼/首字母查询"
+        ></el-input>
+      </div>
+      <div class="btn-group">
+        <form ref="imporAuthForm" v-show="false">
+          <input
+            type="file"
+            ref="importAuth"
+            @change="importAuth"
+            accept="text/xml, application/xml"
+          />
+        </form>
+        <el-button
+          size="medium"
+          type="primary"
+          class="btn-item"
+          @click="$refs.importAuth.click()"
+        >
+          <icon-svg iconClass="import" />
+          导入
+        </el-button>
+        <el-button
+          size="medium"
+          type="primary"
+          class="btn-item"
+          @click="exportAuthVisible = true"
+        >
+          <icon-svg iconClass="export" />
+          导出
+        </el-button>
+      </div>
+    </div>
+    <div class="auth-connect-content">
+      <div class="auth-connect-content-body">
+        <auth-table
+          :data="data"
+          v-loading="loading"
+          @onOperateSuccess="getAuth"
+          :search="search"
+          ref="authConnectTable"
+          :showSelection="isRole"
+          @onSelected="onSelected"
+          :defaultSelection="roleAuth"
+        ></auth-table>
+      </div>
+    </div>
+    <el-dialog
+      title="导出功能权限"
+      :visible.sync="exportAuthVisible"
+      append-to-body
+      @close="closeExportAuthDialog"
+    >
+      <el-input
+        v-model.lazy="searchExportAuth"
+        size="medium"
+        clearable
+        placeholder="输入权限名称/全拼/首字母查询"
+      ></el-input>
+      <auth-table
+        :data="data"
+        :showOperate="false"
+        :showSelection="true"
+        style="height: 300px"
+        ref="exportAuth"
+        :search="searchExportAuth"
+      ></auth-table>
+      <template slot="footer">
+        <el-button type="primary" size="medium" @click="exportAuth">
+          <icon-svg iconClass="export" />
+          导出
+        </el-button>
+        <el-button plain size="medium" @click="closeExportAuthDialog">
+          <icon-svg iconClass="cancel" />
+          取消
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import {
+  getPermissions,
+  exportPermission,
+  importPermission,
+  getPermissionsByRoleId,
+} from '@/apis/auth/permission';
+import {
+  removeRolePermission,
+  bindRolePermission,
+} from '@/apis/auth/role';
+import { downloadStream } from '@/libs/common';
+import { formatDate } from '@/libs/date';
+import AuthTable from './AuthTable';
+
+export default {
+  props: {
+    roleId: {
+      type: String,
+      required: true,
+    },
+    isRole: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  components: {
+    AuthTable,
+  },
+  data() {
+    return {
+      search: '',
+      data: [],
+      searchExportAuth: '',
+      loading: false,
+      exportAuthVisible: false,
+      roleAuth: [],
+    };
+  },
+  watch: {
+    roleId: {
+      handler() {
+        this.getRoleAuth();
+      },
+      immediate: true,
+    },
+    // isRole() {
+    //   this.$nextTick(() => {
+    //     this.$refs.authConnectTable.refreshColumn();
+    //   });
+    // },
+  },
+  created() {
+    this.getAuth();
+  },
+  methods: {
+    onSelected(selection, isChecked, row) {
+      const promiseType = isChecked ? 'bind' : 'unbind';
+      const promiseTypeMap = {
+        bind: bindRolePermission,
+        unbind: removeRolePermission,
+      };
+      let permissionIds = [];
+      if (row) {
+        const getPermissionid = (obj) => {
+          if (obj.type === 'Prop') {
+            permissionIds.push(obj.id);
+          }
+          if (Array.isArray(obj.children) && obj.children.length) {
+            obj.children.forEach((item) => {
+              getPermissionid(item);
+            });
+          }
+        };
+        getPermissionid(row);
+      } else {
+        permissionIds = this.data.filter(item => item.type === 'Prop')
+          .map(item => item.id);
+      }
+      if (!permissionIds.length) {
+        this.$message({
+          type: 'warning',
+          message: '请选择功能权限',
+        });
+        return;
+      }
+      promiseTypeMap[promiseType](this.roleId, permissionIds)
+        .then(({
+          code,
+          msg,
+        }) => {
+          if (code !== 0) {
+            throw new Error(msg || `${isChecked ? '绑定' : '解绑'}角色权限失败`);
+          }
+          this.$message({
+            type: 'success',
+            message: msg || `${isChecked ? '绑定' : '解绑'}角色权限成功`,
+          });
+          this.getRoleAuth();
+        });
+    },
+    getRoleAuth() {
+      if (!this.roleId) {
+        return;
+      }
+      this.loading = true;
+      getPermissionsByRoleId(this.roleId).then(({
+        code,
+        msg,
+        resData: {
+          permissionIds,
+        } = {},
+      }) => {
+        this.loading = false;
+        if (code !== 0) {
+          throw new Error(msg || '获取角色功能权限失败');
+        }
+        this.roleAuth = permissionIds || [];
+      }).catch(() => {
+        this.loading = false;
+      });
+    },
+    importAuth(e) {
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      importPermission(formData).then(({
+        code,
+        msg,
+      }) => {
+        if (code !== 0) {
+          throw new Error(msg || '导入失败');
+        }
+        this.$message({
+          type: 'success',
+          message: msg || '导入成功',
+        });
+        this.getAuth();
+      });
+    },
+    exportAuth() {
+      const exportAuths = this.$refs.exportAuth.getCheckboxRecords();
+      if (!exportAuths.length) {
+        return this.$message({
+          type: 'warning',
+          message: '请选择需要导出的权限',
+        });
+      }
+      const objcode = exportAuths.filter(item => item.type === 'Obj')
+        .map(item => item.id).join(':');
+      const propcode = exportAuths.filter(item => item.type === 'Prop')
+        .map(item => item.id).join(':');
+      return exportPermission({ objcode, propcode }).then((res) => {
+        downloadStream(res, 'xml', `GeoOnlineobjprop${formatDate(new Date(), 8)}`);
+        this.closeExportAuthDialog();
+      }).catch((err) => {
+        this.$message.error(err.message);
+      });
+    },
+    getAuth() {
+      this.loading = true;
+      getPermissions().then(({
+        code,
+        msg,
+        resData: {
+          permissionInfo,
+        } = {},
+      } = {}) => {
+        this.loading = false;
+        if (code !== 0) {
+          throw new Error(msg || '获取权限失败');
+        }
+        this.data = permissionInfo || [];
+      }).catch(() => {
+        this.loading = false;
+      });
+    },
+    closeExportAuthDialog() {
+      this.searchExportAuth = '';
+      this.exportAuthVisible = false;
+      this.$refs.exportAuth.clearCheckboxRow();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import './index.scss';
+</style>

@@ -1,0 +1,54 @@
+<!--
+ * @Author: huwei
+ * @Date: 2020-02-05 10:03:57
+ * @
+# Description:
+ -->
+<template>
+  <geo-layout :showUserCenter="true" :showSearch="false" :showWeChat="true">
+    <template slot="main">
+      <header class="register-tit">
+        <section class="register-tit-wrap">
+          <el-breadcrumb separator-class="el-icon-arrow-right" class="breadstyle">
+            <el-breadcrumb-item :to="{ path: '/p' }" :replace="true">首页
+            </el-breadcrumb-item>
+            <el-breadcrumb-item v-for="(item, index) in list" :key = index
+            :to = "{ path: item.to }" :replace="true">
+              {{item.name}}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
+        </section>
+      </header>
+      <div class="register-main">
+        <router-view @getRouterName="getUrlName"></router-view>
+      </div>
+    </template>
+  </geo-layout>
+</template>
+
+<script>
+import GeoLayout from '@/layouts/Personal';
+
+export default {
+  components: {
+    GeoLayout,
+  },
+  data() {
+    return {
+      list: [
+        { name: '我要办', to: '/p' },
+        { name: '预告登记', to: '' },
+      ],
+    };
+  },
+  methods: {
+    getUrlName(val) {
+      this.list[1].name = val;
+    },
+  },
+};
+</script>
+
+<style lang="scss" >
+@import './index.scss';
+</style>

@@ -1,0 +1,51 @@
+.register{
+  background-color: $--background-color-base;
+  &-main{
+    @extend container;
+    margin: 10px auto;
+    background-color: $--color-white;
+    &-header{
+      line-height: 60px;
+      font-size: 20px;
+      border-bottom: $--border-base;
+      padding: 0 40px;
+    }
+    &-body{
+      padding: 40px;
+      /deep/ {
+        .el-step__icon.is-icon{
+          width: auto;
+          height: auto;
+        }
+        .el-step.is-horizontal .el-step__line{
+          top: 15px;
+        }
+      }
+      .register-steps{
+        margin-bottom: 20px;
+      }
+      .register-step{
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        &.active .register-step-icon,
+        &.success .register-step-icon{
+          background-color: $--color-primary;
+          border-color: $--color-primary;
+          color: $--color-white;
+        }
+        &-icon{
+          width: 28px;
+          height: 28px;
+          min-width: 28px;
+          line-height: 28px;
+          text-align: center;
+          border-radius: 50%;
+          border: $--border-base;
+          position: relative;
+          margin-right: 20px;
+        }
+      }
+    }
+  }
+}
