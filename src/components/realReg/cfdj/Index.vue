@@ -4,7 +4,7 @@
  * @Author: zengying
  * @Date: 2020-03-11 20:44:41
  * @LastEditors: zengying
- * @LastEditTime: 2020-03-21 18:21:08
+ * @LastEditTime: 2020-03-22 10:21:04
  -->
 <template>
   <div class="cfmainInfo" v-loading="showLoading" element-loading-text="拼命加载中">
@@ -30,7 +30,6 @@ export default {
   data() {
     return {
       show: false, // 是否显示详细信息
-      nodeName: '宜昌',
       info: {
         sqr: sessionStorage.userId,
         lcmc: '查封登记（含轮候查封）',
@@ -57,6 +56,7 @@ export default {
     cfInfo,
   },
   computed: {
+    ...mapState('app', { area: state => state.area }),
     ...mapState('queryData', { flowdatas: state => state.FlOWDATA }),
   },
   methods: {
@@ -185,7 +185,7 @@ export default {
         this.setFlowData(data);
       }
     });
-    this.setNodeName(this.nodeName);
+    this.setNodeName(this.area);
   },
   watch: {
     show(val, oldVal) {
