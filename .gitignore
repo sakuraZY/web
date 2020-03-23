@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
 /dist
+.svn
 
 # local env files
 .env.local
@@ -19,6 +20,5 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-.svn/wc.db
-.svn/pristine/7f/7fae96137f89231a5cf3c0abf7e2184118e3858f.svn-base
-.svn/wc.db
+zy/123
+zy/123.pub
